@@ -67,7 +67,7 @@ export function Hero() {
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
   const textY = useTransform(scrollYProgress, [0, 1], reduce ? ["0%", "0%"] : ["0%", "40%"]);
   const sceneScale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1, 0.86]);
-  const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const fade = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
 
   const showStatic = mode !== "3d" || !ready;
 

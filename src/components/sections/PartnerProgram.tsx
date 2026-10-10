@@ -31,7 +31,7 @@ export function PartnerProgram() {
               Commission rates, eligibility and payout terms are shared with approved partners during onboarding.
             </p>
           </Reveal>
-          <div aria-hidden className="pointer-events-none absolute -bottom-24 -left-24 opacity-[0.07] max-lg:hidden">
+          <div aria-hidden className="pointer-events-none absolute -bottom-48 -left-48 opacity-[0.05] max-lg:hidden">
             <Monogram size={420} />
           </div>
         </div>

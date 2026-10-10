@@ -60,7 +60,7 @@ function Card({
         {/* antique gold frame */}
         <mesh position={[0, 0, -0.012]}>
           <planeGeometry args={[w + 0.07, CARD_H + 0.07]} />
-          <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.3} side={THREE.DoubleSide} />
+          <meshStandardMaterial color="#d4af37" metalness={0.7} roughness={0.32} emissive="#4a360c" emissiveIntensity={0.5} />
         </mesh>
         <mesh
           onPointerOver={onOver}

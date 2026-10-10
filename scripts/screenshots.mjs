@@ -79,7 +79,11 @@ for (const vp of viewports) {
     await sleep(2200);
     await page.screenshot({ path: `${OUT}/${vp.name}-${id}.png` });
   }
-  await page.screenshot({ path: `${OUT}/${vp.name}-full.png`, fullPage: true });
+  try {
+    await page.screenshot({ path: `${OUT}/${vp.name}-full.png`, fullPage: true, timeout: 60000, animations: "disabled" });
+  } catch (e) {
+    report.consoleErrors.push(`[${vp.name}] full-page screenshot skipped: ${e.message.split("\n")[0]}`);
+  }
 
   if (vp.name === "mobile") {
     await page.evaluate(() => window.scrollTo(0, 0));

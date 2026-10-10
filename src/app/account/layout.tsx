@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { customerSections } from "@/lib/portals";
 
+/** Always render per request: session and backend configuration are read at runtime. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "My account",
   robots: { index: false, follow: false },

@@ -37,7 +37,7 @@ export function Header() {
       transition={{ duration: 1.2, delay: 0.2, ease: EASE }}
       className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-700 ${
         scrolled || open
-          ? "border-b border-gold/15 bg-noir/80 backdrop-blur-md"
+          ? "border-b border-gold/15 bg-noir/90 backdrop-blur-md"
           : "border-b border-transparent bg-gradient-to-b from-noir/70 to-transparent"
       }`}
     >

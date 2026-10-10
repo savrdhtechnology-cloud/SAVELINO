@@ -107,7 +107,7 @@ function OrbitingLights() {
   );
 }
 
-const goldMetal = { color: "#d4af37", metalness: 1, roughness: 0.28 } as const;
+const goldMetal = { color: "#d4af37", metalness: 0.75, roughness: 0.3, emissive: "#5a4210", emissiveIntensity: 0.55 } as const;
 
 function FloatingOrnaments({ mobile }: { mobile: boolean }) {
   return (

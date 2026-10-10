@@ -5,6 +5,9 @@ import { PortalShell } from "@/components/portal/PortalShell";
 import { adminModules } from "@/lib/portals";
 import { getSessionContext } from "@/lib/supabase/server";
 
+/** Always render per request: session and backend configuration are read at runtime. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin CRM",
   robots: { index: false, follow: false },
