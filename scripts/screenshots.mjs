@@ -39,6 +39,10 @@ const routes = [
   "/partner/dashboard/commissions",
   "/admin",
   "/admin/orders",
+  "/admin/payments",
+  "/admin/partners",
+  "/admin/analytics",
+  "/admin/products",
   "/sitemap.xml",
   "/robots.txt",
 ];
@@ -127,7 +131,7 @@ for (const vp of viewports) {
   for (const r of routes) {
     const res = await page.goto(BASE + r, { waitUntil: "domcontentloaded" });
     report.routes.push({ route: r, status: res?.status() ?? 0 });
-    if (["/collections", "/our-story", "/size-guide", "/faq", "/contact", "/shipping-returns", "/collections/sarees", "/login"].includes(r)) {
+    if (["/collections", "/our-story", "/size-guide", "/faq", "/contact", "/shipping-returns", "/collections/sarees", "/login", "/admin", "/admin/orders", "/admin/analytics", "/admin/partners"].includes(r)) {
       await sleep(1200);
       await shot(page, `${OUT}/route${r.replace(/\//g, "_")}.png`);
     }
