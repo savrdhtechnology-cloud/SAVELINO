@@ -3,7 +3,7 @@
 import { LayoutGroup, Reorder, motion, useDragControls } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSiteSettings } from "@/lib/admin/site-settings-client";
-import { DEFAULT_SETTINGS, SECTION_LABELS, type SiteSettings } from "@/lib/settings";
+import { DARK_PALETTE, LIGHT_PALETTE, SECTION_LABELS, type Palette, type SiteSettings, type ThemeMode } from "@/lib/settings";
 import { Card, ColorField, SaveBar, TextField, Toggle } from "./fields";
 import { EASE, Icon } from "./ui";
 
@@ -20,11 +20,26 @@ const DEVICES = [
   { id: "mobile", label: "Mobile", width: "390px" },
 ] as const;
 
-const PRESETS: { name: string; theme: Partial<SiteSettings["theme"]> }[] = [
-  { name: "Royal Noir", theme: { gold: "#D4AF37", noir: "#0B0B0B", ivory: "#F8F5EB", burgundy: "#6B0F1A" } },
-  { name: "Rose Gold", theme: { gold: "#C98B72", noir: "#100B0B", ivory: "#FBF3EE", burgundy: "#5E1A2A" } },
-  { name: "Champagne", theme: { gold: "#D8C39A", noir: "#0E0D0B", ivory: "#FAF6EC", burgundy: "#4A1C24" } },
-  { name: "Emerald Court", theme: { gold: "#D4AF37", noir: "#06100C", ivory: "#F4F1E6", burgundy: "#0F4D3A" } },
+const PRESETS: Record<ThemeMode, { name: string; palette: Palette }[]> = {
+  dark: [
+    { name: "Royal Noir", palette: DARK_PALETTE },
+    { name: "Rose Gold Night", palette: { gold: "#C98B72", noir: "#100B0B", ivory: "#FBF3EE", burgundy: "#5E1A2A" } },
+    { name: "Champagne Noir", palette: { gold: "#D8C39A", noir: "#0E0D0B", ivory: "#FAF6EC", burgundy: "#4A1C24" } },
+    { name: "Emerald Court", palette: { gold: "#D4AF37", noir: "#06100C", ivory: "#F4F1E6", burgundy: "#0F4D3A" } },
+  ],
+  light: [
+    { name: "Ivory Atelier", palette: LIGHT_PALETTE },
+    { name: "Pearl & Rose", palette: { gold: "#A86A55", noir: "#FBF6F3", ivory: "#2A1D1A", burgundy: "#F0DAD3" } },
+    { name: "Champagne Day", palette: { gold: "#8C7440", noir: "#FAF7EF", ivory: "#221D16", burgundy: "#EFE3CC" } },
+    { name: "Sage Linen", palette: { gold: "#7A6A2E", noir: "#F4F3EC", ivory: "#1B211C", burgundy: "#DCE6DC" } },
+  ],
+};
+
+const PALETTE_FIELDS: { key: keyof Palette; dark: string; light: string }[] = [
+  { key: "noir", dark: "Background (Royal Noir)", light: "Background (Ivory paper)" },
+  { key: "ivory", dark: "Text (Ivory)", light: "Text (Ink)" },
+  { key: "gold", dark: "Accent (Antique gold)", light: "Accent (Deep gold)" },
+  { key: "burgundy", dark: "Highlight (Burgundy)", light: "Highlight wash (Rose)" },
 ];
 
 export function StudioApp({ live }: { live: boolean }) {
@@ -32,6 +47,7 @@ export function StudioApp({ live }: { live: boolean }) {
   const [panel, setPanel] = useState<(typeof PANELS)[number]["id"]>("theme");
   const [device, setDevice] = useState<(typeof DEVICES)[number]["id"]>("desktop");
   const [frameKey, setFrameKey] = useState(0);
+  const [editMode, setEditMode] = useState<ThemeMode>("dark");
   const frame = useRef<HTMLIFrameElement>(null);
 
   const post = useCallback((msg: object) => {
@@ -40,13 +56,19 @@ export function StudioApp({ live }: { live: boolean }) {
 
   const pushPreview = useCallback(() => {
     const t = settings.theme;
+    const p = t[editMode];
+    post({ type: "savlino:studio:mode", mode: editMode });
     post({
       type: "savlino:studio:vars",
       vars: {
-        "--color-gold": t.gold,
-        "--color-noir": t.noir,
-        "--color-ivory": t.ivory,
-        "--color-burgundy": t.burgundy,
+        "--color-gold": p.gold,
+        "--color-gold-light": `color-mix(in srgb, ${p.gold} 72%, white)`,
+        "--color-gold-deep": `color-mix(in srgb, ${p.gold} 72%, black)`,
+        "--color-noir": p.noir,
+        "--color-noir-soft": `color-mix(in srgb, ${p.noir} 93%, ${p.ivory})`,
+        "--color-ivory": p.ivory,
+        "--color-burgundy": p.burgundy,
+        "--color-burgundy-deep": `color-mix(in srgb, ${p.burgundy} 55%, ${p.noir})`,
         "--font-display": t.displayFont === "cormorant" ? "var(--font-cormorant), Garamond, serif" : "var(--font-bodoni), Didot, serif",
       },
     });
@@ -54,7 +76,7 @@ export function StudioApp({ live }: { live: boolean }) {
     post({ type: "savlino:studio:text", key: "hero-title", value: settings.hero.title });
     post({ type: "savlino:studio:text", key: "hero-subtitle", value: settings.hero.subtitle });
     post({ type: "savlino:studio:text", key: "announcement", value: settings.announcement.text });
-  }, [post, settings]);
+  }, [post, settings, editMode]);
 
   useEffect(() => {
     pushPreview();
@@ -69,6 +91,11 @@ export function StudioApp({ live }: { live: boolean }) {
   }, [pushPreview]);
 
   const setTheme = (patch: Partial<SiteSettings["theme"]>) => setSettings((s) => ({ ...s, theme: { ...s.theme, ...patch } }));
+  const setPalette = (mode: ThemeMode, patch: Partial<Palette>) =>
+    setSettings((s) => ({
+      ...s,
+      theme: mode === "dark" ? { ...s.theme, dark: { ...s.theme.dark, ...patch } } : { ...s.theme, light: { ...s.theme.light, ...patch } },
+    }));
   const setHero = (patch: Partial<SiteSettings["hero"]>) => setSettings((s) => ({ ...s, hero: { ...s.hero, ...patch } }));
   const setAnn = (patch: Partial<SiteSettings["announcement"]>) => setSettings((s) => ({ ...s, announcement: { ...s.announcement, ...patch } }));
 
@@ -131,18 +158,67 @@ export function StudioApp({ live }: { live: boolean }) {
             <motion.div key={panel} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35, ease: EASE }} className="space-y-4">
               {panel === "theme" && (
                 <>
-                  <Card title="Presets">
+                  <Card title="Website theme" description="The house default every visitor sees.">
                     <div className="grid grid-cols-2 gap-2">
-                      {PRESETS.map((p) => (
+                      {(["dark", "light"] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            setTheme({ mode: m });
+                            setEditMode(m);
+                          }}
+                          className={`overflow-hidden border text-left ${settings.theme.mode === m ? "border-gold" : "border-gold/15 hover:border-gold/40"}`}
+                        >
+                          <span className="block h-16" style={{ background: settings.theme[m].noir }}>
+                            <span className="flex h-full flex-col justify-center gap-1.5 px-3">
+                              <span className="h-1.5 w-16" style={{ background: settings.theme[m].gold }} />
+                              <span className="h-1 w-24 opacity-70" style={{ background: settings.theme[m].ivory }} />
+                              <span className="h-1 w-20 opacity-40" style={{ background: settings.theme[m].ivory }} />
+                            </span>
+                          </span>
+                          <span className={`block px-3 py-2 text-xs ${settings.theme.mode === m ? "text-gold" : "text-ivory/70"}`}>
+                            {m === "dark" ? "Royal Noir · dark" : "Ivory Atelier · light"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <Toggle
+                      label="Let visitors switch"
+                      hint="Adds a light/dark button to the website header."
+                      checked={settings.theme.allowToggle}
+                      onChange={(v) => setTheme({ allowToggle: v })}
+                    />
+                  </Card>
+
+                  <LayoutGroup id="studio-edit-mode">
+                    <div className="grid grid-cols-2 border border-gold/15 p-0.5">
+                      {(["dark", "light"] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setEditMode(m)}
+                          className={`relative py-2 text-[0.58rem] uppercase tracking-[0.2em] ${editMode === m ? "text-noir" : "text-ivory/55 hover:text-gold"}`}
+                        >
+                          {editMode === m && <motion.span layoutId="studio-edit-mode-pill" className="absolute inset-0 bg-gold" />}
+                          <span className="relative">Edit {m} template</span>
+                        </button>
+                      ))}
+                    </div>
+                  </LayoutGroup>
+
+                  <Card title={`${editMode === "dark" ? "Dark" : "Light"} presets`}>
+                    <div className="grid grid-cols-2 gap-2">
+                      {PRESETS[editMode].map((p) => (
                         <button
                           key={p.name}
                           type="button"
-                          onClick={() => setTheme(p.theme)}
+                          onClick={() => setPalette(editMode, p.palette)}
                           className="group border border-gold/15 p-2.5 text-left text-xs text-ivory/70 transition-colors hover:border-gold/50"
                         >
                           <span className="flex gap-1">
-                            {[p.theme.noir, p.theme.gold, p.theme.ivory, p.theme.burgundy].map((c, i) => (
-                              <span key={i} className="h-5 flex-1 border border-white/10" style={{ background: c }} />
+                            {[p.palette.noir, p.palette.gold, p.palette.ivory, p.palette.burgundy].map((c, i) => (
+                              <span key={i} className="h-5 flex-1 border border-black/10" style={{ background: c }} />
                             ))}
                           </span>
                           <span className="mt-2 block group-hover:text-gold">{p.name}</span>
@@ -150,13 +226,21 @@ export function StudioApp({ live }: { live: boolean }) {
                       ))}
                     </div>
                   </Card>
-                  <Card title="Colours">
-                    <ColorField label="Antique gold" value={settings.theme.gold} onChange={(v) => setTheme({ gold: v })} />
-                    <ColorField label="Royal noir" value={settings.theme.noir} onChange={(v) => setTheme({ noir: v })} />
-                    <ColorField label="Ivory" value={settings.theme.ivory} onChange={(v) => setTheme({ ivory: v })} />
-                    <ColorField label="Burgundy" value={settings.theme.burgundy} onChange={(v) => setTheme({ burgundy: v })} />
-                    <button type="button" onClick={() => setTheme(DEFAULT_SETTINGS.theme)} className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/45 hover:text-gold">
-                      Reset to brand colours
+                  <Card title={`${editMode === "dark" ? "Dark" : "Light"} colours`}>
+                    {PALETTE_FIELDS.map((f) => (
+                      <ColorField
+                        key={f.key}
+                        label={f[editMode]}
+                        value={settings.theme[editMode][f.key]}
+                        onChange={(v) => setPalette(editMode, { [f.key]: v } as Partial<Palette>)}
+                      />
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setPalette(editMode, editMode === "dark" ? DARK_PALETTE : LIGHT_PALETTE)}
+                      className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/45 hover:text-gold"
+                    >
+                      Reset {editMode} template
                     </button>
                   </Card>
                   <Card title="Headline typeface">

@@ -66,7 +66,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0B0B0B",
-  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
 };
@@ -75,7 +74,22 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const settings = await getSiteSettings();
   const css = `${themeCss(settings.theme)}${settings.announcement.enabled && settings.announcement.text ? ":root{--announce-h:32px}" : ""}`;
   return (
-    <html lang="en" className={`${bodoni.variable} ${cormorant.variable} ${manrope.variable}`}>
+    <html
+      lang="en"
+      data-theme={settings.theme.mode}
+      suppressHydrationWarning
+      className={`${bodoni.variable} ${cormorant.variable} ${manrope.variable}`}
+    >
+      <head>
+        {settings.theme.allowToggle && (
+          // Applies a visitor's saved light/dark choice before paint (no flash).
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `try{var t=localStorage.getItem("savlino-site-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
+            }}
+          />
+        )}
+      </head>
       <body>
         {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
         <StudioBridge />

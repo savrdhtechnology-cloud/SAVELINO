@@ -34,6 +34,14 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   account: "Customer login",
 };
 
+export type ThemeMode = "dark" | "light";
+
+/** noir = background, ivory = text, gold = accent, burgundy = accent wash. */
+export type Palette = { gold: string; noir: string; ivory: string; burgundy: string };
+
+export const DARK_PALETTE: Palette = { gold: "#D4AF37", noir: "#0B0B0B", ivory: "#F8F5EB", burgundy: "#6B0F1A" };
+export const LIGHT_PALETTE: Palette = { gold: "#9A7724", noir: "#F7F2E7", ivory: "#1D1714", burgundy: "#EAD7D0" };
+
 export type SiteSettings = {
   brand: {
     name: string;
@@ -56,11 +64,20 @@ export type SiteSettings = {
     returnWindowDays: number;
   };
   theme: {
-    gold: string;
-    noir: string;
-    ivory: string;
-    burgundy: string;
+    /** House default for every visitor. */
+    mode: ThemeMode;
+    /** Show a light/dark switch in the website header. */
+    allowToggle: boolean;
     displayFont: "bodoni" | "cormorant";
+    dark: Palette;
+    light: Palette;
+  };
+  /** House defaults for the CRM (each admin may override in Settings → Appearance). */
+  crm: {
+    mode: ThemeMode;
+    accent: string;
+    wallpaper: string;
+    radius: "sharp" | "soft";
   };
   hero: {
     eyebrow: string;
@@ -96,7 +113,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     codEnabled: false,
     returnWindowDays: 0,
   },
-  theme: { gold: "#D4AF37", noir: "#0B0B0B", ivory: "#F8F5EB", burgundy: "#6B0F1A", displayFont: "bodoni" },
+  theme: { mode: "dark", allowToggle: false, displayFont: "bodoni", dark: { ...DARK_PALETTE }, light: { ...LIGHT_PALETTE } },
+  crm: { mode: "dark", accent: "gold", wallpaper: "silk", radius: "sharp" },
   hero: {
     eyebrow: "Timeless women’s luxury",
     title: "A Legacy of Elegance",
@@ -112,44 +130,74 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
+/** Copies values from `src` onto `base` only where the key exists and the type matches (recursively). */
+function mergeInto(base: Record<string, unknown>, src: unknown) {
+  if (!isObj(src)) return;
+  for (const [k, v] of Object.entries(src)) {
+    if (!(k in base)) continue;
+    const cur = base[k];
+    if (isObj(cur)) mergeInto(cur, v);
+    else if (!Array.isArray(cur) && typeof v === typeof cur) base[k] = v;
+  }
+}
+
 /** Deep-merges stored settings over defaults, ignoring unknown or mistyped keys. */
 export function mergeSettings(stored: unknown): SiteSettings {
-  const out = structuredClone(DEFAULT_SETTINGS) as unknown as Record<string, Record<string, unknown>>;
-  if (!isObj(stored)) return out as unknown as SiteSettings;
-  for (const group of ["brand", "commerce", "theme", "hero", "announcement"] as const) {
-    const src = stored[group];
-    if (!isObj(src)) continue;
-    for (const [k, v] of Object.entries(src)) {
-      if (k in out[group] && typeof v === typeof out[group][k]) out[group][k] = v;
-    }
+  const out = structuredClone(DEFAULT_SETTINGS);
+  if (!isObj(stored)) return out;
+  const src = structuredClone(stored) as Record<string, unknown>;
+  // Older saves kept one flat palette under theme — treat it as the dark palette.
+  if (isObj(src.theme) && typeof src.theme.gold === "string" && !isObj(src.theme.dark)) {
+    const t = src.theme;
+    src.theme = { ...t, dark: { gold: t.gold, noir: t.noir, ivory: t.ivory, burgundy: t.burgundy } };
   }
-  if (Array.isArray(stored.sections)) {
+  for (const group of ["brand", "commerce", "theme", "hero", "announcement", "crm"] as const) {
+    mergeInto(out[group] as unknown as Record<string, unknown>, src[group]);
+  }
+  if (out.theme.mode !== "light") out.theme.mode = "dark";
+  if (out.crm.mode !== "light") out.crm.mode = "dark";
+  if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];
-    for (const s of stored.sections) {
+    for (const s of src.sections) {
       if (isObj(s) && SECTION_IDS.includes(s.id as SectionId) && !seen.has(String(s.id))) {
         seen.add(String(s.id));
         list.push({ id: s.id as SectionId, visible: s.visible !== false });
       }
     }
     for (const id of SECTION_IDS) if (!seen.has(id)) list.push({ id, visible: true });
-    (out as unknown as SiteSettings).sections = list;
+    out.sections = list;
   }
-  return out as unknown as SiteSettings;
+  return out;
 }
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
-/** CSS variable overrides for the brand palette (only valid hex colours are applied). */
-export function themeCss(theme: SiteSettings["theme"]) {
+function paletteVars(p: Palette) {
   const vars: string[] = [];
-  const map: [string, string][] = [
-    ["--color-gold", theme.gold],
-    ["--color-noir", theme.noir],
-    ["--color-ivory", theme.ivory],
-    ["--color-burgundy", theme.burgundy],
-  ];
-  for (const [k, v] of map) if (HEX.test(v)) vars.push(`${k}:${v}`);
-  if (theme.displayFont === "cormorant") vars.push("--font-display:var(--font-cormorant),Garamond,serif");
-  return vars.length ? `:root{${vars.join(";")}}` : "";
+  if (HEX.test(p.gold)) {
+    vars.push(`--color-gold:${p.gold}`);
+    vars.push(`--color-gold-light:color-mix(in srgb,${p.gold} 72%,white)`);
+    vars.push(`--color-gold-deep:color-mix(in srgb,${p.gold} 72%,black)`);
+  }
+  if (HEX.test(p.noir)) {
+    vars.push(`--color-noir:${p.noir}`);
+    if (HEX.test(p.ivory)) vars.push(`--color-noir-soft:color-mix(in srgb,${p.noir} 93%,${p.ivory})`);
+  }
+  if (HEX.test(p.ivory)) vars.push(`--color-ivory:${p.ivory}`);
+  if (HEX.test(p.burgundy)) {
+    vars.push(`--color-burgundy:${p.burgundy}`);
+    if (HEX.test(p.noir)) vars.push(`--color-burgundy-deep:color-mix(in srgb,${p.burgundy} 55%,${p.noir})`);
+  }
+  return vars.join(";");
+}
+
+/**
+ * Website-only CSS: the Studio palettes for each mode, scoped to <html>, so the
+ * CRM (which sets its own data-theme on its shell) keeps the house templates.
+ */
+export function themeCss(theme: SiteSettings["theme"]) {
+  const rules = [`html[data-theme="dark"]{${paletteVars(theme.dark)}}`, `html[data-theme="light"]{${paletteVars(theme.light)}}`];
+  if (theme.displayFont === "cormorant") rules.push("html{--font-display:var(--font-cormorant),Garamond,serif}");
+  return rules.join("");
 }

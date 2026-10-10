@@ -4,7 +4,8 @@ import { useEffect } from "react";
 
 type Msg =
   | { type: "savlino:studio:vars"; vars: Record<string, string> }
-  | { type: "savlino:studio:text"; key: string; value: string };
+  | { type: "savlino:studio:text"; key: string; value: string }
+  | { type: "savlino:studio:mode"; mode: "dark" | "light" };
 
 /**
  * Lets CRM → Studio preview unsaved theme and copy changes inside its iframe.
@@ -19,6 +20,8 @@ export function StudioBridge() {
         for (const [k, v] of Object.entries(e.data.vars)) {
           if (/^--(color|font)-[a-z-]+$/.test(k)) document.documentElement.style.setProperty(k, v);
         }
+      } else if (e.data.type === "savlino:studio:mode") {
+        if (e.data.mode === "dark" || e.data.mode === "light") document.documentElement.setAttribute("data-theme", e.data.mode);
       } else if (e.data.type === "savlino:studio:text") {
         const { key, value } = e.data;
         document.querySelectorAll<HTMLElement>(`[data-studio="${CSS.escape(key)}"]`).forEach((el) => {

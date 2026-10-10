@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getSessionContext } from "@/lib/supabase/server";
+import { getSiteSettings } from "@/lib/settings-server";
 
 /** Always render per request: session and backend configuration are read at runtime. */
 export const dynamic = "force-dynamic";
@@ -20,9 +21,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     if (!("role" in session) || session.role !== "admin") notFound();
   }
   const email = session.configured && session.user ? session.user.email : null;
+  const { crm } = await getSiteSettings();
 
   return (
-    <AdminShell live={session.configured} email={email}>
+    <AdminShell live={session.configured} email={email} house={crm}>
       {children}
     </AdminShell>
   );

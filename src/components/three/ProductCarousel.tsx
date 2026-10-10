@@ -122,6 +122,15 @@ function Ring({ items, mobile, onFocusChange, onSelect }: Omit<Props, "active">)
 }
 
 export default function ProductCarousel({ items, active, mobile, onFocusChange, onSelect }: Props) {
+  // Match the floor to the current theme background (dark or light template).
+  const [floor, setFloor] = useState("#0b0b0b");
+  useEffect(() => {
+    const read = () => setFloor(getComputedStyle(document.documentElement).getPropertyValue("--color-noir").trim() || "#0b0b0b");
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "style"] });
+    return () => obs.disconnect();
+  }, []);
   useEffect(() => () => void (document.body.style.cursor = ""), []);
   return (
     <Canvas
@@ -143,7 +152,7 @@ export default function ProductCarousel({ items, active, mobile, onFocusChange, 
       {/* Polished noir floor reflection hint */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.45, 0]}>
         <circleGeometry args={[6, 64]} />
-        <meshStandardMaterial color="#0b0b0b" metalness={0.8} roughness={0.35} transparent opacity={0.9} />
+        <meshStandardMaterial color={floor} metalness={0.8} roughness={0.35} transparent opacity={0.9} />
       </mesh>
     </Canvas>
   );
