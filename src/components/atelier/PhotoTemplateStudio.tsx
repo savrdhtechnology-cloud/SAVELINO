@@ -5,6 +5,14 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { DesignSpec } from "@/lib/atelier/constants";
 
 type Draft = {name:string;category:string;spec:DesignSpec;uncertainty:string[];confidence:string;warning:string};
+const RUBY_SAMPLE: Draft = {
+ name: "Ruby Shimmer Sleeveless Princess Blouse",
+ category: "designer-blouses",
+ spec: { neckline:"u",backNeck:"round",sleeve:"sleeveless",cut:"princess",darts:["waist"],closure:"back-hooks",fabric:"Ruby red metallic shimmer (visual estimate)",lining:"To verify",embroidery:"None visible",accessories:[],colors:["Ruby red","Metallic red"],instructions:"Reference shows wide scoop neckline, broad shoulder straps and princess panel seams. Verify back, closure, stretch and measurements before drafting production patterns.",notes:"QA SAMPLE — front photograph only; back neckline and back hooks are placeholders, not confirmed." },
+ uncertainty:["Back view is missing","Back neckline and closure are not visually confirmed","No reliable size or fabric consumption can be derived from a photo","Pattern-master fitting, stretch and seam allowance checks required"],
+ confidence:"Front style only",
+ warning:"Demonstration draft from the supplied ruby-blouse reference; no AI request. Verify all inferred construction details before production."
+};
 const input = "w-full border border-gold/25 bg-noir/40 p-3 text-sm text-ivory outline-none focus:border-gold";
 const button = "border border-gold/40 px-5 py-3 text-xs uppercase tracking-widest text-gold hover:bg-gold/10 disabled:opacity-50";
 export function PhotoTemplateStudio() {
@@ -53,7 +61,7 @@ export function PhotoTemplateStudio() {
    <label className="block text-xs uppercase tracking-widest text-gold">Reference photographs (1–4)</label>
    <input aria-label="Select garment images" type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={e=>onFiles(e.target.files)} className={input}/>
    {files.length>0 && <div className="grid gap-2 sm:grid-cols-4">{files.map((f,i)=><div key={i} className="border border-gold/20 p-3 text-xs text-ivory/70">{f.name}</div>)}</div>}
-   <button className={button} onClick={analyze} disabled={busy||!files.length}>{busy?"Working…":"Analyze Photos & Generate Draft"}</button>
+   <div className="flex flex-wrap gap-3"><button className={button} onClick={()=>{setDraft(RUBY_SAMPLE);setError("");setSaved(false)}} disabled={busy}>Load Ruby Sample Draft</button><button className={button} onClick={analyze} disabled={busy||!files.length}>{busy?"Working…":"Analyze Photos & Generate Draft"}</button></div>
   </section>
   {error && <p role="alert" className="border border-red-500/40 p-4 text-sm text-red-300">{error}</p>}
   {draft && <section className="space-y-5 border border-gold/20 p-5">
@@ -61,6 +69,7 @@ export function PhotoTemplateStudio() {
    <label className="block space-y-2 text-sm text-ivory/70">Design name<input className={input} value={draft.name} onChange={e=>setDraft({...draft,name:e.target.value})}/></label>
    <label className="block space-y-2 text-sm text-ivory/70">Category<select className={input} value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value})}>{["designer-blouses","salwar-suits","sarees","shapewear","lingerie","loungewear"].map(x=><option key={x} value={x}>{x}</option>)}</select></label>
    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{(["neckline","backNeck","sleeve","cut","closure","fabric","lining","embroidery"] as const).map(k=><label key={k} className="space-y-2 text-sm text-ivory/70 block">{k}<input className={input} value={draft.spec[k]} onChange={e=>setDraft({...draft,spec:{...draft.spec,[k]:e.target.value}})}/></label>)}</div>
+   <p className="text-xs text-ivory/60">Photo analysis proposes style only. Size charts, measured pattern pieces, cutting approval, production batches and QC must be generated through their dedicated verified workflows.</p>
    <label className="block space-y-2 text-sm text-ivory/70">Notes<textarea className={input} value={draft.spec.notes} onChange={e=>setDraft({...draft,spec:{...draft.spec,notes:e.target.value}})}/></label>
    {draft.uncertainty.length>0&&<div><p className="text-sm text-gold">Check before production</p><ul className="list-disc pl-6 text-sm text-ivory/70">{draft.uncertainty.map((x,i)=><li key={i}>{x}</li>)}</ul></div>}
    <button className={button} onClick={save} disabled={busy||saved}>{saved?"Draft saved":"Save Draft to Design Studio"}</button>
