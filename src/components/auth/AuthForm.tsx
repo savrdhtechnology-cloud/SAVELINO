@@ -58,7 +58,29 @@ export function AuthForm({ mode, audience, configured }: AuthFormProps) {
         setMessage(error.message);
         return;
       }
-      router.replace(safeNext(params.get("next"), home));
+      // Resolve the role from the database after successful authentication.
+      // Never infer administrator rights from the email address or form audience.
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        setStatus("error");
+        setMessage("Unable to verify your session. Please sign in again.");
+        return;
+      }
+      const { data: profile, error: roleError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authData.user.id)
+        .single();
+      if (roleError || !profile) {
+        setStatus("error");
+        setMessage("Your account role could not be verified. Please contact support.");
+        return;
+      }
+      const role = profile.role as "admin" | "partner" | "customer";
+      const destination = role === "admin" ? "/admin" : role === "partner" ? "/partner/dashboard" : "/account";
+      const requested = safeNext(params.get("next"), destination);
+      const validNext = requested === destination || requested.startsWith(destination + "/");
+      router.replace(validNext ? requested : destination);
       router.refresh();
       return;
     }
