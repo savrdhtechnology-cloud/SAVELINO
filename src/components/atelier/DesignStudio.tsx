@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StatusBadge } from "@/components/admin/ui";
 import { toast } from "@/lib/admin/store";
@@ -216,10 +217,31 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ivory/45">Upload hand sketches (shown as an overlay on the flat) and reference photos. References are for inspiration only — patterns are never generated from images.</p>
+            <p className="text-sm text-ivory/45">No original image saved for this design. Restore archived design if needed, then use Add reference to upload the original front/back photos. Images do not establish exact cutting measurements.</p>
           )}
         </Section>
 
+        <Section title="Production readiness · next steps">
+          <div className="space-y-3 text-sm text-ivory/75">
+            <p>Design status: <strong>{design.status}</strong>. Design approval alone does not approve measurements, patterns or production: these are separate safety gates.</p>
+            <ol className="space-y-2">
+              <li>1. Reference photos — {sketches.some(s=>s.kind==="reference") ? "attached" : "missing: upload the original photo above"}</li>
+              <li>2. Design approval — {design.status === "approved" ? "complete" : design.status === "archived" ? "archived: restore and approve before production" : "pending"}</li>
+              <li>3. Size Charts — verify measurements and approve the size chart</li>
+              <li>4. Pattern Library — draft size-wise pieces and request pattern master approval</li>
+              <li>5. Bill of Materials & Fabric Calculator — validate materials and marker estimates</li>
+              <li>6. Production Batches — create a batch after approvals, then assign Worker Tasks</li>
+              <li>7. Quality Control — inspect finished work through the QC workflow</li>
+            </ol>
+            <div className="flex flex-wrap gap-2">
+              <Link className={btnLine} href="/admin/size-charts">Size Charts →</Link>
+              <Link className={btnLine} href="/admin/pattern-library">Pattern Library →</Link>
+              <Link className={btnLine} href="/admin/bill-of-materials">BOM →</Link>
+              <Link className={btnLine} href="/admin/production-batches">Production Batches →</Link>
+              <Link className={btnLine} href="/admin/worker-tasks">Worker Tasks →</Link>
+            </div>
+          </div>
+        </Section>
         <div className="grid gap-4 lg:grid-cols-2">
           <Section title="Version history">
             <ol className="max-h-64 space-y-2 overflow-y-auto">
