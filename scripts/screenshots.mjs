@@ -15,6 +15,16 @@ const viewports = [
 
 const routes = [
   "/",
+  "/collections",
+  "/lookbook",
+  "/our-story",
+  "/craftsmanship",
+  "/size-guide",
+  "/faq",
+  "/contact",
+  "/shipping-returns",
+  "/privacy",
+  "/terms",
   "/collections/designer-blouses",
   "/collections/sarees",
   "/custom-stitching",
@@ -117,7 +127,7 @@ for (const vp of viewports) {
   for (const r of routes) {
     const res = await page.goto(BASE + r, { waitUntil: "domcontentloaded" });
     report.routes.push({ route: r, status: res?.status() ?? 0 });
-    if (["/collections/sarees", "/login", "/account", "/admin", "/custom-stitching"].includes(r)) {
+    if (["/collections", "/our-story", "/size-guide", "/faq", "/contact", "/shipping-returns", "/collections/sarees", "/login"].includes(r)) {
       await sleep(1200);
       await shot(page, `${OUT}/route${r.replace(/\//g, "_")}.png`);
     }
