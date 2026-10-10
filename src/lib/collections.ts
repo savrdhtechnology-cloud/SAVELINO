@@ -1,5 +1,6 @@
 import type { StaticImageData } from "next/image";
 import blouses from "@/assets/images/blouses.webp";
+import readymade from "@/assets/images/readymade.webp";
 import salwar from "@/assets/images/salwar.webp";
 import sarees from "@/assets/images/sarees.webp";
 import shapewear from "@/assets/images/shapewear.webp";
@@ -7,7 +8,7 @@ import lingerie from "@/assets/images/lingerie.webp";
 import loungewear from "@/assets/images/loungewear.webp";
 import heritage from "@/assets/images/editorial-heritage.webp";
 
-export const images = { blouses, salwar, sarees, shapewear, lingerie, loungewear, heritage };
+export const images = { blouses, readymade, salwar, sarees, shapewear, lingerie, loungewear, heritage };
 
 export type Collection = {
   slug: string;
@@ -37,7 +38,7 @@ export const collections: Collection[] = [
     summary: "Designer detailing in carefully graded standard sizes — ready when you are.",
     story:
       "Our ready-made range is cut on graded patterns with generous seam allowances, so small alterations stay simple. Each size is checked against a fit model before release.",
-    image: blouses,
+    image: readymade,
     highlights: ["Sizes 32 – 44", "Alteration-friendly seams", "Ready to dispatch"],
   },
   {

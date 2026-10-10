@@ -27,7 +27,7 @@ export function Heritage() {
 
       <div className="mx-auto mt-10 grid max-w-[1440px] items-center gap-14 px-5 md:mt-16 md:px-10 lg:grid-cols-2 lg:gap-24">
         <motion.div style={{ y: imgY }} className="relative">
-          <ImageReveal className="aspect-[1080/936] border border-gold/25">
+          <ImageReveal className="aspect-[1200/896] border border-gold/25">
             <Image
               src={images.heritage}
               alt="A woman in a black saree with gold embroidery in a candlelit heritage interior"

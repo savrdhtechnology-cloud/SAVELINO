@@ -67,8 +67,8 @@ export function ReadyMade() {
         <div className="relative mx-auto w-full max-w-[460px]">
           <ImageReveal className="aspect-[4/5]">
             <Image
-              src={images.blouses}
-              alt="Ready-made designer blouse"
+              src={images.readymade}
+              alt="Burgundy silk ready-made blouse with gold embroidered sweetheart neckline on a dress form"
               fill
               sizes="(min-width: 1024px) 460px, 90vw"
               placeholder="blur"

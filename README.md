@@ -42,8 +42,8 @@ approved image. The lockup used on the site is the variant without the ® mark, 
 Brand colours: Royal Noir `#0B0B0B` · Antique Gold `#D4AF37` · Ivory `#F8F5EB` · Burgundy `#6B0F1A`.
 Typography: Bodoni Moda (display), Cormorant Garamond (editorial), Manrope (interface).
 
-> Collection photography is cropped from the supplied brand board and is low resolution. Replace the files in
-> `src/assets/images/` with original high-resolution photography (same file names) before launch.
+> Campaign photography in `src/assets/images/` is AI-generated (896×1200 / 1200×896, WebP). Replace files with
+> real product photography (same file names) whenever it is available.
 
 ## Backend (Supabase-ready)
 
