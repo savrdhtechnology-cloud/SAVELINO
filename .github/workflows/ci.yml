@@ -21,7 +21,7 @@ jobs:
   verify:
     name: Lint, typecheck, build & responsive QA
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +53,22 @@ jobs:
           npm run start -- -p 2736 &
           npx --yes wait-on@8 -t 60000 http://localhost:2736
           BASE_URL=http://localhost:2736 npm run screenshots 2>&1 | tee screenshots/qa.txt
+
+      # Rebuilds against the real Supabase project (public URL + anon key only; all
+      # access is enforced by RLS and ownership-checked functions) and runs the
+      # Virtual Try-On flow as a guest with a synthetic mannequin image.
+      - name: Virtual Try-On end-to-end (connected build)
+        if: github.event_name == 'push'
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SUPABASE_URL: https://vfqbddwutifhwstjcrzn.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWJkZHd1dGlmaHdzdGpjcnpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MTIzNjcsImV4cCI6MjEwNzE4ODM2N30.ZcMLfSmji3J0hPEsKY04RMHi7UXVlBqP2W0l-4K_jBU
+        run: |
+          pkill -f "next start" || true
+          (npm run build || (sleep 15 && npm run build)) > screenshots/build-connected.txt 2>&1
+          npm run start -- -p 2737 &
+          npx --yes wait-on@8 -t 60000 http://localhost:2737
+          BASE_URL=http://localhost:2737 node scripts/tryon-e2e.mjs 2>&1 | tee screenshots/tryon-e2e.txt
 
       - name: Upload screenshots
         if: always()

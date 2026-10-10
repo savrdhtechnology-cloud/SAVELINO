@@ -11,6 +11,7 @@ const extraDescriptions: Record<string, string> = {
   apps: "Every app in SAVLINO OS.",
   studio: "Design the website: theme, hero, sections.",
   settings: "Business details, commerce rules, appearance.",
+  "virtual-try-ons": "AI try-on sessions, consent, previews and conversion.",
 };
 
 export function Launchpad() {

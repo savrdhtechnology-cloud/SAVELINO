@@ -26,7 +26,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
       title="My SAVLINO"
       basePath="/account"
       overviewLabel="Overview"
-      links={customerSections}
+      links={[...customerSections, { slug: "try-ons", title: "Try-On previews" }]}
     >
       {children}
     </PortalShell>
