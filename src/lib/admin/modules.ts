@@ -611,6 +611,7 @@ export const navGroups: NavGroup[] = [
   {
     title: "Atelier",
     items: [
+      { slug: "photo-to-template", title: "Photo to Template", icon: ICONS.design },
       { slug: "design-studio", title: "Design Studio", icon: ICONS.design },
       { slug: "pattern-library", title: "Pattern Library", icon: ICONS.pattern },
       { slug: "size-charts", title: "Size Charts", icon: ICONS.sizes },
