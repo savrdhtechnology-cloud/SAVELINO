@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { imageToDataUrl } from "@/components/atelier/image";
 import type { DesignSpec } from "@/lib/atelier/constants";
 
 type Draft = {name:string;category:string;spec:DesignSpec;uncertainty:string[];confidence:string;warning:string};
@@ -21,10 +22,11 @@ export function PhotoTemplateStudio() {
  const [draft,setDraft]=useState<Draft|null>(null);
  const [error,setError]=useState("");
  const [saved,setSaved]=useState(false);
+ const [photoViews,setPhotoViews]=useState<("front"|"back"|"side")[]>([]);
  const onFiles = (incoming:FileList|null) => {
    const a=Array.from(incoming||[]).slice(0,4);
    if(a.some(f=>!["image/jpeg","image/png","image/webp"].includes(f.type)||f.size>1700000)){setError("Use 1–4 JPEG/PNG/WebP files, max 1.7 MB each.");return;}
-   setFiles(a);setDraft(null);setSaved(false);setError("");
+   setFiles(a);setPhotoViews(a.map((_,i)=>i===0?"front":i===1?"back":"side"));setDraft(null);setSaved(false);setError("");
  };
  const encode=(f:File)=>new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(new Error("Unable to read image"));r.readAsDataURL(f);});
  async function analyze(){
@@ -49,18 +51,19 @@ export function PhotoTemplateStudio() {
      if(authErr||!user)throw new Error("Sign in as Admin");
      const {data:profile}=await client.from("profiles").select("role").eq("id",user.id).single();
      if(profile?.role!=="admin")throw new Error("Admin role required");
-     const {error:saveErr}=await client.from("garment_designs").insert({name:draft.name,category:draft.category,status:"draft",spec:{...draft.spec,notes:`${draft.spec.notes}\nPHOTO ANALYSIS (UNVERIFIED): ${draft.uncertainty.join("; ")}`},sketches:[]});
+     const sketches = await Promise.all(files.map(async (f,i)=>({name:`${photoViews[i]||"front"}: ${f.name.slice(0,65)}`,view:photoViews[i]==="back"?"back":"front",kind:"reference",data:await imageToDataUrl(f)})));
+     const {error:saveErr}=await client.from("garment_designs").insert({name:draft.name,category:draft.category,status:"draft",spec:{...draft.spec,notes:`${draft.spec.notes}\nPHOTO ANALYSIS (UNVERIFIED): ${draft.uncertainty.join("; ")}`},sketches});
      if(saveErr)throw new Error(saveErr.message);
      setSaved(true);
    }catch(e){setError(e instanceof Error?e.message:"Could not save");}
    finally{setBusy(false);}
  }
  return <div className="space-y-8">
-  <header><p className="text-xs uppercase tracking-[0.3em] text-gold">Atelier · Image Recognition</p><h1 className="mt-3 font-serif text-4xl text-ivory">Photo to Template</h1><p className="mt-3 max-w-3xl text-sm text-ivory/65">Upload front, back and side photographs. AI proposes editable garment details, then you review and save a Design Studio draft. Images are transmitted to the configured vision provider for analysis, not saved in the SAVLINO database.</p></header>
+  <header><p className="text-xs uppercase tracking-[0.3em] text-gold">Atelier · Image Recognition</p><h1 className="mt-3 font-serif text-4xl text-ivory">Photo to Template</h1><p className="mt-3 max-w-3xl text-sm text-ivory/65">Upload front, back and side photographs. AI proposes editable garment details, then you review and save a Design Studio draft. Images are analyzed by the configured vision provider. On Save Draft, compressed reference copies are attached to the design so the originals remain visible in Design Studio.</p></header>
   <section className="border border-gold/20 bg-noir-soft/40 p-5 space-y-4">
    <label className="block text-xs uppercase tracking-widest text-gold">Reference photographs (1–4)</label>
    <input aria-label="Select garment images" type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={e=>onFiles(e.target.files)} className={input}/>
-   {files.length>0 && <div className="grid gap-2 sm:grid-cols-4">{files.map((f,i)=><div key={i} className="border border-gold/20 p-3 text-xs text-ivory/70">{f.name}</div>)}</div>}
+   {files.length>0 && <div className="grid gap-3 sm:grid-cols-4">{files.map((f,i)=><div key={i} className="border border-gold/20 p-2 text-xs text-ivory/70"><p className="truncate">{f.name}</p><select className={input} aria-label={`View for ${f.name}`} value={photoViews[i]||"front"} onChange={e=>setPhotoViews(v=>v.map((x,j)=>i===j?e.target.value as "front"|"back"|"side":x))}><option value="front">Front photo</option><option value="back">Back photo</option><option value="side">Side photo</option></select></div>)}</div>}
    <div className="flex flex-wrap gap-3"><button className={button} onClick={()=>{setDraft(RUBY_SAMPLE);setError("");setSaved(false)}} disabled={busy}>Load Ruby Sample Draft</button><button className={button} onClick={analyze} disabled={busy||!files.length}>{busy?"Working…":"Analyze Photos & Generate Draft"}</button></div>
   </section>
   {error && <p role="alert" className="border border-red-500/40 p-4 text-sm text-red-300">{error}</p>}
