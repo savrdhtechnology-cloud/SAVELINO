@@ -40,7 +40,8 @@ jobs:
         run: npm run typecheck 2>&1 | tee screenshots/typecheck.txt
 
       - name: Production build
-        run: npm run build 2>&1 | tee screenshots/build.txt
+        # Retries once: next/font downloads Google Fonts at build time and can hit transient network errors.
+        run: (npm run build || (sleep 15 && npm run build)) 2>&1 | tee screenshots/build.txt
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
