@@ -77,8 +77,8 @@ export function Segmented<T extends string>({ value, onChange, options, id }: { 
   );
 }
 
-export function Chips({ values, options, onChange, disabled }: { values: string[]; options: readonly string[] | { value: string; label: string }[]; onChange: (v: string[]) => void; disabled?: boolean }) {
-  const opts = (options as readonly (string | { value: string; label: string })[]).map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+export function Chips({ values, options, onChange, disabled }: { values: string[]; options: readonly (string | { readonly value: string; readonly label: string })[]; onChange: (v: string[]) => void; disabled?: boolean }) {
+  const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
   return (
     <div className="flex flex-wrap gap-1.5">
       {opts.map((o) => {

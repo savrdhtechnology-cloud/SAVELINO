@@ -9,7 +9,7 @@ import { DEFAULT_SPEC, PIECE_TYPES, STANDARD_SIZES, type DesignSpec, type Measur
 import { draftPieces, pieceSvg, type PieceGeometry } from "@/lib/atelier/drafting";
 import { rpc, useRows, write } from "@/lib/atelier/store";
 import { ALL_LAYERS, PatternPiece, type Layers } from "./PatternView";
-import { AppHeader, Empty, Notice, Section, Select, btnDanger, btnGhost, btnGold, btnLine, fmtDateTime, panel } from "./ui";
+import { AppHeader, Empty, Notice, Section, Select, btnDanger, btnGhost, btnGold, btnLine, fmtDateTime } from "./ui";
 import { Viewport } from "./Viewport";
 
 type Piece = Row & { design_id: string; design_version: number; size_chart_id: string; size: string; piece_type: string; version: number; status: string; geometry: PieceGeometry; approved_at?: string; created_at?: string };
