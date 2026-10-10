@@ -1,3 +1,5 @@
+import { BODY_FONTS, HEADING_FONTS, type BodyFont, type HeadingFont } from "./fonts";
+
 /**
  * Website + business settings edited from CRM → Settings and CRM → Studio.
  * Stored as one JSON row in `public.site_settings` (id = 1). Anything missing
@@ -34,13 +36,23 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   account: "Customer login",
 };
 
-export type ThemeMode = "dark" | "light";
+/** dark = Royal Noir · light = Ivory Atelier · porcelain = clean white workspace. */
+export type ThemeMode = "dark" | "light" | "porcelain";
+export const THEME_MODES: ThemeMode[] = ["dark", "light", "porcelain"];
+export const THEME_LABELS: Record<ThemeMode, string> = {
+  dark: "Royal Noir",
+  light: "Ivory Atelier",
+  porcelain: "Porcelain",
+};
+export const isThemeMode = (v: unknown): v is ThemeMode => v === "dark" || v === "light" || v === "porcelain";
 
 /** noir = background, ivory = text, gold = accent, burgundy = accent wash. */
 export type Palette = { gold: string; noir: string; ivory: string; burgundy: string };
 
 export const DARK_PALETTE: Palette = { gold: "#D4AF37", noir: "#0B0B0B", ivory: "#F8F5EB", burgundy: "#6B0F1A" };
-export const LIGHT_PALETTE: Palette = { gold: "#9A7724", noir: "#F7F2E7", ivory: "#1D1714", burgundy: "#EAD7D0" };
+export const LIGHT_PALETTE: Palette = { gold: "#8E6C1E", noir: "#F7F2E7", ivory: "#17120F", burgundy: "#EAD7D0" };
+export const PORCELAIN_PALETTE: Palette = { gold: "#8A6A1F", noir: "#F3F2EF", ivory: "#111111", burgundy: "#F3E6E2" };
+export const DEFAULT_PALETTES: Record<ThemeMode, Palette> = { dark: DARK_PALETTE, light: LIGHT_PALETTE, porcelain: PORCELAIN_PALETTE };
 
 export type SiteSettings = {
   brand: {
@@ -68,9 +80,11 @@ export type SiteSettings = {
     mode: ThemeMode;
     /** Show a light/dark switch in the website header. */
     allowToggle: boolean;
-    displayFont: "bodoni" | "cormorant";
+    displayFont: HeadingFont;
+    bodyFont: BodyFont;
     dark: Palette;
     light: Palette;
+    porcelain: Palette;
   };
   /** House defaults for the CRM (each admin may override in Settings → Appearance). */
   crm: {
@@ -78,6 +92,8 @@ export type SiteSettings = {
     accent: string;
     wallpaper: string;
     radius: "sharp" | "soft";
+    headingFont: HeadingFont;
+    bodyFont: BodyFont;
   };
   hero: {
     eyebrow: string;
@@ -113,8 +129,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     codEnabled: false,
     returnWindowDays: 0,
   },
-  theme: { mode: "dark", allowToggle: false, displayFont: "bodoni", dark: { ...DARK_PALETTE }, light: { ...LIGHT_PALETTE } },
-  crm: { mode: "dark", accent: "gold", wallpaper: "silk", radius: "sharp" },
+  theme: {
+    mode: "dark",
+    allowToggle: false,
+    displayFont: "bodoni",
+    bodyFont: "manrope",
+    dark: { ...DARK_PALETTE },
+    light: { ...LIGHT_PALETTE },
+    porcelain: { ...PORCELAIN_PALETTE },
+  },
+  crm: { mode: "dark", accent: "gold", wallpaper: "silk", radius: "sharp", headingFont: "bodoni", bodyFont: "manrope" },
   hero: {
     eyebrow: "Timeless women’s luxury",
     title: "A Legacy of Elegance",
@@ -154,8 +178,12 @@ export function mergeSettings(stored: unknown): SiteSettings {
   for (const group of ["brand", "commerce", "theme", "hero", "announcement", "crm"] as const) {
     mergeInto(out[group] as unknown as Record<string, unknown>, src[group]);
   }
-  if (out.theme.mode !== "light") out.theme.mode = "dark";
-  if (out.crm.mode !== "light") out.crm.mode = "dark";
+  if (!isThemeMode(out.theme.mode)) out.theme.mode = "dark";
+  if (!isThemeMode(out.crm.mode)) out.crm.mode = "dark";
+  if (!(out.theme.displayFont in HEADING_FONTS)) out.theme.displayFont = "bodoni";
+  if (!(out.theme.bodyFont in BODY_FONTS)) out.theme.bodyFont = "manrope";
+  if (!(out.crm.headingFont in HEADING_FONTS)) out.crm.headingFont = "bodoni";
+  if (!(out.crm.bodyFont in BODY_FONTS)) out.crm.bodyFont = "manrope";
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];
@@ -197,7 +225,10 @@ function paletteVars(p: Palette) {
  * CRM (which sets its own data-theme on its shell) keeps the house templates.
  */
 export function themeCss(theme: SiteSettings["theme"]) {
-  const rules = [`html[data-theme="dark"]{${paletteVars(theme.dark)}}`, `html[data-theme="light"]{${paletteVars(theme.light)}}`];
-  if (theme.displayFont === "cormorant") rules.push("html{--font-display:var(--font-cormorant),Garamond,serif}");
+  const rules = THEME_MODES.map((m) => `html[data-theme="${m}"]{${paletteVars(theme[m])}}`);
+  const fonts: string[] = [];
+  if (theme.displayFont !== "bodoni") fonts.push(`--font-display:${HEADING_FONTS[theme.displayFont].css}`);
+  if (theme.bodyFont !== "manrope") fonts.push(`--font-sans:${BODY_FONTS[theme.bodyFont].css}`);
+  if (fonts.length) rules.push(`html{${fonts.join(";")}}`);
   return rules.join("");
 }

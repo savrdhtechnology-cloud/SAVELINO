@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { SiteSettings } from "@/lib/settings";
+import type { SiteSettings, ThemeMode } from "@/lib/settings";
+import { BODY_FONTS, HEADING_FONTS, isBodyFont, isHeadingFont, type BodyFont, type HeadingFont } from "@/lib/fonts";
 
 /**
  * Per-admin CRM appearance, kept in this browser. "house" means: use the
  * defaults set for all admins in Settings → Appearance → House defaults.
  */
 export type CrmPrefs = {
-  mode: "house" | "dark" | "light" | "system";
+  mode: "house" | ThemeMode | "system";
   accent: "house" | AccentKey | "custom";
   customAccent: string;
   wallpaper: "house" | WallpaperKey;
   radius: "house" | "sharp" | "soft";
-  headingFont: "bodoni" | "cormorant" | "manrope";
+  headingFont: "house" | HeadingFont;
+  bodyFont: "house" | BodyFont;
   dockExpanded: boolean;
   density: "comfortable" | "compact";
   motion: "full" | "reduced";
@@ -28,7 +30,8 @@ export const DEFAULT_PREFS: CrmPrefs = {
   customAccent: "#D4AF37",
   wallpaper: "house",
   radius: "house",
-  headingFont: "bodoni",
+  headingFont: "house",
+  bodyFont: "house",
   dockExpanded: true,
   density: "comfortable",
   motion: "full",
@@ -55,18 +58,13 @@ export const WALLPAPERS: Record<WallpaperKey, { label: string; css: string }> = 
   plain: { label: "Plain", css: "none" },
 };
 
-export const HEADING_FONTS: Record<CrmPrefs["headingFont"], { label: string; css: string }> = {
-  bodoni: { label: "Bodoni", css: "var(--font-bodoni), Didot, serif" },
-  cormorant: { label: "Cormorant", css: "var(--font-cormorant), Garamond, serif" },
-  manrope: { label: "Manrope", css: "var(--font-manrope), system-ui, sans-serif" },
-};
-
 export type ResolvedTheme = {
-  mode: "dark" | "light";
+  mode: ThemeMode;
   accent: [string, string, string];
   wallpaper: string;
   radius: "sharp" | "soft";
   headingFont: string;
+  bodyFont: string;
 };
 
 const isAccent = (v: string): v is AccentKey => v in ACCENTS;
@@ -74,17 +72,18 @@ const isWallpaper = (v: string): v is WallpaperKey => v in WALLPAPERS;
 
 /** Combines house defaults, this admin's overrides and the OS colour scheme. */
 export function resolveTheme(prefs: CrmPrefs, house: SiteSettings["crm"], systemDark: boolean): ResolvedTheme {
-  const mode = prefs.mode === "house" ? house.mode : prefs.mode === "system" ? (systemDark ? "dark" : "light") : prefs.mode;
+  const mode: ThemeMode = prefs.mode === "house" ? house.mode : prefs.mode === "system" ? (systemDark ? "dark" : "porcelain") : prefs.mode;
+  const tone = mode === "dark" ? "dark" : "light";
   let accent: [string, string, string];
   if (prefs.accent === "custom" && /^#[0-9a-fA-F]{6}$/.test(prefs.customAccent)) {
     const c = prefs.customAccent;
     accent =
-      mode === "light"
+      tone === "light"
         ? [`color-mix(in srgb, ${c} 75%, black)`, c, `color-mix(in srgb, ${c} 50%, black)`]
         : [c, `color-mix(in srgb, ${c} 65%, white)`, `color-mix(in srgb, ${c} 70%, black)`];
   } else {
     const key = prefs.accent !== "house" && prefs.accent !== "custom" ? prefs.accent : isAccent(house.accent) ? house.accent : "gold";
-    accent = ACCENTS[key][mode];
+    accent = ACCENTS[key][tone];
   }
   const wp = prefs.wallpaper !== "house" ? prefs.wallpaper : isWallpaper(house.wallpaper) ? house.wallpaper : "silk";
   return {
@@ -92,7 +91,8 @@ export function resolveTheme(prefs: CrmPrefs, house: SiteSettings["crm"], system
     accent,
     wallpaper: WALLPAPERS[wp].css,
     radius: prefs.radius === "house" ? house.radius : prefs.radius,
-    headingFont: HEADING_FONTS[prefs.headingFont].css,
+    headingFont: HEADING_FONTS[prefs.headingFont !== "house" ? prefs.headingFont : isHeadingFont(house.headingFont) ? house.headingFont : "bodoni"].css,
+    bodyFont: BODY_FONTS[prefs.bodyFont !== "house" ? prefs.bodyFont : isBodyFont(house.bodyFont) ? house.bodyFont : "manrope"].css,
   };
 }
 

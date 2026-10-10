@@ -45,24 +45,64 @@
   color-scheme: light;
   --color-noir: #f7f2e7;
   --color-noir-soft: #efe7d6;
-  --color-gold: #9a7724;
-  --color-gold-light: #b8923a;
-  --color-gold-deep: #6f5414;
-  --color-ivory: #1d1714;
+  --color-gold: #8e6c1e;
+  --color-gold-light: #ad8a34;
+  --color-gold-deep: #64490f;
+  --color-ivory: #17120f;
   --color-burgundy: #ead7d0;
   --color-burgundy-deep: #f2e6df;
 }
 
+/* Porcelain — clean white workspace template (white cards, soft shadows, crisp ink). */
+[data-theme="porcelain"] {
+  color-scheme: light;
+  --color-noir: #f3f2ef;
+  --color-noir-soft: #ffffff;
+  --color-gold: #8a6a1f;
+  --color-gold-light: #a8842e;
+  --color-gold-deep: #5f4712;
+  --color-ivory: #111111;
+  --color-burgundy: #f3e6e2;
+  --color-burgundy-deep: #f8f1ee;
+}
+[data-theme="porcelain"]
+  :is(.bg-noir-soft, .bg-noir-soft\/40, .bg-noir-soft\/50, .bg-noir-soft\/60, .bg-noir-soft\/70, .bg-noir-soft\/80, .bg-noir-soft\/95) {
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.04), 0 10px 30px -14px rgba(17, 17, 17, 0.14);
+}
+[data-theme="porcelain"]
+  :is(.border-gold\/8, .border-gold\/10, .border-gold\/12, .border-gold\/15, .border-gold\/20, .border-gold\/25) {
+  border-color: rgba(17, 17, 17, 0.09);
+}
+[data-theme="porcelain"] :is(.backdrop-blur, .backdrop-blur-xl) {
+  backdrop-filter: none;
+}
+
+/* Light templates: lift faint text and hairlines so every label stays readable. */
+:is([data-theme="light"], [data-theme="porcelain"]) :is(.text-ivory\/25, .text-ivory\/30, .text-ivory\/35, .text-ivory\/40, .text-ivory\/45) {
+  color: color-mix(in srgb, var(--color-ivory) 62%, transparent);
+}
+:is([data-theme="light"], [data-theme="porcelain"]) :is(.text-ivory\/50, .text-ivory\/55, .text-ivory\/60, .text-ivory\/65) {
+  color: color-mix(in srgb, var(--color-ivory) 74%, transparent);
+}
+:is([data-theme="light"], [data-theme="porcelain"]) :is(.text-ivory\/70, .text-ivory\/75, .text-ivory\/80) {
+  color: color-mix(in srgb, var(--color-ivory) 86%, transparent);
+}
+:is([data-theme="light"]) :is(.border-gold\/8, .border-gold\/10, .border-gold\/12, .border-gold\/15) {
+  border-color: color-mix(in srgb, var(--color-gold) 28%, transparent);
+}
+:is([data-theme="light"], [data-theme="porcelain"]) :is(.text-gold\/70, .text-gold\/80) {
+  color: var(--color-gold);
+}
+
 /* Status colours keep their meaning but gain contrast on light surfaces. */
-[data-theme="light"] .text-emerald-200 { color: #0f6b4f; }
-[data-theme="light"] .text-red-200,
-[data-theme="light"] .text-red-100 { color: #9b1c1c; }
-[data-theme="light"] .text-red-300\/80 { color: #b42318; }
-[data-theme="light"] .text-sky-200 { color: #1d5f8a; }
-[data-theme="light"] .bg-red-950\/40,
-[data-theme="light"] .bg-red-950\/80 { background-color: #fbe9e7; }
-[data-theme="light"] .bg-emerald-300 { background-color: #12936b; }
-[data-theme="light"] .grain::after { opacity: 0.035; }
+:is([data-theme="light"], [data-theme="porcelain"]) .text-emerald-200 { color: #0f6b4f; }
+:is([data-theme="light"], [data-theme="porcelain"]) :is(.text-red-200, .text-red-100) { color: #9b1c1c; }
+:is([data-theme="light"], [data-theme="porcelain"]) .text-red-300\/80 { color: #b42318; }
+:is([data-theme="light"], [data-theme="porcelain"]) .text-sky-200 { color: #1d5f8a; }
+:is([data-theme="light"], [data-theme="porcelain"]) :is(.bg-red-950\/40, .bg-red-950\/80) { background-color: #fbe9e7; }
+:is([data-theme="light"], [data-theme="porcelain"]) .bg-emerald-300 { background-color: #12936b; }
+:is([data-theme="light"], [data-theme="porcelain"]) .grain::after { opacity: 0.03; }
 
 /* Optional rounded corners for the CRM. */
 [data-radius="soft"] :where(button, input, select, textarea, section, aside, kbd, li > a, .border) {

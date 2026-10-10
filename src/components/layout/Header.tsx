@@ -12,9 +12,11 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 export function Header({
   announcement,
   themeToggle = false,
+  lightMode = "porcelain",
 }: {
   announcement?: { text: string; href: string } | null;
   themeToggle?: boolean;
+  lightMode?: "light" | "porcelain";
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -68,7 +70,7 @@ export function Header({
           {primaryNav.slice(3).map((item) => (
             <NavLink key={item.href} {...item} />
           ))}
-          {themeToggle && <ThemeToggle />}
+          {themeToggle && <ThemeToggle lightMode={lightMode} />}
           <Link
             href="/login"
             className="border border-gold/50 px-5 py-2.5 text-[0.65rem] uppercase tracking-[0.3em] text-gold transition-colors duration-500 hover:bg-gold hover:text-noir"
@@ -141,7 +143,7 @@ export function Header({
             </div>
             {themeToggle && (
               <div className="mt-6 flex items-center gap-3 text-[0.65rem] uppercase tracking-[0.3em] text-ivory/60">
-                <ThemeToggle /> Light / dark
+                <ThemeToggle lightMode={lightMode} /> Light / dark
               </div>
             )}
           </motion.nav>
@@ -166,13 +168,15 @@ function NavLink({ label, href }: { label: string; href: string }) {
   );
 }
 
-function ThemeToggle() {
-  const [mode, setMode] = useState<"dark" | "light" | null>(null);
+function ThemeToggle({ lightMode }: { lightMode: "light" | "porcelain" }) {
+  const [mode, setMode] = useState<"dark" | "light" | "porcelain" | null>(null);
   useEffect(() => {
-    setMode(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
+    const t = document.documentElement.getAttribute("data-theme");
+    setMode(t === "light" || t === "porcelain" ? t : "dark");
   }, []);
+  const isLight = mode === "light" || mode === "porcelain";
   const toggle = () => {
-    const next = mode === "light" ? "dark" : "light";
+    const next = isLight ? "dark" : lightMode;
     document.documentElement.setAttribute("data-theme", next);
     try {
       localStorage.setItem("savlino-site-theme", next);
@@ -185,11 +189,11 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={mode === "light" ? "Switch to dark theme" : "Switch to light theme"}
+      aria-label={isLight ? "Switch to dark theme" : "Switch to light theme"}
       className="flex h-9 w-9 items-center justify-center border border-gold/30 text-gold transition-colors hover:bg-gold hover:text-noir"
     >
       <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 fill-none stroke-current stroke-[1.5]">
-        {mode === "light" ? (
+        {isLight ? (
           <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
         ) : (
           <path d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.7-5.7 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />

@@ -2,7 +2,9 @@
 
 import { LayoutGroup, motion } from "motion/react";
 import { useId, useState } from "react";
-import { ACCENTS, HEADING_FONTS, WALLPAPERS, usePrefs, type AccentKey, type CrmPrefs, type WallpaperKey } from "@/lib/admin/prefs";
+import { ACCENTS, WALLPAPERS, usePrefs, type AccentKey, type CrmPrefs, type WallpaperKey } from "@/lib/admin/prefs";
+import { BODY_FONTS, HEADING_FONTS, type BodyFont, type HeadingFont } from "@/lib/fonts";
+import { THEME_LABELS, THEME_MODES } from "@/lib/settings";
 import { useSiteSettings } from "@/lib/admin/site-settings-client";
 import type { SiteSettings } from "@/lib/settings";
 import { Card, ColorField, NumberField, SaveBar, TextField, Toggle } from "./fields";
@@ -90,17 +92,7 @@ export function SettingsApp({ live }: { live: boolean }) {
           {tab === "appearance" && (
             <>
               <Card title="My appearance" description="Only for you, in this browser. “House” follows the defaults for all admins.">
-                <Segmented
-                  label="Theme"
-                  value={prefs.mode}
-                  options={[
-                    ["house", "House"],
-                    ["dark", "Dark"],
-                    ["light", "Light"],
-                    ["system", "System"],
-                  ]}
-                  onChange={(v) => setPrefs({ mode: v as CrmPrefs["mode"] })}
-                />
+                <TemplatePicker value={prefs.mode} withHouse onChange={(v) => setPrefs({ mode: v as CrmPrefs["mode"] })} />
                 <div>
                   <p className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">Accent</p>
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -132,25 +124,27 @@ export function SettingsApp({ live }: { live: boolean }) {
                   ]}
                   onChange={(v) => setPrefs({ radius: v as CrmPrefs["radius"] })}
                 />
-                <Segmented
-                  label="Headings"
+                <FontPicker
+                  label="Heading font"
                   value={prefs.headingFont}
-                  options={(Object.keys(HEADING_FONTS) as CrmPrefs["headingFont"][]).map((k) => [k, HEADING_FONTS[k].label] as [string, string])}
+                  withHouse
+                  fonts={HEADING_FONTS}
                   onChange={(v) => setPrefs({ headingFont: v as CrmPrefs["headingFont"] })}
+                />
+                <FontPicker
+                  label="Body font"
+                  value={prefs.bodyFont}
+                  withHouse
+                  fonts={BODY_FONTS}
+                  onChange={(v) => setPrefs({ bodyFont: v as CrmPrefs["bodyFont"] })}
                 />
               </Card>
 
               <div className="space-y-5">
                 <Card title="House defaults" description="Applies to every admin who hasn’t chosen their own. Publish to save.">
-                  <Segmented
-                    label="CRM theme"
-                    value={settings.crm.mode}
-                    options={[
-                      ["dark", "Royal Noir · dark"],
-                      ["light", "Ivory Atelier · light"],
-                    ]}
-                    onChange={(v) => setCrm({ mode: v as SiteSettings["crm"]["mode"] })}
-                  />
+                  <TemplatePicker value={settings.crm.mode} onChange={(v) => setCrm({ mode: v as SiteSettings["crm"]["mode"] })} />
+                  <FontPicker label="Heading font" value={settings.crm.headingFont} fonts={HEADING_FONTS} onChange={(v) => setCrm({ headingFont: v as HeadingFont })} />
+                  <FontPicker label="Body font" value={settings.crm.bodyFont} fonts={BODY_FONTS} onChange={(v) => setCrm({ bodyFont: v as BodyFont })} />
                   <Segmented
                     label="Accent"
                     value={settings.crm.accent}
@@ -259,5 +253,92 @@ function Swatch({ active, onClick, label, colors }: { active: boolean; onClick: 
       <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` }} />
       {label}
     </button>
+  );
+}
+
+const TEMPLATE_PREVIEW: Record<string, { bg: string; card: string; ink: string; accent: string; note: string }> = {
+  dark: { bg: "#0b0b0b", card: "#161411", ink: "#f8f5eb", accent: "#d4af37", note: "Dark · gold on noir" },
+  light: { bg: "#f7f2e7", card: "#efe7d6", ink: "#17120f", accent: "#8e6c1e", note: "Light · warm ivory paper" },
+  porcelain: { bg: "#f3f2ef", card: "#ffffff", ink: "#111111", accent: "#8a6a1f", note: "Light · white cards, soft shadows" },
+};
+
+/** Visual template chooser (mini previews of each workspace). */
+export function TemplatePicker({ value, onChange, withHouse }: { value: string; onChange: (v: string) => void; withHouse?: boolean }) {
+  const options: string[] = [...(withHouse ? ["house"] : []), ...THEME_MODES, ...(withHouse ? ["system"] : [])];
+  return (
+    <div>
+      <p className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">Template</p>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {options.map((o) => {
+          const p = TEMPLATE_PREVIEW[o];
+          const label = o === "house" ? "House default" : o === "system" ? "Match device" : THEME_LABELS[o as keyof typeof THEME_LABELS];
+          return (
+            <motion.button
+              key={o}
+              type="button"
+              whileHover={{ y: -2 }}
+              onClick={() => onChange(o)}
+              className={`overflow-hidden border text-left transition-colors ${value === o ? "border-gold ring-1 ring-gold" : "border-gold/15 hover:border-gold/45"}`}
+            >
+              {p ? (
+                <span className="block p-2.5" style={{ background: p.bg }}>
+                  <span className="flex gap-1.5">
+                    <span className="h-12 w-4" style={{ background: p.card }} />
+                    <span className="flex-1 space-y-1.5 p-1.5" style={{ background: p.card, boxShadow: o === "porcelain" ? "0 4px 12px -6px rgba(0,0,0,.25)" : undefined }}>
+                      <span className="block h-1.5 w-10" style={{ background: p.accent }} />
+                      <span className="block h-1 w-14 opacity-70" style={{ background: p.ink }} />
+                      <span className="block h-1 w-9 opacity-40" style={{ background: p.ink }} />
+                    </span>
+                  </span>
+                </span>
+              ) : (
+                <span className="flex h-[68px] items-center justify-center bg-gradient-to-r from-[#0b0b0b] to-[#f3f2ef] text-[0.6rem] uppercase tracking-[0.2em] text-gold">
+                  {o === "house" ? "Shared" : "Auto"}
+                </span>
+              )}
+              <span className={`block px-2.5 py-2 text-xs ${value === o ? "text-gold" : "text-ivory/75"}`}>{label}</span>
+              {p && <span className="-mt-1.5 block px-2.5 pb-2 text-[0.6rem] text-ivory/45">{p.note}</span>}
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Typeface chooser with live samples. */
+export function FontPicker({
+  label,
+  value,
+  fonts,
+  onChange,
+  withHouse,
+}: {
+  label: string;
+  value: string;
+  fonts: Record<string, { label: string; css: string }>;
+  onChange: (v: string) => void;
+  withHouse?: boolean;
+}) {
+  const keys = [...(withHouse ? ["house"] : []), ...Object.keys(fonts)];
+  return (
+    <div>
+      <p className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">{label}</p>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {keys.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => onChange(k)}
+            className={`border px-2 py-2.5 text-left transition-colors ${value === k ? "border-gold bg-gold/10" : "border-gold/15 hover:border-gold/45"}`}
+          >
+            <span className="block truncate text-lg leading-tight text-ivory" style={{ fontFamily: k === "house" ? undefined : fonts[k].css }}>
+              {k === "house" ? "House" : "Aa Elegance"}
+            </span>
+            <span className={`mt-1 block truncate text-[0.6rem] ${value === k ? "text-gold" : "text-ivory/50"}`}>{k === "house" ? "Shared default" : fonts[k].label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
