@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { collections, getCollection } from "@/lib/collections";
+import { TRYON_DISCLAIMER, isTryOnCategory } from "@/lib/tryon/config";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -66,6 +67,16 @@ export default async function CollectionPage({ params }: Params) {
                 ))}
               </ul>
             </Reveal>
+            {isTryOnCategory(c.slug) && (
+              <Reveal delay={0.25} className="mt-10 flex flex-wrap items-center gap-5 border border-gold/40 bg-[linear-gradient(120deg,rgba(212,175,55,0.12),transparent_60%)] p-6">
+                <div className="min-w-[220px] flex-1">
+                  <p className="eyebrow">AI Virtual Try-On</p>
+                  <p className="mt-2 text-sm leading-relaxed text-ivory/70">Preview this piece on your own photo — front, sides and back.</p>
+                  <p className="mt-2 text-[0.68rem] text-ivory/45">{TRYON_DISCLAIMER}</p>
+                </div>
+                <Button href={`/virtual-try-on?product=${c.slug}`}>Try Virtually</Button>
+              </Reveal>
+            )}
             <Reveal delay={0.3} className="mt-10 border border-gold/20 bg-noir-soft p-6">
               <p className="eyebrow">Shopping opens soon</p>
               <p className="mt-3 text-sm leading-relaxed text-ivory/65">

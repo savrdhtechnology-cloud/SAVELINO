@@ -49,6 +49,12 @@ const routes = [
   "/admin/stitching",
   "/admin/leads",
   "/admin/expenses",
+  "/admin/virtual-try-ons",
+  "/virtual-try-on",
+  "/virtual-try-on?product=sarees",
+  "/try-on-terms",
+  "/image-consent",
+  "/account/try-ons",
   "/sitemap.xml",
   "/robots.txt",
 ];
@@ -147,7 +153,7 @@ for (const mode of ["light", "porcelain"]) {
   await page.evaluate(() => document.getElementById("custom-stitching")?.scrollIntoView());
   await sleep(2200);
   await shot(page, `${OUT}/${mode}-site-stitching.png`);
-  for (const r of ["/admin", "/admin/stitching", "/admin/settings"]) {
+  for (const r of ["/admin", "/admin/stitching", "/admin/settings", "/admin/virtual-try-ons"]) {
     await page.goto(BASE + r, { waitUntil: "networkidle" });
     await sleep(2200);
     await shot(page, `${OUT}/${mode}-crm${r.replace(/\//g, "_")}.png`);
@@ -162,9 +168,9 @@ for (const mode of ["light", "porcelain"]) {
   for (const r of routes) {
     const res = await page.goto(BASE + r, { waitUntil: "domcontentloaded" });
     report.routes.push({ route: r, status: res?.status() ?? 0 });
-    if (["/collections", "/our-story", "/size-guide", "/faq", "/contact", "/shipping-returns", "/collections/sarees", "/login", "/admin", "/admin/apps", "/admin/studio", "/admin/settings", "/admin/stitching", "/admin/leads"].includes(r)) {
+    if (["/collections", "/our-story", "/size-guide", "/faq", "/contact", "/shipping-returns", "/collections/sarees", "/login", "/admin", "/admin/apps", "/admin/studio", "/admin/settings", "/admin/stitching", "/admin/leads", "/admin/virtual-try-ons", "/virtual-try-on", "/virtual-try-on?product=sarees", "/try-on-terms", "/account/try-ons"].includes(r)) {
       await sleep(1200);
-      await shot(page, `${OUT}/route${r.replace(/\//g, "_")}.png`);
+      await shot(page, `${OUT}/route${r.replace(/[/?=]/g, "_")}.png`);
     }
   }
   await context.close();

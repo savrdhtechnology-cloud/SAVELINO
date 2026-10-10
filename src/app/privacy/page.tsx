@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { DRAFT_NOTE, Prose } from "@/components/layout/Prose";
 
@@ -35,6 +36,27 @@ export default function PrivacyPage() {
                 <li>To calculate partner commission on referred orders (partners never see customer contact details or addresses).</li>
                 <li>To reply to your questions.</li>
               </ul>
+            ),
+          },
+          {
+            heading: "Virtual Try-On photos",
+            body: (
+              <>
+                <p>
+                  If you use the AI Virtual Try-On Studio, the photos you upload are used only to generate your styling
+                  preview. They are resized in your browser, stored privately (never in a public folder) and can be seen
+                  only by you and authorised SAVLINO staff who support your order.
+                </p>
+                <ul>
+                  <li>We ask for your consent before every try-on and record the consent version you accepted.</li>
+                  <li>You can delete your try-on photos and previews at any time from the preview page.</li>
+                  <li>We never publish or share your photos without your permission.</li>
+                </ul>
+                <p>
+                  See the <Link href="/try-on-terms">Virtual Try-On terms</Link> and{" "}
+                  <Link href="/image-consent">image consent policy</Link>.
+                </p>
+              </>
             ),
           },
           {

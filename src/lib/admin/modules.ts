@@ -31,6 +31,7 @@ export const ICONS = {
   settings: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-2.2-1.3L14.4 3h-4l-.4 2.4a7.5 7.5 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 2.2 1.3l.4 2.4h4l.4-2.4a7.5 7.5 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.3Z",
   studio: "M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5L12 3Zm7 13 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z",
   apps: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
+  tryon: "M9 3 6 5 3 6l1.5 4H6v11h12V10h1.5L21 6l-3-1-3-2a3 3 0 0 1-6 0Z",
 } as const;
 
 export const adminModuleConfigs: ModuleConfig[] = [
@@ -595,7 +596,7 @@ export const navGroups: NavGroup[] = [
   { title: "Catalogue", items: ["products", "collections", "inventory", "materials", "suppliers"].map((s) => moduleNav(s)) },
   { title: "Partners", items: ["partners", "commissions"].map((s) => moduleNav(s)) },
   { title: "Finance", items: ["expenses"].map((s) => moduleNav(s)) },
-  { title: "Website", items: [{ slug: "studio", title: "Studio", icon: ICONS.studio }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
+  { title: "Website", items: [{ slug: "studio", title: "Studio", icon: ICONS.studio }, { slug: "virtual-try-ons", title: "Virtual Try-Ons", icon: ICONS.tryon }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
   { title: "System", items: [{ slug: "settings", title: "Settings", icon: ICONS.settings }] },
 ];
 
