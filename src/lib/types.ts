@@ -2,7 +2,7 @@
  * Domain types mirroring supabase/migrations/0001_init.sql.
  * Regenerate precise types with `supabase gen types typescript` once the project is provisioned.
  */
-export type UserRole = "customer" | "partner" | "admin";
+export type UserRole = "customer" | "partner" | "admin" | "worker";
 
 export type OrderStatus =
   | "pending_payment"

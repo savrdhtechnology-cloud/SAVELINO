@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
         const role = (profile as { role?: string } | null)?.role;
-        const destination = role === "admin" ? "/admin" : role === "partner" ? "/partner/dashboard" : "/account";
+        const destination = role === "admin" ? "/admin" : role === "partner" ? "/partner/dashboard" : role === "worker" ? "/worker" : "/account";
         const allowed = next === destination || next.startsWith(destination + "/");
         return NextResponse.redirect(`${origin}${allowed ? next : destination}`);
       }

@@ -76,8 +76,8 @@ export function AuthForm({ mode, audience, configured }: AuthFormProps) {
         setMessage("Your account role could not be verified. Please contact support.");
         return;
       }
-      const role = profile.role as "admin" | "partner" | "customer";
-      const destination = role === "admin" ? "/admin" : role === "partner" ? "/partner/dashboard" : "/account";
+      const role = profile.role as "admin" | "partner" | "customer" | "worker";
+      const destination = role === "admin" ? "/admin" : role === "partner" ? "/partner/dashboard" : role === "worker" ? "/worker" : "/account";
       const requested = safeNext(params.get("next"), destination);
       const validNext = requested === destination || requested.startsWith(destination + "/");
       router.replace(validNext ? requested : destination);

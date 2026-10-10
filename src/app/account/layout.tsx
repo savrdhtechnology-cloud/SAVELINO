@@ -18,6 +18,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     if (!session.user) redirect("/login?next=/account");
     if (session.role === "admin") redirect("/admin");
     if (session.role === "partner") redirect("/partner/dashboard");
+    if (session.role === "worker") redirect("/worker");
   }
 
   return (

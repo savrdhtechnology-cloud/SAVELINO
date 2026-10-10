@@ -54,6 +54,10 @@ jobs:
           npx --yes wait-on@8 -t 60000 http://localhost:2736
           BASE_URL=http://localhost:2736 npm run screenshots 2>&1 | tee screenshots/qa.txt
 
+      - name: Design & Production Studio browser tests (preview build)
+        if: always()
+        run: BASE_URL=http://localhost:2736 node scripts/atelier-e2e.mjs 2>&1 | tee screenshots/atelier-e2e.txt
+
       # Rebuilds against the real Supabase project (public URL + anon key only; all
       # access is enforced by RLS and ownership-checked functions) and runs the
       # Virtual Try-On flow as a guest with a synthetic mannequin image.
