@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["feat/**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    name: Lint, typecheck, build & responsive QA
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+
+      - name: Lint
+        run: mkdir -p screenshots && npm run lint 2>&1 | tee screenshots/lint.txt
+
+      - name: Typecheck
+        run: npm run typecheck 2>&1 | tee screenshots/typecheck.txt
+
+      - name: Production build
+        # Retries once: next/font downloads Google Fonts at build time and can hit transient network errors.
+        run: (npm run build || (sleep 15 && npm run build)) 2>&1 | tee screenshots/build.txt
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Responsive screenshots (desktop / tablet / mobile)
+        run: |
+          npm run start -- -p 2736 &
+          npx --yes wait-on@8 -t 60000 http://localhost:2736
+          BASE_URL=http://localhost:2736 npm run screenshots 2>&1 | tee screenshots/qa.txt
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          retention-days: 14
+
+      # Publishes QA output to a throwaway branch so it can be reviewed without
+      # downloading artifacts. Safe to delete at any time.
+      - name: Publish QA report branch
+        if: always() && github.event_name == 'push'
+        run: |
+          mkdir -p /tmp/qa && cp -r screenshots/. /tmp/qa/ && cp package-lock.json /tmp/qa/ 2>/dev/null || true
+          cd /tmp/qa
+          git init -q -b qa/ci-report
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "QA report for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" qa/ci-report
