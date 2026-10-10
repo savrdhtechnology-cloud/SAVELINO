@@ -6,12 +6,14 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { images } from "@/lib/collections";
+import lookCandlelight from "@/assets/images/look-candlelight.webp";
+import lookDurbar from "@/assets/images/look-durbar.webp";
 
 type Look = { img: StaticImageData; title: string; caption: string; href: string };
 
 const looks: Look[] = [
-  { img: images.heritage, title: "Candlelight", caption: "Noir saree, zardozi blouse", href: "/collections/sarees" },
-  { img: images.salwar, title: "Durbar", caption: "Burgundy anarkali", href: "/collections/salwar-suits" },
+  { img: lookCandlelight, title: "Candlelight", caption: "Noir sequin saree, velvet blouse", href: "/collections/sarees" },
+  { img: lookDurbar, title: "Durbar", caption: "Burgundy gota-patti sharara", href: "/collections/salwar-suits" },
   { img: images.sarees, title: "Gilded Hour", caption: "Tissue-gold saree", href: "/collections/sarees" },
   { img: images.blouses, title: "The Back Story", caption: "Embroidered designer blouse", href: "/collections/designer-blouses" },
   { img: images.lingerie, title: "Bordeaux", caption: "Lace lingerie set", href: "/collections/lingerie" },
