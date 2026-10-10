@@ -48,5 +48,7 @@ export type ModuleConfig = {
   createLabel?: string;
   actions?: Action[];
   canDelete?: boolean;
+  /** Optional board view grouped by a status-like column (drag cards between columns). */
+  kanban?: { key: string; columns: string[]; title: string; subtitle?: (row: Row) => string; amountKey?: string };
   demo: () => Row[];
 };

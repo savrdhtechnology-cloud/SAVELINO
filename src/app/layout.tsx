@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, Cormorant_Garamond, Manrope } from "next/font/google";
 import { site } from "@/lib/site";
+import { themeCss } from "@/lib/settings";
+import { getSiteSettings } from "@/lib/settings-server";
+import { StudioBridge } from "@/components/site/StudioBridge";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -68,10 +71,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const settings = await getSiteSettings();
+  const css = `${themeCss(settings.theme)}${settings.announcement.enabled && settings.announcement.text ? ":root{--announce-h:32px}" : ""}`;
   return (
     <html lang="en" className={`${bodoni.variable} ${cormorant.variable} ${manrope.variable}`}>
       <body>
+        {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
+        <StudioBridge />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-gold focus:px-4 focus:py-2 focus:text-noir"

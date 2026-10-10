@@ -26,7 +26,9 @@ function useCrmData(live: boolean) {
   const partners = useModuleRows(mod("partners"), live);
   const commissions = useModuleRows(mod("commissions"), live);
   const messages = useModuleRows(mod("messages"), live);
-  return { orders, payments, partners, commissions, messages };
+  const stitching = useModuleRows(mod("stitching"), live);
+  const leads = useModuleRows(mod("leads"), live);
+  return { orders, payments, partners, commissions, messages, stitching, leads };
 }
 
 function revenueSeries(orders: Row[], days: number, now: number): Point[] {
@@ -44,7 +46,7 @@ const card = "relative overflow-hidden border border-gold/15 bg-noir-soft/50 bac
 
 export function Dashboard({ live, variant = "dashboard" }: { live: boolean; variant?: "dashboard" | "analytics" }) {
   const reduce = useReducedMotion();
-  const { orders, payments, partners, commissions, messages } = useCrmData(live);
+  const { orders, payments, partners, commissions, messages, stitching, leads } = useCrmData(live);
   const now = live ? Date.now() : DEMO_REFERENCE_DATE;
 
   const stats = useMemo(() => {
@@ -236,6 +238,40 @@ export function Dashboard({ live, variant = "dashboard" }: { live: boolean; vari
           </div>
         </motion.section>
       </div>
+
+      {variant === "dashboard" && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <motion.section variants={item} className={`${card} p-6`}>
+            <div className="flex items-center justify-between">
+              <p className="text-[0.58rem] uppercase tracking-[0.28em] text-ivory/50">Atelier · stitching pipeline</p>
+              <Link href="/admin/stitching" className="text-[0.58rem] uppercase tracking-[0.28em] text-gold hover:text-gold-light">Open board →</Link>
+            </div>
+            <div className="mt-6">
+              <BarList
+                data={(mod("stitching").kanban?.columns ?? []).map((c) => ({
+                  label: c,
+                  value: stitching.rows.filter((r) => r.stage === c).length,
+                }))}
+              />
+            </div>
+          </motion.section>
+          <motion.section variants={item} className={`${card} p-6`}>
+            <div className="flex items-center justify-between">
+              <p className="text-[0.58rem] uppercase tracking-[0.28em] text-ivory/50">Sales pipeline · leads</p>
+              <Link href="/admin/leads" className="text-[0.58rem] uppercase tracking-[0.28em] text-gold hover:text-gold-light">Open board →</Link>
+            </div>
+            <div className="mt-6">
+              <BarList
+                format={(n) => formatINR(n)}
+                data={(mod("leads").kanban?.columns ?? []).map((c) => ({
+                  label: c,
+                  value: leads.rows.filter((r) => r.stage === c).reduce((s, r) => s + Number(r.value ?? 0), 0),
+                }))}
+              />
+            </div>
+          </motion.section>
+        </div>
+      )}
 
       {variant === "dashboard" && (
         <motion.section variants={item} className={`${card} p-6`}>

@@ -1,4 +1,7 @@
-import { Header } from "@/components/layout/Header";
+import { Fragment, type ReactNode } from "react";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { getSiteSettings } from "@/lib/settings-server";
+import type { SectionId } from "@/lib/settings";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/hero/Hero";
 import { DesignerBlouses } from "@/components/sections/DesignerBlouses";
@@ -15,7 +18,22 @@ import { CustomerEntry } from "@/components/sections/CustomerEntry";
 import { site } from "@/lib/site";
 import { collections } from "@/lib/collections";
 
-export default function Home() {
+const SECTIONS: Record<SectionId, ReactNode> = {
+  "designer-blouses": <DesignerBlouses />,
+  showcase: <ProductShowcase />,
+  signature: <SignatureGallery />,
+  "ready-made": <ReadyMade />,
+  "custom-stitching": <CustomStitching />,
+  heritage: <Heritage />,
+  craftsmanship: <Craftsmanship />,
+  lookbook: <Lookbook />,
+  collections: <Collections />,
+  partners: <PartnerProgram />,
+  account: <CustomerEntry />,
+};
+
+export default async function Home() {
+  const settings = await getSiteSettings();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ClothingStore",
@@ -37,20 +55,14 @@ export default function Home() {
 
   return (
     <>
-      <Header />
+      <SiteHeader />
       <main id="main">
-        <Hero />
-        <DesignerBlouses />
-        <ProductShowcase />
-        <SignatureGallery />
-        <ReadyMade />
-        <CustomStitching />
-        <Heritage />
-        <Craftsmanship />
-        <Lookbook />
-        <Collections />
-        <PartnerProgram />
-        <CustomerEntry />
+        <Hero content={settings.hero} />
+        {settings.sections
+          .filter((sec) => sec.visible)
+          .map((sec) => (
+            <Fragment key={sec.id}>{SECTIONS[sec.id]}</Fragment>
+          ))}
       </main>
       <Footer />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

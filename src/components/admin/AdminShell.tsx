@@ -2,26 +2,56 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Monogram } from "@/components/ui/Logo";
-import { navGroups } from "@/lib/admin/modules";
+import { ICONS, navGroups } from "@/lib/admin/modules";
+import { ACCENTS, WALLPAPERS, usePrefs } from "@/lib/admin/prefs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { CommandPalette } from "./CommandPalette";
 import { EASE, Icon, Toaster } from "./ui";
 
 type Props = { children: ReactNode; live: boolean; email: string | null };
 
+function useClock() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+
+const clockFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
+
 export function AdminShell({ children, live, email }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const reduce = useReducedMotion();
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [prefs, setPrefs] = usePrefs();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [palette, setPalette] = useState(false);
+  const now = useClock();
+  const expanded = prefs.dockExpanded;
 
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => setMobileOpen(false), [pathname]);
 
-  const allItems = useMemo(() => navGroups.flatMap((g) => g.items), []);
-  const matches = query ? allItems.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())) : [];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPalette((p) => !p);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const current = useMemo(() => {
+    const slug = pathname.replace(/^\/admin\/?/, "").split("/")[0] ?? "";
+    for (const g of navGroups) for (const i of g.items) if (i.slug === slug) return i;
+    return navGroups[0].items[0];
+  }, [pathname]);
 
   const isActive = (slug: string) => (slug === "" ? pathname === "/admin" : pathname.startsWith(`/admin/${slug}`));
 
@@ -31,205 +61,211 @@ export function AdminShell({ children, live, email }: Props) {
     router.refresh();
   }
 
-  const sidebar = (
-    <LayoutGroup id="admin-nav">
-      <nav aria-label="CRM" className="space-y-7">
-        {navGroups.map((group, gi) => (
-          <motion.div
-            key={group.title}
-            initial={reduce ? false : { opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 + gi * 0.07, duration: 0.6, ease: EASE }}
-          >
-            <p className="px-3 text-[0.56rem] uppercase tracking-[0.35em] text-ivory/35">{group.title}</p>
-            <ul className="mt-2 space-y-0.5">
+  const accent = ACCENTS[prefs.accent];
+  const shellStyle = {
+    "--color-gold": accent.base,
+    "--color-gold-light": accent.light,
+    "--color-gold-deep": accent.deep,
+  } as CSSProperties;
+
+  const dock = (wide: boolean) => (
+    <LayoutGroup id="os-dock">
+      <nav aria-label="CRM apps" className="space-y-5">
+        {navGroups.map((group) => (
+          <div key={group.title}>
+            {wide ? (
+              <p className="px-3 pb-1.5 text-[0.55rem] uppercase tracking-[0.35em] text-ivory/30">{group.title}</p>
+            ) : (
+              <span aria-hidden className="mx-auto mb-2 block h-px w-6 bg-gold/15" />
+            )}
+            <ul className={`space-y-0.5 ${prefs.density === "compact" ? "" : "space-y-1"}`}>
               {group.items.map((item) => {
                 const active = isActive(item.slug);
                 return (
-                  <li key={item.slug || "dashboard"}>
+                  <li key={item.slug || "dashboard"} className="group/item relative">
                     <Link
                       href={item.slug ? `/admin/${item.slug}` : "/admin"}
-                      className={`group relative flex items-center gap-3 px-3 py-2.5 text-[0.78rem] tracking-[0.04em] transition-colors duration-300 ${
-                        active ? "text-noir" : "text-ivory/70 hover:text-gold"
-                      }`}
+                      aria-label={item.title}
+                      className={`relative flex items-center gap-3 ${wide ? "px-3" : "justify-center"} ${
+                        prefs.density === "compact" ? "py-2" : "py-2.5"
+                      } text-[0.78rem] transition-colors duration-300 ${active ? "text-noir" : "text-ivory/60 hover:text-gold"}`}
                     >
                       {active && (
                         <motion.span
-                          layoutId="admin-nav-pill"
-                          className="absolute inset-0 bg-gradient-to-r from-gold to-gold-light shadow-[0_8px_30px_-8px_rgba(212,175,55,0.6)]"
-                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                          layoutId="os-dock-active"
+                          className="absolute inset-0 bg-gradient-to-r from-gold to-gold-light shadow-[0_8px_28px_-8px_var(--color-gold)]"
+                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
                         />
                       )}
-                      <span className="relative transition-transform duration-300 group-hover:scale-110">
+                      <span className="relative transition-transform duration-300 group-hover/item:scale-110">
                         <Icon d={item.icon} />
                       </span>
-                      <span className="relative">{item.title}</span>
+                      {wide && <span className="relative truncate">{item.title}</span>}
                     </Link>
+                    {!wide && (
+                      <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap border border-gold/30 bg-noir px-2.5 py-1 text-[0.65rem] text-ivory opacity-0 shadow-xl transition-opacity group-hover/item:opacity-100">
+                        {item.title}
+                      </span>
+                    )}
                   </li>
                 );
               })}
             </ul>
-          </motion.div>
+          </div>
         ))}
       </nav>
     </LayoutGroup>
   );
 
   return (
-    <div className="min-h-screen bg-noir text-ivory">
-      <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.08),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(107,15,26,0.18),transparent_60%)]" />
+    <MotionConfig reducedMotion={prefs.motion === "reduced" ? "always" : "user"}>
+      <div style={shellStyle} className="min-h-screen bg-noir text-ivory">
+        <div aria-hidden className="pointer-events-none fixed inset-0" style={{ backgroundImage: WALLPAPERS[prefs.wallpaper].css }} />
 
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-gold/12 bg-noir/95 lg:flex">
-        <Brand />
-        <div className="flex-1 overflow-y-auto px-4 pb-8">{sidebar}</div>
-        <SidebarFooter live={live} email={email} onSignOut={signOut} />
-      </aside>
-
-      {/* Mobile drawer */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              className="fixed inset-0 z-40 bg-noir/70 backdrop-blur-sm lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
-            />
-            <motion.aside
-              className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-gold/20 bg-noir lg:hidden"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 280, damping: 32 }}
-            >
-              <Brand />
-              <div className="flex-1 overflow-y-auto px-4 pb-8">{sidebar}</div>
-              <SidebarFooter live={live} email={email} onSignOut={signOut} />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      <div className="relative lg:pl-64">
+        {/* OS menu bar */}
         <motion.header
-          initial={reduce ? false : { y: -20, opacity: 0 }}
+          initial={{ y: -24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-gold/12 bg-noir/80 px-4 backdrop-blur-xl md:px-8"
+          transition={{ duration: 0.6, ease: EASE }}
+          className="fixed inset-x-0 top-0 z-40 flex h-12 items-center gap-3 border-b border-gold/12 bg-noir/75 px-3 backdrop-blur-xl md:px-4"
         >
           <button
             type="button"
-            onClick={() => setOpen(true)}
-            aria-label="Open menu"
-            className="flex h-10 w-10 items-center justify-center border border-gold/25 text-gold lg:hidden"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open apps"
+            className="flex h-8 w-8 items-center justify-center text-gold lg:hidden"
           >
-            <Icon d="M4 7h16M4 12h16M4 17h10" />
+            <Icon d={ICONS.apps} className="h-4 w-4" />
+          </button>
+          <Link href="/admin" className="flex items-center gap-2">
+            <motion.span animate={{ rotateY: [0, 360] }} transition={{ duration: 14, repeat: Infinity, ease: "linear" }} className="inline-block">
+              <Monogram size={26} />
+            </motion.span>
+            <span className="hidden font-display text-sm tracking-[0.25em] text-gold sm:inline">SAVLINO</span>
+            <span className="hidden text-[0.55rem] uppercase tracking-[0.35em] text-ivory/40 sm:inline">OS</span>
+          </Link>
+          <span aria-hidden className="hidden h-4 w-px bg-gold/20 md:block" />
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={current.slug}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="hidden items-center gap-2 text-xs text-ivory/80 md:flex"
+            >
+              <Icon d={current.icon} className="h-3.5 w-3.5 text-gold" />
+              {current.title}
+            </motion.span>
+          </AnimatePresence>
+
+          <button
+            type="button"
+            onClick={() => setPalette(true)}
+            className="mx-auto flex h-8 w-full max-w-xs items-center gap-2 border border-gold/15 bg-noir-soft/60 px-3 text-xs text-ivory/40 transition-colors hover:border-gold/45 hover:text-ivory/70"
+          >
+            <Icon d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35" className="h-3.5 w-3.5" />
+            Search or run…
+            <kbd className="ml-auto hidden border border-gold/25 px-1 text-[0.55rem] sm:inline">⌘K</kbd>
           </button>
 
-          <div className="relative w-full max-w-sm">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ivory/40">
-              <Icon d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35" className="h-4 w-4" />
-            </span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Jump to…  orders, partners, payments"
-              aria-label="Jump to a CRM section"
-              className="h-10 w-full border border-gold/15 bg-noir-soft/60 pl-9 pr-3 text-sm text-ivory placeholder:text-ivory/30 outline-none transition-colors focus:border-gold/60"
-            />
-            <AnimatePresence>
-              {matches.length > 0 && (
-                <motion.ul
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="absolute inset-x-0 top-12 border border-gold/25 bg-noir-soft py-1 shadow-2xl"
-                >
-                  {matches.map((m) => (
-                    <li key={m.slug || "dashboard"}>
-                      <Link
-                        href={m.slug ? `/admin/${m.slug}` : "/admin"}
-                        onClick={() => setQuery("")}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-ivory/80 hover:bg-gold/10 hover:text-gold"
-                      >
-                        <Icon d={m.icon} className="h-4 w-4" />
-                        {m.title}
-                      </Link>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="ml-auto flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {!live && (
-              <motion.span
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="hidden items-center gap-2 border border-gold/40 bg-gold/10 px-3 py-1.5 text-[0.6rem] uppercase tracking-[0.25em] text-gold sm:inline-flex"
-                title="Supabase is not connected. Figures are sample data for preview only."
+              <span
+                className="hidden items-center gap-1.5 border border-gold/40 bg-gold/10 px-2 py-1 text-[0.55rem] uppercase tracking-[0.25em] text-gold sm:inline-flex"
+                title="Supabase not connected — figures are sample data"
               >
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold" />
                 </span>
-                Demo data
-              </motion.span>
+                Demo
+              </span>
             )}
+            <Link href="/admin/studio" className="hidden text-ivory/55 hover:text-gold md:block" aria-label="Studio" title="Studio">
+              <Icon d={ICONS.studio} className="h-4 w-4" />
+            </Link>
+            <Link href="/admin/settings" className="hidden text-ivory/55 hover:text-gold md:block" aria-label="Settings" title="Settings">
+              <Icon d={ICONS.settings} className="h-4 w-4" />
+            </Link>
+            <span className="hidden min-w-[9.5rem] text-right text-[0.7rem] tabular-nums text-ivory/55 xl:block">{now ? clockFmt.format(now) : ""}</span>
             <Link
               href="/"
-              className="border border-gold/25 px-3 py-1.5 text-[0.6rem] uppercase tracking-[0.25em] text-ivory/70 transition-colors hover:border-gold hover:text-gold"
+              className="border border-gold/25 px-2.5 py-1 text-[0.55rem] uppercase tracking-[0.25em] text-ivory/70 transition-colors hover:border-gold hover:text-gold"
             >
-              View site
+              Site
             </Link>
           </div>
         </motion.header>
 
-        <main id="main" className="relative px-4 py-8 md:px-8 md:py-10">
-          {children}
-        </main>
+        {/* Dock */}
+        <motion.aside
+          animate={{ width: expanded ? 232 : 68 }}
+          transition={{ type: "spring", stiffness: 300, damping: 34 }}
+          className="fixed bottom-0 left-0 top-12 z-30 hidden flex-col border-r border-gold/12 bg-noir/85 backdrop-blur-xl lg:flex"
+        >
+          <div className="no-scrollbar flex-1 overflow-y-auto overflow-x-visible px-2.5 py-4">{dock(expanded)}</div>
+          <div className="border-t border-gold/12 p-2.5">
+            {expanded && (
+              <div className="mb-2 px-2">
+                {live ? (
+                  <>
+                    <p className="truncate text-[0.7rem] text-ivory/55">{email ?? "Administrator"}</p>
+                    <button type="button" onClick={signOut} className="mt-1 text-[0.55rem] uppercase tracking-[0.3em] text-gold hover:text-gold-light">
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-[0.62rem] leading-relaxed text-ivory/40">Preview mode — connect Supabase for live data.</p>
+                )}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setPrefs({ dockExpanded: !expanded })}
+              aria-label={expanded ? "Collapse dock" : "Expand dock"}
+              className="flex h-9 w-full items-center justify-center border border-gold/15 text-gold/80 transition-colors hover:border-gold/45 hover:text-gold"
+            >
+              <motion.span animate={{ rotate: expanded ? 180 : 0 }}>
+                <Icon d="M9 6l6 6-6 6" className="h-4 w-4" />
+              </motion.span>
+            </button>
+          </div>
+        </motion.aside>
+
+        {/* Mobile dock */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              <motion.div
+                className="fixed inset-0 z-40 bg-noir/70 backdrop-blur-sm lg:hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileOpen(false)}
+              />
+              <motion.aside
+                className="fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto border-r border-gold/20 bg-noir px-3 py-5 lg:hidden"
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", stiffness: 280, damping: 32 }}
+              >
+                {dock(true)}
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
+        <div className={`relative pt-12 transition-[padding] duration-500 ${expanded ? "lg:pl-[232px]" : "lg:pl-[68px]"}`}>
+          <main id="main" className={`relative ${prefs.density === "compact" ? "px-4 py-6 md:px-6" : "px-4 py-8 md:px-8 md:py-10"}`}>
+            {children}
+          </main>
+        </div>
+
+        <CommandPalette open={palette} onClose={() => setPalette(false)} />
+        <Toaster />
       </div>
-      <Toaster />
-    </div>
-  );
-}
-
-function Brand() {
-  return (
-    <Link href="/admin" className="flex items-center gap-3 px-6 py-6">
-      <motion.span
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-        className="inline-block [transform-style:preserve-3d]"
-      >
-        <Monogram size={40} />
-      </motion.span>
-      <span>
-        <span className="block font-display text-lg tracking-[0.2em] text-gold">SAVLINO</span>
-        <span className="block text-[0.55rem] uppercase tracking-[0.4em] text-ivory/45">CRM</span>
-      </span>
-    </Link>
-  );
-}
-
-function SidebarFooter({ live, email, onSignOut }: { live: boolean; email: string | null; onSignOut: () => void }) {
-  return (
-    <div className="border-t border-gold/12 px-6 py-5">
-      {live ? (
-        <>
-          <p className="truncate text-xs text-ivory/60">{email ?? "Administrator"}</p>
-          <button type="button" onClick={onSignOut} className="mt-2 text-[0.6rem] uppercase tracking-[0.3em] text-gold hover:text-gold-light">
-            Sign out
-          </button>
-        </>
-      ) : (
-        <p className="text-[0.65rem] leading-relaxed text-ivory/45">
-          Preview mode. Connect Supabase to manage real orders, partners and payments.
-        </p>
-      )}
-    </div>
+    </MotionConfig>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { isBackendConfigured } from "@/lib/supabase/env";
+import { getSiteSettings } from "@/lib/settings-server";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -17,8 +18,15 @@ const quick = [
   { t: "FAQ", d: "Quick answers to common questions.", href: "/faq" },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage() {
   const configured = isBackendConfigured();
+  const { brand } = await getSiteSettings();
+  const details = [
+    brand.contactEmail && { label: "Email", value: brand.contactEmail, href: `mailto:${brand.contactEmail}` },
+    brand.phone && { label: "Phone", value: brand.phone, href: `tel:${brand.phone.replace(/\s/g, "")}` },
+    brand.whatsapp && { label: "WhatsApp", value: brand.whatsapp, href: `https://wa.me/${brand.whatsapp.replace(/\D/g, "")}` },
+    brand.address && { label: "Studio", value: brand.address, href: "" },
+  ].filter(Boolean) as { label: string; value: string; href: string }[];
   return (
     <PageShell>
       <PageIntro eyebrow="Contact" title="We would love to hear from you" intro="Questions about a piece, a fit or a collaboration — write to us." />
@@ -32,6 +40,27 @@ export default function ContactPage() {
           <ContactForm configured={configured} />
         </div>
         <ul className="space-y-4">
+          {details.length > 0 && (
+            <li className="border border-gold/30 bg-noir-soft p-6">
+              <p className="eyebrow">Reach us</p>
+              <dl className="mt-4 space-y-3">
+                {details.map((d) => (
+                  <div key={d.label}>
+                    <dt className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/45">{d.label}</dt>
+                    <dd className="mt-1 text-ivory">
+                      {d.href ? (
+                        <a href={d.href} className="hover:text-gold">
+                          {d.value}
+                        </a>
+                      ) : (
+                        d.value
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          )}
           {quick.map((q) => (
             <li key={q.t}>
               <Link href={q.href} className="group block border border-gold/15 p-6 transition-colors hover:border-gold/50">

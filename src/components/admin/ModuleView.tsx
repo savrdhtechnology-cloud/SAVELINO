@@ -1,11 +1,12 @@
 "use client";
 
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getModule } from "@/lib/admin/modules";
 import { useModuleRows } from "@/lib/admin/store";
 import type { Action, Column, Field, ModuleConfig, Row } from "@/lib/admin/types";
 import { Drawer, EASE, FormattedCell, Icon, cellValue } from "./ui";
+import { KanbanBoard } from "./KanbanBoard";
 
 const PAGE = 20;
 
@@ -25,6 +26,12 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
   const [limit, setLimit] = useState(PAGE);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [view, setView] = useState<"board" | "table">(cfg.kanban ? "board" : "table");
+
+  // Command palette quick actions open the create form via ?new=1
+  useEffect(() => {
+    if (cfg.form && new URLSearchParams(window.location.search).get("new") === "1") setCreating(true);
+  }, [cfg.form]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: rows.length };
@@ -56,6 +63,13 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
   }, [rows, status, query, sort, cfg]);
 
   const selected = rows.find((r) => r.id === selectedId) ?? null;
+  const kb = cfg.kanban;
+  const moveActions: Action[] =
+    selected && kb
+      ? kb.columns
+          .filter((c) => c !== String(selected[kb.key]))
+          .map((c) => ({ label: `→ ${c.replace(/_/g, " ")}`, patch: { [kb.key]: c } }))
+      : [];
 
   return (
     <div>
@@ -70,6 +84,24 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
           <h1 className="mt-2 font-display text-4xl text-ivory md:text-5xl">{cfg.title}</h1>
           <p className="mt-2 font-serif text-lg text-ivory/60">{cfg.description}</p>
         </div>
+        <div className="flex items-center gap-3 self-start md:self-auto">
+        {cfg.kanban && (
+          <LayoutGroup id={`view-${slug}`}>
+            <div className="flex border border-gold/20 p-0.5">
+              {(["board", "table"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={`relative px-3.5 py-2 text-[0.6rem] uppercase tracking-[0.22em] ${view === v ? "text-noir" : "text-ivory/55 hover:text-gold"}`}
+                >
+                  {view === v && <motion.span layoutId="view-pill" className="absolute inset-0 bg-gold" transition={{ type: "spring", stiffness: 400, damping: 32 }} />}
+                  <span className="relative">{v}</span>
+                </button>
+              ))}
+            </div>
+          </LayoutGroup>
+        )}
         {cfg.form && (
           <motion.button
             type="button"
@@ -81,6 +113,7 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
             <span className="text-base leading-none">+</span> {cfg.createLabel ?? "Add"}
           </motion.button>
         )}
+        </div>
       </motion.header>
 
       <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -124,6 +157,20 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
         </div>
       </div>
 
+      {cfg.kanban && view === "board" ? (
+        <div className="mt-5">
+          {error && <p className="mb-3 border border-red-300/30 bg-red-950/40 px-5 py-3 text-sm text-red-200">Could not load: {error}</p>}
+          <KanbanBoard
+            cfg={{ ...cfg, kanban: cfg.kanban }}
+            rows={visible}
+            onOpen={setSelectedId}
+            onMove={(id, col) => {
+              const row = rows.find((r) => r.id === id);
+              if (row && cfg.kanban && String(row[cfg.kanban.key]) !== col) void update(id, { [cfg.kanban.key]: col });
+            }}
+          />
+        </div>
+      ) : (
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -198,7 +245,9 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
         )}
       </motion.div>
 
-      {visible.length > limit && (
+      )}
+
+      {view === "table" && visible.length > limit && (
         <div className="mt-6 text-center">
           <button
             type="button"
@@ -214,7 +263,10 @@ function ModuleTable({ cfg, live }: { cfg: ModuleConfig; live: boolean }) {
         {selected && (
           <RecordDetail
             row={selected}
-            actions={(cfg.actions ?? []).filter((a) => !a.when || a.when(selected))}
+            actions={[
+              ...(cfg.actions ?? []).filter((a) => !a.when || a.when(selected)),
+              ...moveActions,
+            ]}
             columns={cfg.columns}
             onAction={(a) => update(selected.id, a.patch)}
             onDelete={

@@ -12,6 +12,8 @@ type SplitHeadlineProps = {
   stagger?: number;
   /** Classes applied to every word (use for background-clip effects such as gold foil). */
   wordClassName?: string;
+  /** Marks the element for live editing from CRM → Studio. */
+  studioKey?: string;
 };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -28,6 +30,7 @@ export function SplitHeadline({
   trigger = "view",
   stagger = 0.08,
   wordClassName,
+  studioKey,
 }: SplitHeadlineProps) {
   const reduce = useReducedMotion();
   const Tag = as;
@@ -39,7 +42,7 @@ export function SplitHeadline({
       : { whileInView: "show" as const, viewport: { once: true, margin: "0px 0px -10% 0px" } };
 
   return (
-    <Tag className={className} aria-label={text}>
+    <Tag className={className} aria-label={text} data-studio={studioKey}>
       <motion.span
         aria-hidden
         className="inline"

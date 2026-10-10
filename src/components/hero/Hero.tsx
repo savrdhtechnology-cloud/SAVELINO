@@ -6,6 +6,7 @@ import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { Monogram } from "@/components/ui/Logo";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { Button } from "@/components/ui/Button";
+import { DEFAULT_SETTINGS, type SiteSettings } from "@/lib/settings";
 
 const MonogramScene = dynamic(() => import("@/components/three/MonogramScene"), { ssr: false });
 
@@ -33,7 +34,7 @@ function supportsWebGL() {
   }
 }
 
-export function Hero() {
+export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettings["hero"] }) {
   const reduce = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const [mode, setMode] = useState<"pending" | "3d" | "static">("pending");
@@ -116,15 +117,17 @@ export function Hero() {
           animate={{ opacity: 1, letterSpacing: "0.42em" }}
           transition={{ duration: 2, delay: 0.5, ease: EASE }}
           className="eyebrow"
+          data-studio="hero-eyebrow"
         >
-          Timeless women’s luxury
+          {content.eyebrow}
         </motion.p>
         <SplitHeadline
           as="h1"
           trigger="mount"
           delay={0.7}
           stagger={0.12}
-          text="A Legacy of Elegance"
+          text={content.title}
+          studioKey="hero-title"
           wordClassName="text-gold-foil is-shimmer"
           className="mx-auto mt-4 max-w-4xl font-display text-[clamp(2.4rem,7vw,5.6rem)] italic leading-[1] tracking-[-0.01em]"
         />
@@ -133,8 +136,9 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, delay: 1.4, ease: EASE }}
           className="mx-auto mt-4 max-w-xl font-serif text-lg text-ivory/75 md:text-xl"
+          data-studio="hero-subtitle"
         >
-          Designer blouses, heirloom sarees and intimate essentials — tradition in style, always.
+          {content.subtitle}
         </motion.p>
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 12 }}
@@ -142,10 +146,12 @@ export function Hero() {
           transition={{ duration: 1.2, delay: 1.7, ease: EASE }}
           className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-5"
         >
-          <Button href="/#collections">Explore collections</Button>
-          <Button href="/#custom-stitching" variant="outline">
-            Custom stitching
-          </Button>
+          <Button href={content.primaryHref || "/collections"}>{content.primaryLabel}</Button>
+          {content.secondaryLabel && (
+            <Button href={content.secondaryHref || "/custom-stitching"} variant="outline">
+              {content.secondaryLabel}
+            </Button>
+          )}
         </motion.div>
       </motion.div>
 

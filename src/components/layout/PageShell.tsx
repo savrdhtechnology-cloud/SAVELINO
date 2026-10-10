@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import { Header } from "./Header";
+import { SiteHeader } from "./SiteHeader";
 import { Footer } from "./Footer";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
     <>
-      <Header />
-      <main id="main" className="min-h-[70vh] pt-[var(--header-h)]">
+      <SiteHeader />
+      <main id="main" className="min-h-[70vh] pt-[calc(var(--header-h)+var(--announce-h,0px))]">
         {children}
       </main>
       <Footer />
