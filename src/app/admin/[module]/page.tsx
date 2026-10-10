@@ -1,18 +1,28 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SectionPage } from "@/components/portal/SectionPage";
-import { adminModules } from "@/lib/portals";
+import { Dashboard } from "@/components/admin/Dashboard";
+import { ModuleView } from "@/components/admin/ModuleView";
+import { Launchpad } from "@/components/admin/Launchpad";
+import { SettingsApp } from "@/components/admin/SettingsApp";
+import { StudioApp } from "@/components/admin/StudioApp";
+import { getModule } from "@/lib/admin/modules";
+import { isBackendConfigured } from "@/lib/supabase/env";
 
 type Params = { params: Promise<{ module: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { module: slug } = await params;
-  return { title: adminModules.find((m) => m.slug === slug)?.title ?? "Admin" };
+  const special: Record<string, string> = { analytics: "Analytics", apps: "All apps", settings: "Settings", studio: "Studio" };
+  return { title: special[slug] ?? getModule(slug)?.title ?? "CRM" };
 }
 
 export default async function AdminModulePage({ params }: Params) {
   const { module: slug } = await params;
-  const section = adminModules.find((m) => m.slug === slug);
-  if (!section) notFound();
-  return <SectionPage section={section} loginPath={`/login?next=/admin/${slug}`} />;
+  const live = isBackendConfigured();
+  if (slug === "analytics") return <Dashboard live={live} variant="analytics" />;
+  if (slug === "apps") return <Launchpad />;
+  if (slug === "settings") return <SettingsApp live={live} />;
+  if (slug === "studio") return <StudioApp live={live} />;
+  if (!getModule(slug)) notFound();
+  return <ModuleView slug={slug} live={live} />;
 }

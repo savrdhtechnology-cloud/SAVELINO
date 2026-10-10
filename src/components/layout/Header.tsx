@@ -5,10 +5,11 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { primaryNav } from "@/lib/site";
+import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export function Header() {
+export function Header({ announcement }: { announcement?: { text: string; href: string } | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
@@ -41,6 +42,7 @@ export function Header() {
           : "border-b border-transparent bg-gradient-to-b from-noir/70 to-transparent"
       }`}
     >
+      {announcement && <AnnouncementBar text={announcement.text} href={announcement.href} />}
       <div className="mx-auto flex h-[var(--header-h)] max-w-[1440px] items-center justify-between px-5 md:px-10">
         <nav aria-label="Primary" className="hidden flex-1 items-center gap-8 lg:flex">
           {primaryNav.slice(0, 3).map((item) => (

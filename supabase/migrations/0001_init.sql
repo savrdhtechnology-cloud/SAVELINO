@@ -219,6 +219,9 @@ create view public.partner_referred_orders_view as
   join public.partners p on p.id = o.partner_id
   where p.user_id = auth.uid() and p.status = 'approved';
 
+revoke all on public.partner_referred_orders_view from anon;
+grant select on public.partner_referred_orders_view to authenticated;
+
 create view public.inventory_view with (security_invoker = true) as
   select v.id, v.sku, v.size, p.name as product_name, coalesce(i.quantity, 0) as quantity
   from public.product_variants v
@@ -332,7 +335,8 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.role is distinct from old.role and not public.is_admin() then
+  -- auth.uid() is null for the SQL editor / service role, which may promote the first admin.
+  if new.role is distinct from old.role and auth.uid() is not null and not public.is_admin() then
     raise exception 'Only administrators can change roles';
   end if;
   new.updated_at := now();

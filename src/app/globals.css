@@ -13,7 +13,8 @@
   --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@theme inline {
+/* Not inline: utilities reference these variables, so CRM → Studio can switch typefaces. */
+@theme {
   --font-display: var(--font-bodoni), "Bodoni Moda", Didot, "Times New Roman", serif;
   --font-serif: var(--font-cormorant), "Cormorant Garamond", Garamond, Georgia, serif;
   --font-sans: var(--font-manrope), Manrope, ui-sans-serif, system-ui, sans-serif;
