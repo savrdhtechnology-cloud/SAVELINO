@@ -12,6 +12,7 @@ const extraDescriptions: Record<string, string> = {
   studio: "Design the website: theme, hero, sections.",
   settings: "Business details, commerce rules, appearance.",
   "virtual-try-ons": "AI try-on sessions, consent, previews and conversion.",
+  "photo-to-template": "Upload garment references and generate editable AI design drafts.",
   "design-studio": "Garment designs, technical flats, versions and approval.",
   "pattern-library": "Size-wise 2D patterns, review and true-scale export.",
   "size-charts": "Standard size measurements, grading and approval.",

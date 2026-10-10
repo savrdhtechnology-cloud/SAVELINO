@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StatusBadge } from "@/components/admin/ui";
 import { toast } from "@/lib/admin/store";
@@ -91,6 +92,10 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
   const [productId, setProductId] = useState(design.product_id ?? "");
   const [spec, setSpec] = useState<DesignSpec>({ ...DEFAULT_SPEC, ...design.spec });
   const [view, setView] = useState<"front" | "back">("front");
+  // Open on the reference photo only when one exists; otherwise show the technical flat.
+  const [displayMode, setDisplayMode] = useState<"photo" | "flat" | "compare">(() =>
+    ((design.sketches ?? []) as Sketch[]).some((s) => s.kind === "reference") ? "photo" : "flat",
+  );
   const [color, setColor] = useState(spec.colors[0]);
   const [overlay, setOverlay] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -105,6 +110,10 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
   const set = <K extends keyof DesignSpec>(k: K, v: DesignSpec[K]) => setSpec((s) => ({ ...s, [k]: v }));
   const sketches = (design.sketches ?? []) as Sketch[];
   const viewSketch = overlay ? sketches.find((s) => s.view === view && s.kind === "sketch")?.data : null;
+  const reference = sketches.find(s => s.kind === "reference" && s.view === view && !s.name.toLowerCase().startsWith("side:"));
+  const sideReferences = sketches.filter(s => s.kind === "reference" && s.name.toLowerCase().startsWith("side:"));
+  const [showSide,setShowSide]=useState(false);
+  const shownReference = showSide ? sideReferences[0] : reference;
 
   const save = async () => {
     setSaving(true);
@@ -146,7 +155,9 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
         <div className={`${panel} p-3`}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
-              <Segmented id="flat-view" value={view} onChange={setView} options={[{ value: "front", label: "Front" }, { value: "back", label: "Back" }]} />
+              <Segmented id="flat-view" value={view} onChange={(v)=>{setView(v);setShowSide(false)}} options={[{ value: "front", label: "Front" }, { value: "back", label: "Back" }]} />
+              {sideReferences.length>0 && <button onClick={()=>setShowSide(true)} className={btnGhost}>Side photo</button>}
+              <Segmented id="reference-view" value={displayMode} onChange={setDisplayMode} options={[{value:"photo",label:"Photo"},{value:"flat",label:"Flat"},{value:"compare",label:"Compare"}]} />
               <div className="flex items-center gap-1.5" aria-label="Colourway">
                 {spec.colors.map((c) => (
                   <button key={c} title={c} aria-label={`Show ${c}`} onClick={() => setColor(c)} className={`h-6 w-6 border ${color === c ? "border-gold ring-1 ring-gold" : "border-ivory/20"}`} style={{ background: colorHex(c) }} />
@@ -160,13 +171,36 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
             </div>
             <span className="text-[0.6rem] uppercase tracking-[0.2em] text-ivory/45">{design.code} · version {design.current_version}{dirty ? " · unsaved changes" : ""}</span>
           </div>
-          <Viewport content={{ x: 0, y: 0, w: 200, h: 222 }} className="h-[520px] text-ivory" label={`${name} technical flat, ${view} view`}>
+          {displayMode === "photo" ? (<div className="flex h-[520px] items-center justify-center overflow-hidden bg-black/30">
+              {shownReference ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={shownReference.data} alt={shownReference.name} className="max-h-full max-w-full object-contain" />
+              ) : <p className="px-5 text-center text-sm text-ivory/50">{`No ${showSide ? "side" : view} reference photo yet. Add one under “Sketches & reference photos”, or switch to Flat.`}</p>}
+            </div>) : displayMode === "flat" ? (
+            <Viewport content={{ x: 0, y: 0, w: 200, h: 222 }} className="h-[520px] text-ivory" label={`${name} technical flat, ${view} view`}>
             <AnimatePresence mode="wait">
               <motion.g key={`${view}-${color}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
                 <TechFlat spec={spec} view={view} color={color} sketch={viewSketch} />
               </motion.g>
             </AnimatePresence>
           </Viewport>
+          ) : (
+            <div className="grid gap-3 lg:grid-cols-2">
+              <div><p className="mb-2 text-xs uppercase tracking-widest text-gold">Original reference</p><div className="flex h-[520px] items-center justify-center overflow-hidden bg-black/30">
+              {shownReference ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={shownReference.data} alt={shownReference.name} className="max-h-full max-w-full object-contain" />
+              ) : <p className="px-5 text-center text-sm text-ivory/50">{`No ${showSide ? "side" : view} reference photo yet. Add one under “Sketches & reference photos”, or switch to Flat.`}</p>}
+            </div></div>
+              <div><p className="mb-2 text-xs uppercase tracking-widest text-gold">Technical illustration</p><Viewport content={{ x: 0, y: 0, w: 200, h: 222 }} className="h-[520px] text-ivory" label={`${name} technical flat, ${view} view`}>
+            <AnimatePresence mode="wait">
+              <motion.g key={`${view}-${color}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                <TechFlat spec={spec} view={view} color={color} sketch={viewSketch} />
+              </motion.g>
+            </AnimatePresence>
+          </Viewport></div>
+            </div>
+          )}
           <p className="mt-2 text-[0.65rem] text-ivory/40">Technical flat generated from the specification — an illustration for the team, not a cutting pattern. Patterns are drafted from approved size charts in the Pattern Library.</p>
         </div>
 
@@ -192,10 +226,31 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ivory/45">Upload hand sketches (shown as an overlay on the flat) and reference photos. References are for inspiration only — patterns are never generated from images.</p>
+            <p className="text-sm text-ivory/45">No sketches or reference photos yet. Upload hand sketches (shown as an overlay on the flat) and front/back/side reference photos. Photos guide style only — they never set cutting measurements.</p>
           )}
         </Section>
 
+        <Section title="Production readiness · next steps">
+          <div className="space-y-3 text-sm text-ivory/75">
+            <p>Design status: <strong>{design.status}</strong>. Design approval alone does not approve measurements, patterns or production: these are separate safety gates.</p>
+            <ol className="space-y-2">
+              <li>1. Reference photos — {sketches.some(s=>s.kind==="reference") ? "attached" : "missing: upload the original photo above"}</li>
+              <li>2. Design approval — {design.status === "approved" ? "complete" : design.status === "archived" ? "archived: restore and approve before production" : "pending"}</li>
+              <li>3. Size Charts — verify measurements and approve the size chart</li>
+              <li>4. Pattern Library — draft size-wise pieces and request pattern master approval</li>
+              <li>5. Bill of Materials & Fabric Calculator — validate materials and marker estimates</li>
+              <li>6. Production Batches — create a batch after approvals, then assign Worker Tasks</li>
+              <li>7. Quality Control — inspect finished work through the QC workflow</li>
+            </ol>
+            <div className="flex flex-wrap gap-2">
+              <Link className={btnLine} href="/admin/size-charts">Size Charts →</Link>
+              <Link className={btnLine} href="/admin/pattern-library">Pattern Library →</Link>
+              <Link className={btnLine} href="/admin/bill-of-materials">BOM →</Link>
+              <Link className={btnLine} href="/admin/production-batches">Production Batches →</Link>
+              <Link className={btnLine} href="/admin/worker-tasks">Worker Tasks →</Link>
+            </div>
+          </div>
+        </Section>
         <div className="grid gap-4 lg:grid-cols-2">
           <Section title="Version history">
             <ol className="max-h-64 space-y-2 overflow-y-auto">

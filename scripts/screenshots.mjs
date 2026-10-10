@@ -50,6 +50,7 @@ const routes = [
   "/admin/leads",
   "/admin/expenses",
   "/admin/virtual-try-ons",
+  "/admin/photo-to-template",
   "/admin/design-studio",
   "/admin/pattern-library",
   "/admin/size-charts",
