@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Routes that require a signed-in user. Role checks happen server-side in each layout. */
-const PROTECTED = ["/account", "/partner/dashboard", "/admin"];
+const PROTECTED = ["/account", "/partner/dashboard", "/admin", "/worker"];
 
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,5 +42,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/partner/dashboard/:path*", "/admin/:path*", "/login", "/register", "/partner/login"],
+  matcher: ["/account/:path*", "/partner/dashboard/:path*", "/admin/:path*", "/worker/:path*", "/worker", "/login", "/register", "/partner/login"],
 };

@@ -12,6 +12,14 @@ const extraDescriptions: Record<string, string> = {
   studio: "Design the website: theme, hero, sections.",
   settings: "Business details, commerce rules, appearance.",
   "virtual-try-ons": "AI try-on sessions, consent, previews and conversion.",
+  "design-studio": "Garment designs, technical flats, versions and approval.",
+  "pattern-library": "Size-wise 2D patterns, review and true-scale export.",
+  "size-charts": "Standard size measurements, grading and approval.",
+  "fabric-calculator": "Estimated vs verified-marker fabric needs.",
+  "bill-of-materials": "Reusable BOM per design linked to stock.",
+  "production-batches": "Batches, job cards, reservation and stock.",
+  "worker-tasks": "Who is on which job card, and worker messages.",
+  "quality-control": "QC checklist before finished inventory.",
 };
 
 export function Launchpad() {
