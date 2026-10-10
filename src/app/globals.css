@@ -25,6 +25,53 @@
   --header-h: 84px;
 }
 
+/* ───────── Theme templates ─────────
+   Both templates use the same token names, so every component re-themes
+   automatically. "noir" = page background, "ivory" = primary text. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-noir: #0b0b0b;
+  --color-noir-soft: #141210;
+  --color-gold: #d4af37;
+  --color-gold-light: #f1d98a;
+  --color-gold-deep: #9c7a22;
+  --color-ivory: #f8f5eb;
+  --color-burgundy: #6b0f1a;
+  --color-burgundy-deep: #3e0910;
+}
+
+/* Ivory Atelier — light template */
+[data-theme="light"] {
+  color-scheme: light;
+  --color-noir: #f7f2e7;
+  --color-noir-soft: #efe7d6;
+  --color-gold: #9a7724;
+  --color-gold-light: #b8923a;
+  --color-gold-deep: #6f5414;
+  --color-ivory: #1d1714;
+  --color-burgundy: #ead7d0;
+  --color-burgundy-deep: #f2e6df;
+}
+
+/* Status colours keep their meaning but gain contrast on light surfaces. */
+[data-theme="light"] .text-emerald-200 { color: #0f6b4f; }
+[data-theme="light"] .text-red-200,
+[data-theme="light"] .text-red-100 { color: #9b1c1c; }
+[data-theme="light"] .text-red-300\/80 { color: #b42318; }
+[data-theme="light"] .text-sky-200 { color: #1d5f8a; }
+[data-theme="light"] .bg-red-950\/40,
+[data-theme="light"] .bg-red-950\/80 { background-color: #fbe9e7; }
+[data-theme="light"] .bg-emerald-300 { background-color: #12936b; }
+[data-theme="light"] .grain::after { opacity: 0.035; }
+
+/* Optional rounded corners for the CRM. */
+[data-radius="soft"] :where(button, input, select, textarea, section, aside, kbd, li > a, .border) {
+  border-radius: 10px;
+}
+[data-radius="soft"] :where(.rounded-full) {
+  border-radius: 9999px;
+}
+
 html {
   background: var(--color-noir);
   scroll-padding-top: var(--header-h);

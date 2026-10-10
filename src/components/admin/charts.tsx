@@ -71,7 +71,7 @@ export function AreaChart({ data, height = 220 }: { data: Point[]; height?: numb
         />
         {data.map((d, i) =>
           i % Math.ceil(data.length / 6) === 0 ? (
-            <text key={d.label} x={x(i)} y={H - 6} textAnchor="middle" fontSize="10" fill="rgba(248,245,235,0.4)">
+            <text key={d.label} x={x(i)} y={H - 6} textAnchor="middle" fontSize="10" className="fill-ivory/40">
               {d.label}
             </text>
           ) : null,
@@ -84,7 +84,7 @@ export function AreaChart({ data, height = 220 }: { data: Point[]; height?: numb
               cx={x(hover)}
               cy={y(h.value)}
               r={5}
-              fill="#0b0b0b"
+              fill="var(--color-noir)"
               stroke="#f1d98a"
               strokeWidth={2}
               initial={{ scale: 0 }}

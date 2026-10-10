@@ -1,11 +1,11 @@
 "use client";
 
 import { LayoutGroup, motion } from "motion/react";
-import { useState } from "react";
-import { ACCENTS, WALLPAPERS, usePrefs, type CrmPrefs } from "@/lib/admin/prefs";
+import { useId, useState } from "react";
+import { ACCENTS, HEADING_FONTS, WALLPAPERS, usePrefs, type AccentKey, type CrmPrefs, type WallpaperKey } from "@/lib/admin/prefs";
 import { useSiteSettings } from "@/lib/admin/site-settings-client";
 import type { SiteSettings } from "@/lib/settings";
-import { Card, NumberField, SaveBar, TextField, Toggle } from "./fields";
+import { Card, ColorField, NumberField, SaveBar, TextField, Toggle } from "./fields";
 import { EASE } from "./ui";
 
 const TABS = [
@@ -18,7 +18,8 @@ const TABS = [
 export function SettingsApp({ live }: { live: boolean }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("business");
   const { settings, setSettings, save, saving, dirty, reset, loading } = useSiteSettings(live);
-  const [prefs, setPrefs] = usePrefs();
+  const [prefs, setPrefs, resetPrefs] = usePrefs();
+  const setCrm = (patch: Partial<SiteSettings["crm"]>) => setSettings((s) => ({ ...s, crm: { ...s.crm, ...patch } }));
 
   const setBrand = (patch: Partial<SiteSettings["brand"]>) => setSettings((s) => ({ ...s, brand: { ...s.brand, ...patch } }));
   const setCommerce = (patch: Partial<SiteSettings["commerce"]>) => setSettings((s) => ({ ...s, commerce: { ...s.commerce, ...patch } }));
@@ -88,43 +89,99 @@ export function SettingsApp({ live }: { live: boolean }) {
 
           {tab === "appearance" && (
             <>
-              <Card title="Accent colour" description="Saved in this browser for your account.">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {(Object.keys(ACCENTS) as CrmPrefs["accent"][]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => setPrefs({ accent: k })}
-                      className={`flex items-center gap-3 border px-3 py-2.5 text-left text-xs transition-colors ${
-                        prefs.accent === k ? "border-gold text-ivory" : "border-gold/15 text-ivory/60 hover:border-gold/40"
-                      }`}
-                    >
-                      <span className="h-5 w-5 rounded-full" style={{ background: `linear-gradient(135deg, ${ACCENTS[k].deep}, ${ACCENTS[k].light})` }} />
-                      {ACCENTS[k].label}
-                    </button>
-                  ))}
+              <Card title="My appearance" description="Only for you, in this browser. “House” follows the defaults for all admins.">
+                <Segmented
+                  label="Theme"
+                  value={prefs.mode}
+                  options={[
+                    ["house", "House"],
+                    ["dark", "Dark"],
+                    ["light", "Light"],
+                    ["system", "System"],
+                  ]}
+                  onChange={(v) => setPrefs({ mode: v as CrmPrefs["mode"] })}
+                />
+                <div>
+                  <p className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">Accent</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <Swatch active={prefs.accent === "house"} onClick={() => setPrefs({ accent: "house" })} label="House" colors={["var(--color-gold-deep)", "var(--color-gold-light)"]} />
+                    {(Object.keys(ACCENTS) as AccentKey[]).map((k) => (
+                      <Swatch key={k} active={prefs.accent === k} onClick={() => setPrefs({ accent: k })} label={ACCENTS[k].label} colors={[ACCENTS[k].dark[2], ACCENTS[k].dark[1]]} />
+                    ))}
+                    <Swatch active={prefs.accent === "custom"} onClick={() => setPrefs({ accent: "custom" })} label="Custom" colors={[prefs.customAccent, prefs.customAccent]} />
+                  </div>
+                  {prefs.accent === "custom" && (
+                    <div className="mt-3">
+                      <ColorField label="Custom accent" value={prefs.customAccent} onChange={(v) => setPrefs({ customAccent: v })} />
+                    </div>
+                  )}
                 </div>
+                <Segmented
+                  label="Wallpaper"
+                  value={prefs.wallpaper}
+                  options={[["house", "House"], ...(Object.keys(WALLPAPERS) as WallpaperKey[]).map((k) => [k, WALLPAPERS[k].label] as [string, string])]}
+                  onChange={(v) => setPrefs({ wallpaper: v as CrmPrefs["wallpaper"] })}
+                />
+                <Segmented
+                  label="Corners"
+                  value={prefs.radius}
+                  options={[
+                    ["house", "House"],
+                    ["sharp", "Sharp"],
+                    ["soft", "Rounded"],
+                  ]}
+                  onChange={(v) => setPrefs({ radius: v as CrmPrefs["radius"] })}
+                />
+                <Segmented
+                  label="Headings"
+                  value={prefs.headingFont}
+                  options={(Object.keys(HEADING_FONTS) as CrmPrefs["headingFont"][]).map((k) => [k, HEADING_FONTS[k].label] as [string, string])}
+                  onChange={(v) => setPrefs({ headingFont: v as CrmPrefs["headingFont"] })}
+                />
               </Card>
-              <Card title="Wallpaper">
-                <div className="grid grid-cols-3 gap-2">
-                  {(Object.keys(WALLPAPERS) as CrmPrefs["wallpaper"][]).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => setPrefs({ wallpaper: k })}
-                      className={`h-20 border bg-noir text-[0.6rem] uppercase tracking-[0.2em] ${prefs.wallpaper === k ? "border-gold text-gold" : "border-gold/15 text-ivory/50"}`}
-                      style={{ backgroundImage: WALLPAPERS[k].css }}
-                    >
-                      {WALLPAPERS[k].label}
-                    </button>
-                  ))}
-                </div>
-              </Card>
-              <Card title="Layout">
-                <Toggle label="Expanded dock" hint="Show app names next to icons." checked={prefs.dockExpanded} onChange={(v) => setPrefs({ dockExpanded: v })} />
-                <Toggle label="Compact density" hint="Fit more on screen." checked={prefs.density === "compact"} onChange={(v) => setPrefs({ density: v ? "compact" : "comfortable" })} />
-                <Toggle label="Reduce motion" hint="Turn off CRM animations." checked={prefs.motion === "reduced"} onChange={(v) => setPrefs({ motion: v ? "reduced" : "full" })} />
-              </Card>
+
+              <div className="space-y-5">
+                <Card title="House defaults" description="Applies to every admin who hasn’t chosen their own. Publish to save.">
+                  <Segmented
+                    label="CRM theme"
+                    value={settings.crm.mode}
+                    options={[
+                      ["dark", "Royal Noir · dark"],
+                      ["light", "Ivory Atelier · light"],
+                    ]}
+                    onChange={(v) => setCrm({ mode: v as SiteSettings["crm"]["mode"] })}
+                  />
+                  <Segmented
+                    label="Accent"
+                    value={settings.crm.accent}
+                    options={(Object.keys(ACCENTS) as AccentKey[]).map((k) => [k, ACCENTS[k].label] as [string, string])}
+                    onChange={(v) => setCrm({ accent: v })}
+                  />
+                  <Segmented
+                    label="Wallpaper"
+                    value={settings.crm.wallpaper}
+                    options={(Object.keys(WALLPAPERS) as WallpaperKey[]).map((k) => [k, WALLPAPERS[k].label] as [string, string])}
+                    onChange={(v) => setCrm({ wallpaper: v })}
+                  />
+                  <Segmented
+                    label="Corners"
+                    value={settings.crm.radius}
+                    options={[
+                      ["sharp", "Sharp"],
+                      ["soft", "Rounded"],
+                    ]}
+                    onChange={(v) => setCrm({ radius: v as SiteSettings["crm"]["radius"] })}
+                  />
+                </Card>
+                <Card title="Layout">
+                  <Toggle label="Expanded dock" hint="Show app names next to icons." checked={prefs.dockExpanded} onChange={(v) => setPrefs({ dockExpanded: v })} />
+                  <Toggle label="Compact density" hint="Fit more on screen." checked={prefs.density === "compact"} onChange={(v) => setPrefs({ density: v ? "compact" : "comfortable" })} />
+                  <Toggle label="Reduce motion" hint="Turn off CRM animations." checked={prefs.motion === "reduced"} onChange={(v) => setPrefs({ motion: v ? "reduced" : "full" })} />
+                  <button type="button" onClick={resetPrefs} className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/45 hover:text-gold">
+                    Reset my appearance
+                  </button>
+                </Card>
+              </div>
             </>
           )}
 
@@ -153,5 +210,54 @@ export function SettingsApp({ live }: { live: boolean }) {
 
       <SaveBar dirty={dirty} saving={saving} live={live} onSave={() => void save()} onReset={reset} />
     </div>
+  );
+}
+
+function Segmented({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: [string, string][];
+  onChange: (v: string) => void;
+}) {
+  const uid = useId();
+  return (
+    <div>
+      <p className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">{label}</p>
+      <LayoutGroup id={`seg-${uid}`}>
+        <div className="mt-2 flex flex-wrap gap-1 border border-gold/15 p-0.5">
+          {options.map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange(v)}
+              className={`relative flex-1 whitespace-nowrap px-3 py-2 text-[0.62rem] uppercase tracking-[0.15em] ${value === v ? "text-noir" : "text-ivory/60 hover:text-gold"}`}
+            >
+              {value === v && <motion.span layoutId={`seg-pill-${uid}`} className="absolute inset-0 bg-gold" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+              <span className="relative">{l}</span>
+            </button>
+          ))}
+        </div>
+      </LayoutGroup>
+    </div>
+  );
+}
+
+function Swatch({ active, onClick, label, colors }: { active: boolean; onClick: () => void; label: string; colors: [string, string] }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-3 border px-3 py-2.5 text-left text-xs transition-colors ${
+        active ? "border-gold text-ivory" : "border-gold/15 text-ivory/60 hover:border-gold/40"
+      }`}
+    >
+      <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` }} />
+      {label}
+    </button>
   );
 }

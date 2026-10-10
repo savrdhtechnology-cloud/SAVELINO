@@ -6,12 +6,13 @@ import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Monogram } from "@/components/ui/Logo";
 import { ICONS, navGroups } from "@/lib/admin/modules";
-import { ACCENTS, WALLPAPERS, usePrefs } from "@/lib/admin/prefs";
+import { resolveTheme, usePrefs, useSystemDark } from "@/lib/admin/prefs";
+import { DEFAULT_SETTINGS, type SiteSettings } from "@/lib/settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { CommandPalette } from "./CommandPalette";
 import { EASE, Icon, Toaster } from "./ui";
 
-type Props = { children: ReactNode; live: boolean; email: string | null };
+type Props = { children: ReactNode; live: boolean; email: string | null; house?: SiteSettings["crm"] };
 
 function useClock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -25,10 +26,12 @@ function useClock() {
 
 const clockFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
-export function AdminShell({ children, live, email }: Props) {
+export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [prefs, setPrefs] = usePrefs();
+  const systemDark = useSystemDark();
+  const theme = resolveTheme(prefs, house, systemDark);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [palette, setPalette] = useState(false);
   const now = useClock();
@@ -61,11 +64,11 @@ export function AdminShell({ children, live, email }: Props) {
     router.refresh();
   }
 
-  const accent = ACCENTS[prefs.accent];
   const shellStyle = {
-    "--color-gold": accent.base,
-    "--color-gold-light": accent.light,
-    "--color-gold-deep": accent.deep,
+    "--color-gold": theme.accent[0],
+    "--color-gold-light": theme.accent[1],
+    "--color-gold-deep": theme.accent[2],
+    "--font-display": theme.headingFont,
   } as CSSProperties;
 
   const dock = (wide: boolean) => (
@@ -119,8 +122,13 @@ export function AdminShell({ children, live, email }: Props) {
 
   return (
     <MotionConfig reducedMotion={prefs.motion === "reduced" ? "always" : "user"}>
-      <div style={shellStyle} className="min-h-screen bg-noir text-ivory">
-        <div aria-hidden className="pointer-events-none fixed inset-0" style={{ backgroundImage: WALLPAPERS[prefs.wallpaper].css }} />
+      <div
+        data-theme={theme.mode}
+        data-radius={theme.radius}
+        style={shellStyle}
+        className="min-h-screen bg-noir text-ivory transition-colors duration-500"
+      >
+        <div aria-hidden className="pointer-events-none fixed inset-0" style={{ backgroundImage: theme.wallpaper }} />
 
         {/* OS menu bar */}
         <motion.header
@@ -182,6 +190,24 @@ export function AdminShell({ children, live, email }: Props) {
                 Demo
               </span>
             )}
+            <button
+              type="button"
+              onClick={() => setPrefs({ mode: theme.mode === "dark" ? "light" : "dark" })}
+              className="text-ivory/55 hover:text-gold"
+              aria-label={theme.mode === "dark" ? "Switch CRM to light" : "Switch CRM to dark"}
+              title="Light / dark"
+            >
+              <motion.span key={theme.mode} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} className="block">
+                <Icon
+                  d={
+                    theme.mode === "dark"
+                      ? "M12 4V2m0 20v-2m8-8h2M2 12h2m13.7-5.7 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+                      : "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"
+                  }
+                  className="h-4 w-4"
+                />
+              </motion.span>
+            </button>
             <Link href="/admin/studio" className="hidden text-ivory/55 hover:text-gold md:block" aria-label="Studio" title="Studio">
               <Icon d={ICONS.studio} className="h-4 w-4" />
             </Link>
