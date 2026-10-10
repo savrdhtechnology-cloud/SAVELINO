@@ -84,7 +84,7 @@ const orderStatuses = ["pending_payment", "payment_review", "confirmed", "in_pro
 
 export function demoOrders(): Row[] {
   const r = rng(23);
-  return Array.from({ length: 48 }, (_, i) => {
+  return Array.from({ length: 140 }, (_, i) => {
     const qty = 1 + Math.floor(r() * 2);
     const price = pick(r, productNames)[2];
     const status = i < 4 ? pick(r, ["pending_payment", "payment_review"]) : pick(r, orderStatuses);
@@ -93,7 +93,7 @@ export function demoOrders(): Row[] {
       order_number: `SV-${String(261010 - Math.floor(i / 3)).slice(-6)}-${(1000 + i * 37).toString(36).toUpperCase()}`,
       status,
       total_amount: price * qty + 150,
-      created_at: iso(REF - Math.floor(i * 0.62 * day + r() * day * 0.5)),
+      created_at: iso(REF - Math.floor(i * 0.21 * day + r() * day * 0.5)),
       shipping_address: { full_name: `${pick(r, first)} ${pick(r, last)}`, city: pick(r, cities) },
       partner_id: r() > 0.7 ? `pt${1 + Math.floor(r() * 3)}` : null,
     };
