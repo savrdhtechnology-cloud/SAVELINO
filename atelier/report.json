@@ -1,0 +1,94 @@
+{
+  "base": "http://localhost:2736",
+  "results": [
+    {
+      "name": "design creation",
+      "ok": false,
+      "error": "locator.waitFor: Timeout 8000ms exceeded."
+    },
+    {
+      "name": "save creates new version",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "design approval locks spec",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "size charts & grading",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "pattern library approve in-review piece",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "approve all size-38 pieces",
+      "ok": true
+    },
+    {
+      "name": "grade nest view",
+      "ok": false,
+      "error": "locator.check: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "draft new size pattern set",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "fabric calculator estimate vs verified",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "bill of materials",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "batch approval blocked without approved patterns",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "create batch and approve with job cards",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "quality control approval",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "receive QC-approved stock",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "worker task board",
+      "ok": false,
+      "error": "locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "worker portal task flow",
+      "ok": true
+    },
+    {
+      "name": "worker portal mobile",
+      "ok": true
+    }
+  ],
+  "pageErrors": [
+    "Cannot read properties of undefined (reading 'replace')"
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 14
+  }
+}

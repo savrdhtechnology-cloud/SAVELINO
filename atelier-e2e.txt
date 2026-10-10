@@ -1,0 +1,18 @@
+FAIL design creation locator.waitFor: Timeout 8000ms exceeded.
+FAIL save creates new version locator.click: Timeout 30000ms exceeded.
+FAIL design approval locks spec locator.click: Timeout 30000ms exceeded.
+FAIL size charts & grading locator.click: Timeout 30000ms exceeded.
+FAIL pattern library approve in-review piece locator.click: Timeout 30000ms exceeded.
+PASS approve all size-38 pieces
+FAIL grade nest view locator.check: Timeout 30000ms exceeded.
+FAIL draft new size pattern set locator.click: Timeout 30000ms exceeded.
+FAIL fabric calculator estimate vs verified locator.click: Timeout 30000ms exceeded.
+FAIL bill of materials locator.click: Timeout 30000ms exceeded.
+FAIL batch approval blocked without approved patterns locator.click: Timeout 30000ms exceeded.
+FAIL create batch and approve with job cards locator.click: Timeout 30000ms exceeded.
+FAIL quality control approval locator.click: Timeout 30000ms exceeded.
+FAIL receive QC-approved stock locator.click: Timeout 30000ms exceeded.
+FAIL worker task board locator.click: Timeout 30000ms exceeded.
+PASS worker portal task flow
+PASS worker portal mobile
+{"passed":3,"failed":14}

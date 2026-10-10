@@ -1,0 +1,230 @@
+
+> savlino@0.1.0 screenshots
+> node scripts/screenshots.mjs
+
+{
+  "base": "http://localhost:2736",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshotFailures": [],
+  "routes": [
+    {
+      "route": "/",
+      "status": 200
+    },
+    {
+      "route": "/collections",
+      "status": 200
+    },
+    {
+      "route": "/lookbook",
+      "status": 200
+    },
+    {
+      "route": "/our-story",
+      "status": 200
+    },
+    {
+      "route": "/craftsmanship",
+      "status": 200
+    },
+    {
+      "route": "/size-guide",
+      "status": 200
+    },
+    {
+      "route": "/faq",
+      "status": 200
+    },
+    {
+      "route": "/contact",
+      "status": 200
+    },
+    {
+      "route": "/shipping-returns",
+      "status": 200
+    },
+    {
+      "route": "/privacy",
+      "status": 200
+    },
+    {
+      "route": "/terms",
+      "status": 200
+    },
+    {
+      "route": "/collections/designer-blouses",
+      "status": 200
+    },
+    {
+      "route": "/collections/sarees",
+      "status": 200
+    },
+    {
+      "route": "/custom-stitching",
+      "status": 200
+    },
+    {
+      "route": "/login",
+      "status": 200
+    },
+    {
+      "route": "/register",
+      "status": 200
+    },
+    {
+      "route": "/partner",
+      "status": 200
+    },
+    {
+      "route": "/partner/login",
+      "status": 200
+    },
+    {
+      "route": "/partner/register",
+      "status": 200
+    },
+    {
+      "route": "/account",
+      "status": 200
+    },
+    {
+      "route": "/account/orders",
+      "status": 200
+    },
+    {
+      "route": "/partner/dashboard",
+      "status": 200
+    },
+    {
+      "route": "/partner/dashboard/commissions",
+      "status": 200
+    },
+    {
+      "route": "/admin",
+      "status": 200
+    },
+    {
+      "route": "/admin/orders",
+      "status": 200
+    },
+    {
+      "route": "/admin/payments",
+      "status": 200
+    },
+    {
+      "route": "/admin/partners",
+      "status": 200
+    },
+    {
+      "route": "/admin/analytics",
+      "status": 200
+    },
+    {
+      "route": "/admin/products",
+      "status": 200
+    },
+    {
+      "route": "/admin/apps",
+      "status": 200
+    },
+    {
+      "route": "/admin/studio",
+      "status": 200
+    },
+    {
+      "route": "/admin/settings",
+      "status": 200
+    },
+    {
+      "route": "/admin/stitching",
+      "status": 200
+    },
+    {
+      "route": "/admin/leads",
+      "status": 200
+    },
+    {
+      "route": "/admin/expenses",
+      "status": 200
+    },
+    {
+      "route": "/admin/virtual-try-ons",
+      "status": 200
+    },
+    {
+      "route": "/admin/photo-to-template",
+      "status": 200
+    },
+    {
+      "route": "/admin/design-studio",
+      "status": 200
+    },
+    {
+      "route": "/admin/pattern-library",
+      "status": 200
+    },
+    {
+      "route": "/admin/size-charts",
+      "status": 200
+    },
+    {
+      "route": "/admin/fabric-calculator",
+      "status": 200
+    },
+    {
+      "route": "/admin/bill-of-materials",
+      "status": 200
+    },
+    {
+      "route": "/admin/production-batches",
+      "status": 200
+    },
+    {
+      "route": "/admin/worker-tasks",
+      "status": 200
+    },
+    {
+      "route": "/admin/quality-control",
+      "status": 200
+    },
+    {
+      "route": "/worker",
+      "status": 200
+    },
+    {
+      "route": "/virtual-try-on",
+      "status": 200
+    },
+    {
+      "route": "/virtual-try-on?product=sarees",
+      "status": 200
+    },
+    {
+      "route": "/try-on-terms",
+      "status": 200
+    },
+    {
+      "route": "/image-consent",
+      "status": 200
+    },
+    {
+      "route": "/account/try-ons",
+      "status": 200
+    },
+    {
+      "route": "/sitemap.xml",
+      "status": 200
+    },
+    {
+      "route": "/robots.txt",
+      "status": 200
+    }
+  ],
+  "layoutShift": {
+    "desktop": 0,
+    "tablet": 0.00036295921912504086,
+    "mobile": 0.02749815519840392
+  },
+  "reducedMotionCanvasCount": 0
+}
