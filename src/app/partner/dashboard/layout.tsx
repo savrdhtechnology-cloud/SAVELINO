@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { partnerSections } from "@/lib/portals";
+import { getSessionContext } from "@/lib/supabase/server";
 
-/** Always render per request: session and backend configuration are read at runtime. */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -11,7 +12,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function PartnerDashboardLayout({ children }: { children: ReactNode }) {
+export default async function PartnerDashboardLayout({ children }: { children: ReactNode }) {
+  const session = await getSessionContext();
+  if (session.configured) {
+    if (!session.user) redirect("/partner/login?next=/partner/dashboard");
+    if (session.role === "admin") redirect("/admin");
+    if (session.role !== "partner") redirect("/account");
+  }
   return (
     <PortalShell
       eyebrow="Partner portal"
