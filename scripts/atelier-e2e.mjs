@@ -35,12 +35,13 @@ const nav = async (label) => {
   await sleep(1500);
 };
 
-await page.goto(`${BASE}/admin/design-studio`, { waitUntil: "networkidle" });
+await page.goto(`${BASE}/admin/design-studio`, { waitUntil: "domcontentloaded", timeout: 60000 });
+await page.getByRole("button", { name: "+ New design" }).first().waitFor({ timeout: 30000 });
 await sleep(2000);
 await shot("01-design-studio");
 
 await test("design creation", async () => {
-  await page.getByRole("button", { name: "+ New design" }).click();
+  await page.getByRole("button", { name: "+ New design" }).first().click();
   await expectText("Untitled blouse");
   await page.getByLabel("Design name").fill("QA Test blouse");
   await page.locator("select").filter({ hasText: "Sweetheart" }).first().selectOption("v");
@@ -50,13 +51,13 @@ await test("design creation", async () => {
 });
 
 await test("save creates new version", async () => {
-  await page.getByRole("button", { name: /Save as v2/ }).click();
+  await page.getByRole("button", { name: /Save as v2/ }).first().click();
   await expectText("Saved as version 2");
   await expectText("v2");
 });
 
 await test("design approval locks spec", async () => {
-  await page.getByRole("button", { name: "Approve design" }).click();
+  await page.getByRole("button", { name: "Approve design" }).first().click();
   await expectText("Approved designs are locked");
   await shot("03-design-approved");
 });
@@ -65,7 +66,7 @@ await test("size charts & grading", async () => {
   await nav("Size Charts");
   await expectText("Bust");
   await shot("04-size-chart");
-  await page.getByRole("tab", { name: "Grading" }).click();
+  await page.getByRole("tab", { name: "Grading" }).first().click();
   await expectText("Grade rules");
   await shot("05-size-grading");
 });
@@ -73,9 +74,11 @@ await test("size charts & grading", async () => {
 await test("pattern library approve in-review piece", async () => {
   await nav("Pattern Library");
   await expectText("Size-wise library");
-  await page.getByRole("button", { name: "Size 38" }).click();
+  await page.getByLabel("Design", { exact: true }).selectOption({ label: "Rani princess-cut blouse (approved)" });
   await sleep(800);
-  await page.getByRole("button", { name: "Approve", exact: true }).click();
+  await page.getByRole("button", { name: "Size 38" }).first().click();
+  await sleep(800);
+  await page.getByRole("button", { name: "Approve", exact: true }).first().click();
   await expectText("Pattern approved for production");
   await shot("06-pattern-approved");
 });
@@ -100,17 +103,19 @@ await test("grade nest view", async () => {
 });
 
 await test("draft new size pattern set", async () => {
-  await page.getByRole("button", { name: "Size 40" }).click();
+  await page.getByRole("button", { name: "Size 40" }).first().click();
   await sleep(500);
-  await page.getByRole("button", { name: /Draft pattern set · size 40/ }).click();
+  await page.getByRole("button", { name: /Draft pattern set · size 40/ }).first().click();
   await expectText("draft pieces created");
-  await page.getByRole("button", { name: "Submit all drafts for review" }).click();
+  await page.getByRole("button", { name: "Submit all drafts for review" }).first().click();
   await expectText("Sent for Pattern Master review");
   await shot("08-pattern-size40-review");
 });
 
 await test("fabric calculator estimate vs verified", async () => {
   await nav("Fabric Calculator");
+  await page.getByLabel("Design", { exact: true }).selectOption({ label: "Rani princess-cut blouse" });
+  await sleep(800);
   await expectText("Planning estimate");
   await expectText("Confirmed cutting requirement");
   await shot("09-fabric-calculator");
@@ -131,11 +136,11 @@ await test("batch approval blocked without approved patterns", async () => {
   await nav("Production Batches");
   await expectText("Production Batches");
   await shot("12-production-board");
-  await page.getByRole("button", { name: /PB-261005/ }).click();
+  await page.getByRole("button", { name: /PB-261005/ }).first().click();
   await sleep(800);
-  await page.getByRole("button", { name: "Start cutting" }).click();
+  await page.getByRole("button", { name: "Start cutting" }).first().click();
   await expectText("Start cutting — done");
-  await page.getByRole("button", { name: "Move to stitching" }).click();
+  await page.getByRole("button", { name: "Move to stitching" }).first().click();
   await expectText("Finish all job cards for this stage first");
   await shot("13-batch-detail-blocked");
   await page.keyboard.press("Escape");
@@ -143,13 +148,13 @@ await test("batch approval blocked without approved patterns", async () => {
 });
 
 await test("create batch and approve with job cards", async () => {
-  await page.getByRole("button", { name: "+ New batch" }).click();
+  await page.getByRole("button", { name: "+ New batch" }).first().click();
   await sleep(600);
   await page.getByLabel("Approved design").selectOption({ label: "Rani princess-cut blouse (DS-RANI01)" });
-  await page.getByRole("button", { name: "Create draft batch" }).click();
+  await page.getByRole("button", { name: "Create draft batch" }).first().click();
   await expectText("Draft batch created");
   await sleep(800);
-  await page.getByRole("button", { name: "Approve & generate job cards" }).click();
+  await page.getByRole("button", { name: "Approve & generate job cards" }).first().click();
   await expectText("Approve & generate job cards — done");
   await expectText("Job cards");
   await shot("14-batch-approved-jobcards");
@@ -163,17 +168,17 @@ await test("quality control approval", async () => {
   await shot("15-qc-checklist");
   const passes = page.getByRole("button", { name: "Pass" });
   for (let i = 0; i < (await passes.count()); i++) await passes.nth(i).click();
-  await page.getByRole("button", { name: "Record inspection" }).click();
+  await page.getByRole("button", { name: "Record inspection" }).first().click();
   await expectText("pieces approved");
 });
 
 await test("receive QC-approved stock", async () => {
   await nav("Production Batches");
-  await page.getByRole("button", { name: /PB-260924/ }).click();
+  await page.getByRole("button", { name: /PB-260924/ }).first().click();
   await sleep(700);
   await page.getByLabel("Finished stock variant").last().selectOption({ label: "SAV-RANI-36-WINE" });
   await sleep(500);
-  await page.getByRole("button", { name: "Receive QC-approved stock" }).click();
+  await page.getByRole("button", { name: "Receive QC-approved stock" }).first().click();
   await expectText("added to finished inventory");
   await shot("16-stock-received");
   await page.keyboard.press("Escape");
@@ -186,30 +191,31 @@ await test("worker task board", async () => {
 });
 
 await test("worker portal task flow", async () => {
-  await page.goto(`${BASE}/worker`, { waitUntil: "networkidle" });
-  await sleep(1500);
+  await page.goto(`${BASE}/worker`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await expectText("Assigned to me", 20000);
+  await sleep(1000);
   await shot("18-worker-portal");
   await page.getByRole("button", { name: /Rani princess-cut blouse/ }).first().click();
   await sleep(800);
   await shot("19-worker-task-detail");
-  await page.getByRole("tab", { name: "Cutting pattern" }).click();
+  await page.getByRole("tab", { name: "Cutting pattern" }).first().click();
   await sleep(900);
   await shot("20-worker-cutting-pattern");
-  await page.getByRole("tab", { name: "Design" }).click();
+  await page.getByRole("tab", { name: "Design" }).first().click();
   await sleep(700);
   await shot("21-worker-design");
-  await page.getByRole("tab", { name: "Messages" }).click();
+  await page.getByRole("tab", { name: "Messages" }).first().click();
   await page.getByLabel("Message").fill("Confirm piping colour please");
-  await page.getByRole("button", { name: "Send question" }).click();
+  await page.getByRole("button", { name: "Send question" }).first().click();
   await expectText("Question sent");
   const start = page.getByRole("button", { name: /Start task|Resume/ });
   if (await start.count()) await start.first().click();
   await sleep(500);
-  await page.getByRole("button", { name: "Pause" }).click();
+  await page.getByRole("button", { name: "Pause" }).first().click();
   await expectText("Paused");
-  await page.getByRole("button", { name: "Resume" }).click();
+  await page.getByRole("button", { name: "Resume" }).first().click();
   await sleep(400);
-  await page.getByRole("button", { name: "Mark complete" }).click();
+  await page.getByRole("button", { name: "Mark complete" }).first().click();
   await expectText("Completed — thank you");
   await shot("22-worker-completed");
 });
@@ -217,7 +223,7 @@ await test("worker portal task flow", async () => {
 await test("worker portal mobile", async () => {
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const mp = await m.newPage();
-  await mp.goto(`${BASE}/worker`, { waitUntil: "networkidle" });
+  await mp.goto(`${BASE}/worker`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await sleep(1500);
   await mp.screenshot({ path: `${OUT}/23-worker-mobile.png` });
   await m.close();

@@ -31,6 +31,18 @@ let demoDb: Record<string, Row[]> | null = null;
 const db = () => (demoDb ??= seedAtelierDemo());
 const uid = () => `demo-${Math.random().toString(36).slice(2, 10)}`;
 const DEMO_NOTE = "Preview mode — changes are not saved";
+const code = (p: string) => `${p}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+/** Column defaults the database would fill in (preview store only). */
+const DEMO_DEFAULTS: Record<string, () => Record<string, unknown>> = {
+  garment_designs: () => ({ code: code("DS"), status: "draft", current_version: 1, sketches: [], spec: {} }),
+  size_charts: () => ({ status: "draft", unit: "cm", version: 1 }),
+  pattern_pieces: () => ({ status: "draft", annotations: [] }),
+  cutting_layouts: () => ({ status: "estimated" }),
+  design_bom: () => ({ wastage_pct: 0, unit: "pcs" }),
+  production_batches: () => ({ batch_no: code("PB"), status: "draft", priority: "normal" }),
+  production_tasks: () => ({ status: "todo", minutes_worked: 0, materials: [] }),
+  production_task_notes: () => ({ resolved: false }),
+};
 
 function emit(tables: string[]) {
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("atelier:changed", { detail: tables }));
@@ -87,8 +99,12 @@ export async function write(live: boolean, table: string, op: "insert" | "update
     const t = (db()[table] ??= []);
     let created: Row | Row[] | null = null;
     if (op === "insert") {
-      const list = (Array.isArray(values) ? values : [values]).map((v) => ({ id: uid(), created_at: new Date().toISOString(), ...(v as object) }) as Row);
+      const list = (Array.isArray(values) ? values : [values]).map((v) => ({ id: uid(), created_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...(DEMO_DEFAULTS[table]?.() ?? {}), ...(v as object) }) as Row);
       t.unshift(...list);
+      if (table === "garment_designs") {
+        for (const r of list) db().design_versions.unshift({ id: uid(), design_id: r.id, version: 1, name: r.name, status: r.status, spec: r.spec, created_at: new Date().toISOString() });
+        emit(["design_versions"]);
+      }
       created = Array.isArray(values) ? list : list[0];
     } else if (op === "update" && id) {
       const i = t.findIndex((r) => r.id === id);

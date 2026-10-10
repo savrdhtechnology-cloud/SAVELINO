@@ -52,7 +52,7 @@ export function StatusBadge({ value }: { value: string }) {
       }`}
     >
       <span className="h-1 w-1 rounded-full bg-current" />
-      {value.replace(/_/g, " ")}
+      {String(value ?? "").replace(/_/g, " ")}
     </motion.span>
   );
 }
