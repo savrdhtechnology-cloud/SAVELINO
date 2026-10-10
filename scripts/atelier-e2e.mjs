@@ -35,7 +35,8 @@ const nav = async (label) => {
   await sleep(1500);
 };
 
-await page.goto(`${BASE}/admin/design-studio`, { waitUntil: "networkidle" });
+await page.goto(`${BASE}/admin/design-studio`, { waitUntil: "domcontentloaded", timeout: 60000 });
+await page.getByRole("button", { name: "+ New design" }).waitFor({ timeout: 30000 });
 await sleep(2000);
 await shot("01-design-studio");
 
@@ -73,6 +74,8 @@ await test("size charts & grading", async () => {
 await test("pattern library approve in-review piece", async () => {
   await nav("Pattern Library");
   await expectText("Size-wise library");
+  await page.getByLabel("Design", { exact: true }).selectOption({ label: "Rani princess-cut blouse (approved)" });
+  await sleep(800);
   await page.getByRole("button", { name: "Size 38" }).click();
   await sleep(800);
   await page.getByRole("button", { name: "Approve", exact: true }).click();
@@ -111,6 +114,8 @@ await test("draft new size pattern set", async () => {
 
 await test("fabric calculator estimate vs verified", async () => {
   await nav("Fabric Calculator");
+  await page.getByLabel("Design", { exact: true }).selectOption({ label: "Rani princess-cut blouse" });
+  await sleep(800);
   await expectText("Planning estimate");
   await expectText("Confirmed cutting requirement");
   await shot("09-fabric-calculator");
@@ -186,8 +191,9 @@ await test("worker task board", async () => {
 });
 
 await test("worker portal task flow", async () => {
-  await page.goto(`${BASE}/worker`, { waitUntil: "networkidle" });
-  await sleep(1500);
+  await page.goto(`${BASE}/worker`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await expectText("Assigned to me", 20000);
+  await sleep(1000);
   await shot("18-worker-portal");
   await page.getByRole("button", { name: /Rani princess-cut blouse/ }).first().click();
   await sleep(800);
@@ -217,7 +223,7 @@ await test("worker portal task flow", async () => {
 await test("worker portal mobile", async () => {
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const mp = await m.newPage();
-  await mp.goto(`${BASE}/worker`, { waitUntil: "networkidle" });
+  await mp.goto(`${BASE}/worker`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await sleep(1500);
   await mp.screenshot({ path: `${OUT}/23-worker-mobile.png` });
   await m.close();
