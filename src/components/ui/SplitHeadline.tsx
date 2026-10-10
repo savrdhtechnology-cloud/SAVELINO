@@ -50,7 +50,7 @@ export function SplitHeadline({
         {words.map((word, i) => (
           <span key={`${word}-${i}`} className="inline-block overflow-hidden -mb-[0.1em] pb-[0.22em] pr-[0.06em] align-bottom">
             <motion.span
-              className={`inline-block ${wordClassName ?? ""}`}
+              className={`-mb-[0.2em] -mr-[0.08em] inline-block pb-[0.2em] pr-[0.08em] ${wordClassName ?? ""}`}
               variants={{
                 hidden: { y: "110%", rotate: 4, opacity: 0 },
                 show: { y: "0%", rotate: 0, opacity: 1, transition: { duration: reduce ? 0 : 1.1, ease: EASE } },

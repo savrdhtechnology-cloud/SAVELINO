@@ -45,7 +45,15 @@ async function scrollThrough(page) {
   await sleep(800);
 }
 
-const report = { base: BASE, consoleErrors: [], pageErrors: [], routes: [], layoutShift: {} };
+async function shot(page, path, opts = {}) {
+  try {
+    await page.screenshot({ path, timeout: 90000, ...opts });
+  } catch (e) {
+    report.screenshotFailures.push(`${path}: ${e.message.split("\n")[0]}`);
+  }
+}
+
+const report = { base: BASE, consoleErrors: [], pageErrors: [], screenshotFailures: [], routes: [], layoutShift: {} };
 
 await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
@@ -70,27 +78,23 @@ for (const vp of viewports) {
 
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
   await sleep(4500);
-  await page.screenshot({ path: `${OUT}/${vp.name}-hero.png` });
+  await shot(page, `${OUT}/${vp.name}-hero.png`);
   report.layoutShift[vp.name] = await page.evaluate(() => window.__cls);
 
   await scrollThrough(page);
   for (const id of ["designer-blouses", "showcase", "collections", "lookbook", "partners"]) {
     await page.evaluate((s) => document.getElementById(s)?.scrollIntoView({ block: "start" }), id);
     await sleep(2200);
-    await page.screenshot({ path: `${OUT}/${vp.name}-${id}.png` });
+    await shot(page, `${OUT}/${vp.name}-${id}.png`);
   }
-  try {
-    await page.screenshot({ path: `${OUT}/${vp.name}-full.png`, fullPage: true, timeout: 60000, animations: "disabled" });
-  } catch (e) {
-    report.consoleErrors.push(`[${vp.name}] full-page screenshot skipped: ${e.message.split("\n")[0]}`);
-  }
+  await shot(page, `${OUT}/${vp.name}-full.png`, { fullPage: true, animations: "disabled" });
 
   if (vp.name === "mobile") {
     await page.evaluate(() => window.scrollTo(0, 0));
     await sleep(500);
     await page.getByRole("button", { name: "Open menu" }).click();
     await sleep(900);
-    await page.screenshot({ path: `${OUT}/mobile-menu.png` });
+    await shot(page, `${OUT}/mobile-menu.png`);
   }
   await context.close();
 }
@@ -101,7 +105,7 @@ for (const vp of viewports) {
   const page = await context.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
   await sleep(1500);
-  await page.screenshot({ path: `${OUT}/desktop-reduced-motion.png` });
+  await shot(page, `${OUT}/desktop-reduced-motion.png`);
   report.reducedMotionCanvasCount = await page.evaluate(() => document.querySelectorAll("#top canvas").length);
   await context.close();
 }
@@ -115,7 +119,7 @@ for (const vp of viewports) {
     report.routes.push({ route: r, status: res?.status() ?? 0 });
     if (["/collections/sarees", "/login", "/account", "/admin", "/custom-stitching"].includes(r)) {
       await sleep(1200);
-      await page.screenshot({ path: `${OUT}/route${r.replace(/\//g, "_")}.png` });
+      await shot(page, `${OUT}/route${r.replace(/\//g, "_")}.png`);
     }
   }
   await context.close();
