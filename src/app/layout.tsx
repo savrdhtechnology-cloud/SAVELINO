@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bodoni_Moda, Cormorant_Garamond, Manrope } from "next/font/google";
+import { Bodoni_Moda, Cormorant_Garamond, DM_Serif_Display, Inter, Lora, Manrope, Playfair_Display, Poppins } from "next/font/google";
 import { site } from "@/lib/site";
 import { themeCss } from "@/lib/settings";
 import { getSiteSettings } from "@/lib/settings-server";
@@ -20,6 +20,13 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   display: "swap",
 });
+
+// Optional typefaces chosen in Studio / CRM settings (not preloaded to keep the first paint light).
+const playfair = Playfair_Display({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-playfair", display: "swap", preload: false });
+const dmserif = DM_Serif_Display({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-dmserif", display: "swap", preload: false });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap", preload: false });
+const poppins = Poppins({ subsets: ["latin"], weight: ["300", "400", "500", "600"], variable: "--font-poppins", display: "swap", preload: false });
+const lora = Lora({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-lora", display: "swap", preload: false });
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -78,14 +85,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       lang="en"
       data-theme={settings.theme.mode}
       suppressHydrationWarning
-      className={`${bodoni.variable} ${cormorant.variable} ${manrope.variable}`}
+      className={`${bodoni.variable} ${cormorant.variable} ${manrope.variable} ${playfair.variable} ${dmserif.variable} ${inter.variable} ${poppins.variable} ${lora.variable}`}
     >
       <head>
         {settings.theme.allowToggle && (
           // Applies a visitor's saved light/dark choice before paint (no flash).
           <script
             dangerouslySetInnerHTML={{
-              __html: `try{var t=localStorage.getItem("savlino-site-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
+              __html: `try{var t=localStorage.getItem("savlino-site-theme");if(t==="light"||t==="dark"||t==="porcelain")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
             }}
           />
         )}

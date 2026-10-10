@@ -130,27 +130,27 @@ for (const vp of viewports) {
   await context.close();
 }
 
-// Light template: website (forced via attribute) and CRM (via saved preference).
-{
+// Light templates: website (forced via attribute) and CRM (via saved preference).
+for (const mode of ["light", "porcelain"]) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  await context.addInitScript(() => {
+  await context.addInitScript((m) => {
     try {
-      localStorage.setItem("savlino-crm-prefs", JSON.stringify({ mode: "light" }));
+      localStorage.setItem("savlino-crm-prefs", JSON.stringify({ mode: m }));
     } catch {}
-  });
+  }, mode);
   const page = await context.newPage();
-  page.on("pageerror", (e) => report.pageErrors.push(`[light] ${e.message}`));
+  page.on("pageerror", (e) => report.pageErrors.push(`[${mode}] ${e.message}`));
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
-  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
+  await page.evaluate((m) => document.documentElement.setAttribute("data-theme", m), mode);
   await sleep(4000);
-  await shot(page, `${OUT}/light-site-hero.png`);
-  await page.evaluate(() => document.getElementById("collections")?.scrollIntoView());
-  await sleep(2000);
-  await shot(page, `${OUT}/light-site-collections.png`);
+  await shot(page, `${OUT}/${mode}-site-hero.png`);
+  await page.evaluate(() => document.getElementById("custom-stitching")?.scrollIntoView());
+  await sleep(2200);
+  await shot(page, `${OUT}/${mode}-site-stitching.png`);
   for (const r of ["/admin", "/admin/stitching", "/admin/settings"]) {
     await page.goto(BASE + r, { waitUntil: "networkidle" });
     await sleep(2200);
-    await shot(page, `${OUT}/light-crm${r.replace(/\//g, "_")}.png`);
+    await shot(page, `${OUT}/${mode}-crm${r.replace(/\//g, "_")}.png`);
   }
   await context.close();
 }

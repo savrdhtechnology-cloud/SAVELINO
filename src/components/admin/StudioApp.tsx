@@ -3,7 +3,9 @@
 import { LayoutGroup, Reorder, motion, useDragControls } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSiteSettings } from "@/lib/admin/site-settings-client";
-import { DARK_PALETTE, LIGHT_PALETTE, SECTION_LABELS, type Palette, type SiteSettings, type ThemeMode } from "@/lib/settings";
+import { DARK_PALETTE, DEFAULT_PALETTES, LIGHT_PALETTE, PORCELAIN_PALETTE, SECTION_LABELS, THEME_LABELS, THEME_MODES, type Palette, type SiteSettings, type ThemeMode } from "@/lib/settings";
+import { BODY_FONTS, HEADING_FONTS, type BodyFont, type HeadingFont } from "@/lib/fonts";
+import { FontPicker, TemplatePicker } from "./SettingsApp";
 import { Card, ColorField, SaveBar, TextField, Toggle } from "./fields";
 import { EASE, Icon } from "./ui";
 
@@ -33,13 +35,19 @@ const PRESETS: Record<ThemeMode, { name: string; palette: Palette }[]> = {
     { name: "Champagne Day", palette: { gold: "#8C7440", noir: "#FAF7EF", ivory: "#221D16", burgundy: "#EFE3CC" } },
     { name: "Sage Linen", palette: { gold: "#7A6A2E", noir: "#F4F3EC", ivory: "#1B211C", burgundy: "#DCE6DC" } },
   ],
+  porcelain: [
+    { name: "Porcelain", palette: PORCELAIN_PALETTE },
+    { name: "Snow & Gold", palette: { gold: "#9A7724", noir: "#FAFAFA", ivory: "#0F0F0F", burgundy: "#F5ECE6" } },
+    { name: "Stone", palette: { gold: "#6E5A2B", noir: "#ECEBE7", ivory: "#151515", burgundy: "#E8E2DA" } },
+    { name: "Blush", palette: { gold: "#9B5C4A", noir: "#F7F2F1", ivory: "#1A1414", burgundy: "#F3E1DC" } },
+  ],
 };
 
-const PALETTE_FIELDS: { key: keyof Palette; dark: string; light: string }[] = [
-  { key: "noir", dark: "Background (Royal Noir)", light: "Background (Ivory paper)" },
-  { key: "ivory", dark: "Text (Ivory)", light: "Text (Ink)" },
-  { key: "gold", dark: "Accent (Antique gold)", light: "Accent (Deep gold)" },
-  { key: "burgundy", dark: "Highlight (Burgundy)", light: "Highlight wash (Rose)" },
+const PALETTE_FIELDS: ({ key: keyof Palette } & Record<ThemeMode, string>)[] = [
+  { key: "noir", dark: "Background (Royal Noir)", light: "Background (Ivory paper)", porcelain: "Background (Soft grey)" },
+  { key: "ivory", dark: "Text (Ivory)", light: "Text (Ink)", porcelain: "Text (Ink)" },
+  { key: "gold", dark: "Accent (Antique gold)", light: "Accent (Deep gold)", porcelain: "Accent (Deep gold)" },
+  { key: "burgundy", dark: "Highlight (Burgundy)", light: "Highlight wash (Rose)", porcelain: "Highlight wash" },
 ];
 
 export function StudioApp({ live }: { live: boolean }) {
@@ -69,7 +77,8 @@ export function StudioApp({ live }: { live: boolean }) {
         "--color-ivory": p.ivory,
         "--color-burgundy": p.burgundy,
         "--color-burgundy-deep": `color-mix(in srgb, ${p.burgundy} 55%, ${p.noir})`,
-        "--font-display": t.displayFont === "cormorant" ? "var(--font-cormorant), Garamond, serif" : "var(--font-bodoni), Didot, serif",
+        "--font-display": HEADING_FONTS[t.displayFont].css,
+        "--font-sans": BODY_FONTS[t.bodyFont].css,
       },
     });
     post({ type: "savlino:studio:text", key: "hero-eyebrow", value: settings.hero.eyebrow });
@@ -92,10 +101,13 @@ export function StudioApp({ live }: { live: boolean }) {
 
   const setTheme = (patch: Partial<SiteSettings["theme"]>) => setSettings((s) => ({ ...s, theme: { ...s.theme, ...patch } }));
   const setPalette = (mode: ThemeMode, patch: Partial<Palette>) =>
-    setSettings((s) => ({
-      ...s,
-      theme: mode === "dark" ? { ...s.theme, dark: { ...s.theme.dark, ...patch } } : { ...s.theme, light: { ...s.theme.light, ...patch } },
-    }));
+    setSettings((s) => {
+      const theme = { ...s.theme };
+      if (mode === "dark") theme.dark = { ...s.theme.dark, ...patch };
+      else if (mode === "light") theme.light = { ...s.theme.light, ...patch };
+      else theme.porcelain = { ...s.theme.porcelain, ...patch };
+      return { ...s, theme };
+    });
   const setHero = (patch: Partial<SiteSettings["hero"]>) => setSettings((s) => ({ ...s, hero: { ...s.hero, ...patch } }));
   const setAnn = (patch: Partial<SiteSettings["announcement"]>) => setSettings((s) => ({ ...s, announcement: { ...s.announcement, ...patch } }));
 
@@ -159,30 +171,13 @@ export function StudioApp({ live }: { live: boolean }) {
               {panel === "theme" && (
                 <>
                   <Card title="Website theme" description="The house default every visitor sees.">
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["dark", "light"] as const).map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => {
-                            setTheme({ mode: m });
-                            setEditMode(m);
-                          }}
-                          className={`overflow-hidden border text-left ${settings.theme.mode === m ? "border-gold" : "border-gold/15 hover:border-gold/40"}`}
-                        >
-                          <span className="block h-16" style={{ background: settings.theme[m].noir }}>
-                            <span className="flex h-full flex-col justify-center gap-1.5 px-3">
-                              <span className="h-1.5 w-16" style={{ background: settings.theme[m].gold }} />
-                              <span className="h-1 w-24 opacity-70" style={{ background: settings.theme[m].ivory }} />
-                              <span className="h-1 w-20 opacity-40" style={{ background: settings.theme[m].ivory }} />
-                            </span>
-                          </span>
-                          <span className={`block px-3 py-2 text-xs ${settings.theme.mode === m ? "text-gold" : "text-ivory/70"}`}>
-                            {m === "dark" ? "Royal Noir · dark" : "Ivory Atelier · light"}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <TemplatePicker
+                      value={settings.theme.mode}
+                      onChange={(v) => {
+                        setTheme({ mode: v as ThemeMode });
+                        setEditMode(v as ThemeMode);
+                      }}
+                    />
                     <Toggle
                       label="Let visitors switch"
                       hint="Adds a light/dark button to the website header."
@@ -192,8 +187,8 @@ export function StudioApp({ live }: { live: boolean }) {
                   </Card>
 
                   <LayoutGroup id="studio-edit-mode">
-                    <div className="grid grid-cols-2 border border-gold/15 p-0.5">
-                      {(["dark", "light"] as const).map((m) => (
+                    <div className="grid grid-cols-3 border border-gold/15 p-0.5">
+                      {THEME_MODES.map((m) => (
                         <button
                           key={m}
                           type="button"
@@ -201,13 +196,13 @@ export function StudioApp({ live }: { live: boolean }) {
                           className={`relative py-2 text-[0.58rem] uppercase tracking-[0.2em] ${editMode === m ? "text-noir" : "text-ivory/55 hover:text-gold"}`}
                         >
                           {editMode === m && <motion.span layoutId="studio-edit-mode-pill" className="absolute inset-0 bg-gold" />}
-                          <span className="relative">Edit {m} template</span>
+                          <span className="relative">{THEME_LABELS[m]}</span>
                         </button>
                       ))}
                     </div>
                   </LayoutGroup>
 
-                  <Card title={`${editMode === "dark" ? "Dark" : "Light"} presets`}>
+                  <Card title={`${THEME_LABELS[editMode]} presets`}>
                     <div className="grid grid-cols-2 gap-2">
                       {PRESETS[editMode].map((p) => (
                         <button
@@ -226,7 +221,7 @@ export function StudioApp({ live }: { live: boolean }) {
                       ))}
                     </div>
                   </Card>
-                  <Card title={`${editMode === "dark" ? "Dark" : "Light"} colours`}>
+                  <Card title={`${THEME_LABELS[editMode]} colours`}>
                     {PALETTE_FIELDS.map((f) => (
                       <ColorField
                         key={f.key}
@@ -237,26 +232,15 @@ export function StudioApp({ live }: { live: boolean }) {
                     ))}
                     <button
                       type="button"
-                      onClick={() => setPalette(editMode, editMode === "dark" ? DARK_PALETTE : LIGHT_PALETTE)}
+                      onClick={() => setPalette(editMode, DEFAULT_PALETTES[editMode])}
                       className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/45 hover:text-gold"
                     >
-                      Reset {editMode} template
+                      Reset {THEME_LABELS[editMode]}
                     </button>
                   </Card>
-                  <Card title="Headline typeface">
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["bodoni", "cormorant"] as const).map((f) => (
-                        <button
-                          key={f}
-                          type="button"
-                          onClick={() => setTheme({ displayFont: f })}
-                          className={`border px-3 py-4 text-2xl ${settings.theme.displayFont === f ? "border-gold text-gold" : "border-gold/15 text-ivory/70"}`}
-                          style={{ fontFamily: f === "bodoni" ? "var(--font-bodoni)" : "var(--font-cormorant)" }}
-                        >
-                          {f === "bodoni" ? "Bodoni" : "Cormorant"}
-                        </button>
-                      ))}
-                    </div>
+                  <Card title="Typography" description="Applies to every page of the website.">
+                    <FontPicker label="Heading font" value={settings.theme.displayFont} fonts={HEADING_FONTS} onChange={(v) => setTheme({ displayFont: v as HeadingFont })} />
+                    <FontPicker label="Body font" value={settings.theme.bodyFont} fonts={BODY_FONTS} onChange={(v) => setTheme({ bodyFont: v as BodyFont })} />
                   </Card>
                 </>
               )}

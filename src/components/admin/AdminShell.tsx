@@ -69,6 +69,8 @@ export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm
     "--color-gold-light": theme.accent[1],
     "--color-gold-deep": theme.accent[2],
     "--font-display": theme.headingFont,
+    "--font-sans": theme.bodyFont,
+    fontFamily: theme.bodyFont,
   } as CSSProperties;
 
   const dock = (wide: boolean) => (
@@ -192,10 +194,10 @@ export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm
             )}
             <button
               type="button"
-              onClick={() => setPrefs({ mode: theme.mode === "dark" ? "light" : "dark" })}
+              onClick={() => setPrefs({ mode: theme.mode === "dark" ? "porcelain" : theme.mode === "porcelain" ? "light" : "dark" })}
               className="text-ivory/55 hover:text-gold"
-              aria-label={theme.mode === "dark" ? "Switch CRM to light" : "Switch CRM to dark"}
-              title="Light / dark"
+              aria-label="Switch CRM template"
+              title={`Template: ${theme.mode === "dark" ? "Royal Noir" : theme.mode === "porcelain" ? "Porcelain" : "Ivory Atelier"} — click to switch`}
             >
               <motion.span key={theme.mode} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} className="block">
                 <Icon
