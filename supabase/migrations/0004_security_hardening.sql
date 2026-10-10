@@ -1,5 +1,5 @@
--- Resolves Supabase security-advisor findings. Contains a DROP VIEW (recreated
--- immediately), so Supabase asks for confirmation before applying it.
+-- Resolves Supabase security-advisor findings (applied to vfqbddwutifhwstjcrzn).
+-- Non-destructive: the view is replaced in place, nothing is dropped.
 
 -- Trigger functions are never called directly through the API.
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
@@ -28,9 +28,9 @@ $$;
 revoke all on function private.partner_referred_orders() from public, anon;
 grant execute on function private.partner_referred_orders() to authenticated;
 
-drop view if exists public.partner_referred_orders_view;
-create view public.partner_referred_orders_view with (security_invoker = true) as
-  select * from private.partner_referred_orders();
+create or replace view public.partner_referred_orders_view with (security_invoker = true) as
+  select f.id, f.partner_id, f.order_number, f.created_at, f.order_status, f.order_total::numeric(12, 2) as order_total
+  from private.partner_referred_orders() f;
 
 revoke all on public.partner_referred_orders_view from anon;
 grant select on public.partner_referred_orders_view to authenticated;
