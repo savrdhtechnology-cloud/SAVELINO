@@ -20,10 +20,14 @@ export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: "Image analysis provider is not configured. Add OPENAI_API_KEY as a server-side Vercel environment variable. No template has been generated." }, { status: 503 });
   const body: unknown = await req.json().catch(() => null);
   const images = (body as { images?: unknown } | null)?.images;
+  const rawViews = (body as { views?: unknown } | null)?.views;
+  // The browser resizes photos first; these limits keep the request under Vercel's ~4.5 MB body cap.
   if (!Array.isArray(images) || images.length < 1 || images.length > 4 ||
-      !images.every(x => typeof x === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(x) && x.length < 2400000)) {
-    return NextResponse.json({ error: "Upload 1–4 JPEG, PNG or WebP images, max ~1.7 MB each." }, { status: 400 });
+      !images.every(x => typeof x === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(x) && x.length <= 1_000_000) ||
+      images.reduce((n: number, x: string) => n + x.length, 0) > 4_000_000) {
+    return NextResponse.json({ error: "Upload 1–4 JPEG, PNG or WebP photos (they are resized automatically before upload)." }, { status: 400 });
   }
+  const views = Array.isArray(rawViews) ? rawViews.map((v) => (v === "back" || v === "side" ? v : "front")) : [];
   const payload = {
     model: process.env.SAVLINO_VISION_MODEL || "gpt-4.1-mini",
     response_format: { type: "json_object" },
@@ -35,7 +39,10 @@ export async function POST(req: Request) {
       role: "user",
       content: [
         {type:"text",text:"Analyze garment style in these photos. They may show different views of one garment. Generate ONE editable draft, not a production-approved pattern."},
-        ...images.map((image_url: string) => ({ type:"image_url", image_url: {url:image_url,detail:"low"} }))
+        ...images.flatMap((image_url: string, i: number) => [
+          { type:"text", text:`Photo ${i + 1}: ${views[i] ?? "unlabelled"} view` },
+          { type:"image_url", image_url: {url:image_url,detail:"low"} },
+        ])
       ]
     }]
   };

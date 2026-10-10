@@ -92,7 +92,10 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
   const [productId, setProductId] = useState(design.product_id ?? "");
   const [spec, setSpec] = useState<DesignSpec>({ ...DEFAULT_SPEC, ...design.spec });
   const [view, setView] = useState<"front" | "back">("front");
-  const [displayMode,setDisplayMode] = useState<"photo"|"flat"|"compare">("photo");
+  // Open on the reference photo only when one exists; otherwise show the technical flat.
+  const [displayMode, setDisplayMode] = useState<"photo" | "flat" | "compare">(() =>
+    ((design.sketches ?? []) as Sketch[]).some((s) => s.kind === "reference") ? "photo" : "flat",
+  );
   const [color, setColor] = useState(spec.colors[0]);
   const [overlay, setOverlay] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -169,7 +172,10 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
             <span className="text-[0.6rem] uppercase tracking-[0.2em] text-ivory/45">{design.code} · version {design.current_version}{dirty ? " · unsaved changes" : ""}</span>
           </div>
           {displayMode === "photo" ? (<div className="flex h-[520px] items-center justify-center overflow-hidden bg-black/30">
-              {shownReference ? <img src={shownReference.data} alt={shownReference.name} className="max-h-full max-w-full object-contain" /> : <p className="px-5 text-center text-sm text-ivory/50">No ${showSide ? 'side' : view} reference uploaded. Add a photo below to view it here.</p>}
+              {shownReference ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={shownReference.data} alt={shownReference.name} className="max-h-full max-w-full object-contain" />
+              ) : <p className="px-5 text-center text-sm text-ivory/50">{`No ${showSide ? "side" : view} reference photo yet. Add one under “Sketches & reference photos”, or switch to Flat.`}</p>}
             </div>) : displayMode === "flat" ? (
             <Viewport content={{ x: 0, y: 0, w: 200, h: 222 }} className="h-[520px] text-ivory" label={`${name} technical flat, ${view} view`}>
             <AnimatePresence mode="wait">
@@ -181,7 +187,10 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
           ) : (
             <div className="grid gap-3 lg:grid-cols-2">
               <div><p className="mb-2 text-xs uppercase tracking-widest text-gold">Original reference</p><div className="flex h-[520px] items-center justify-center overflow-hidden bg-black/30">
-              {shownReference ? <img src={shownReference.data} alt={shownReference.name} className="max-h-full max-w-full object-contain" /> : <p className="px-5 text-center text-sm text-ivory/50">No ${showSide ? 'side' : view} reference uploaded. Add a photo below to view it here.</p>}
+              {shownReference ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={shownReference.data} alt={shownReference.name} className="max-h-full max-w-full object-contain" />
+              ) : <p className="px-5 text-center text-sm text-ivory/50">{`No ${showSide ? "side" : view} reference photo yet. Add one under “Sketches & reference photos”, or switch to Flat.`}</p>}
             </div></div>
               <div><p className="mb-2 text-xs uppercase tracking-widest text-gold">Technical illustration</p><Viewport content={{ x: 0, y: 0, w: 200, h: 222 }} className="h-[520px] text-ivory" label={`${name} technical flat, ${view} view`}>
             <AnimatePresence mode="wait">
@@ -217,7 +226,7 @@ function Editor({ design, live, products }: { design: Design; live: boolean; pro
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ivory/45">No original image saved for this design. Restore archived design if needed, then use Add reference to upload the original front/back photos. Images do not establish exact cutting measurements.</p>
+            <p className="text-sm text-ivory/45">No sketches or reference photos yet. Upload hand sketches (shown as an overlay on the flat) and front/back/side reference photos. Photos guide style only — they never set cutting measurements.</p>
           )}
         </Section>
 

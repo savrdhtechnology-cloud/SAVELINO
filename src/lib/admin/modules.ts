@@ -32,6 +32,7 @@ export const ICONS = {
   studio: "M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5L12 3Zm7 13 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z",
   apps: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
   tryon: "M9 3 6 5 3 6l1.5 4H6v11h12V10h1.5L21 6l-3-1-3-2a3 3 0 0 1-6 0Z",
+  photo: "M4 7h3l2-3h6l2 3h3v12H4V7Zm8 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
   design: "M12 19l7-7 3 3-7 7-3-3Zm6-6-1.5-7.5L2 2l3.5 14.5L13 18l5-5ZM2 2l7.6 7.6M11 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
   pattern: "M4 4h7v7H4zM13 4l7 3-3 7-7-3 3-7ZM4 15l5 5M4 20l5-5M14 14h6v6h-6z",
   sizes: "M3 7h18v10H3zM7 7v4M11 7v3M15 7v4M19 7v3",
@@ -611,7 +612,7 @@ export const navGroups: NavGroup[] = [
   {
     title: "Atelier",
     items: [
-      { slug: "photo-to-template", title: "Photo to Template", icon: ICONS.design },
+      { slug: "photo-to-template", title: "Photo to Template", icon: ICONS.photo },
       { slug: "design-studio", title: "Design Studio", icon: ICONS.design },
       { slug: "pattern-library", title: "Pattern Library", icon: ICONS.pattern },
       { slug: "size-charts", title: "Size Charts", icon: ICONS.sizes },
