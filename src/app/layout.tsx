@@ -65,7 +65,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link rel="stylesheet" href={fontsHref} />
         {settings.theme.allowToggle && (
           // Applies a visitor's saved light/dark choice before paint (no flash).
