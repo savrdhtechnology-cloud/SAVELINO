@@ -6,29 +6,20 @@ import { DEFAULT_SETTINGS, mergeSettings, type SiteSettings } from "./settings";
 
 export const SETTINGS_TAG = "site-settings";
 
-/**
- * Raw stored settings (cached; Studio/Settings saves revalidate the tag). Only the
- * stored JSON is cached — merging with the current defaults happens per request, so a
- * cache entry written by an older deployment can never hand out an outdated shape.
- */
+/** Raw stored settings JSON (cached; CRM saves revalidate the tag). Merged with defaults per request. */
 const getStoredSettings = unstable_cache(
   async (): Promise<unknown> => {
     const env = getSupabaseEnv();
     if (!env) return null;
     try {
       const client = createClient(env.url, env.anonKey, { auth: { persistSession: false } });
-      const { data } = await (client.from("site_settings") as unknown as {
-        select(c: string): { eq(c: string, v: number): { maybeSingle(): PromiseLike<{ data: { data?: unknown } | null }> } };
-      })
-        .select("data")
-        .eq("id", 1)
-        .maybeSingle();
-      return data?.data ?? null;
+      const { data } = await client.from("settings").select("data").eq("id", 1).maybeSingle();
+      return (data as { data?: unknown } | null)?.data ?? null;
     } catch {
       return null;
     }
   },
-  ["site-settings-raw-v2"],
+  ["settings-raw-v3"],
   { tags: [SETTINGS_TAG], revalidate: 300 },
 );
 

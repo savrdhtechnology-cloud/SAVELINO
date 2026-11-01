@@ -1,14 +1,15 @@
 import type { MetadataRoute } from "next";
-import { enabledCategories } from "@/lib/catalogue";
-import { getSiteSettings } from "@/lib/settings-server";
+import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { site } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const collections = enabledCategories((await getSiteSettings()).catalogue);
+  const collections = await getVisibleCategories();
+  const products = await getLiveProducts();
   const now = new Date();
   const staticRoutes = [
     "",
     "/collections",
+    "/shop",
     "/lookbook",
     "/our-story",
     "/craftsmanship",
@@ -19,13 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/shipping-returns",
     "/privacy",
     "/terms",
-    "/virtual-try-on",
-    "/try-on-terms",
-    "/image-consent",
-    "/login",
-    "/register",
-    "/partner",
-    "/partner/register",
   ];
   return [
     ...staticRoutes.map((path) => ({
@@ -39,6 +33,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly" as const,
       priority: 0.8,
+    })),
+    ...products.map((p) => ({
+      url: `${site.url}/shop/${p.slug}`,
+      lastModified: new Date(p.updated_at ?? p.created_at),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
     })),
   ];
 }

@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { ProductGrid } from "@/components/store/ProductCard";
-import { enabledCategories } from "@/lib/catalogue";
-import { getSiteSettings } from "@/lib/settings-server";
-import { getLiveProducts } from "@/lib/store/products-server";
+import { resolveCategories } from "@/lib/catalogue";
+import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -16,13 +15,13 @@ type Props = { searchParams: Promise<{ category?: string }> };
 
 export default async function ShopPage({ searchParams }: Props) {
   const { category } = await searchParams;
-  const settings = await getSiteSettings();
-  const categories = enabledCategories(settings.catalogue);
-  const visible = new Set(categories.map((c) => c.slug));
-  const all = (await getLiveProducts()).filter((p) => visible.has(p.category));
-  const active = category && visible.has(category) ? category : "";
-  const products = active ? all.filter((p) => p.category === active) : all;
-  const withProducts = categories.filter((c) => all.some((p) => p.category === c.slug));
+  const categories = resolveCategories(await getVisibleCategories());
+  const idBySlug = new Map(categories.map((c) => [c.slug, c.id]));
+  const visibleIds = new Set(categories.map((c) => c.id));
+  const all = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
+  const active = category && idBySlug.has(category) ? category : "";
+  const products = active ? all.filter((p) => p.category_id === idBySlug.get(active)) : all;
+  const withProducts = categories.filter((c) => all.some((p) => p.category_id === c.id));
 
   return (
     <PageShell>

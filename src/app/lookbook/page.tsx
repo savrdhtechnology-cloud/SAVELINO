@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { Lookbook } from "@/components/sections/Lookbook";
 import { SignatureGallery } from "@/components/sections/SignatureGallery";
-import { enabledCategories } from "@/lib/catalogue";
-import { getSiteSettings } from "@/lib/settings-server";
+import { getVisibleCategories } from "@/lib/data/catalog-server";
 
 export const metadata: Metadata = {
   title: "Lookbook",
@@ -12,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LookbookPage() {
-  const enabled = enabledCategories((await getSiteSettings()).catalogue).map((c) => c.slug);
+  const enabled = (await getVisibleCategories()).map((c) => c.slug);
   return (
     <PageShell>
       <PageIntro

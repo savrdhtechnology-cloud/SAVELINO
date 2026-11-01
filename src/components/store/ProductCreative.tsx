@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { imageUrl, type StoreImage, type StoreProduct } from "@/lib/store/types";
+import type { Product, ProductImage } from "@/lib/data/types";
 import { site } from "@/lib/site";
 
 /**
@@ -22,18 +22,18 @@ const iconFor = (f: string) => ICONS.find((x) => x.match.test(f))?.d ?? ICONS[4]
 
 const singular = (w: string) => (/ies$/i.test(w) ? `${w.slice(0, -3)}y` : /(ss|us)$/i.test(w) ? w : /s$/i.test(w) ? w.slice(0, -1) : w);
 
-function Photo({ img, alt, sizes, priority, className, framed }: { img: StoreImage; alt: string; sizes: string; priority?: boolean; className?: string; framed?: boolean }) {
+function Photo({ img, alt, sizes, priority, className, framed }: { img: ProductImage; alt: string; sizes: string; priority?: boolean; className?: string; framed?: boolean }) {
   return (
     <div
       className={`relative overflow-hidden ${framed ? "rounded-2xl" : "rounded-xl"} ${className ?? ""}`}
       style={framed ? { boxShadow: `0 0 0 2px ${C.cream}, 0 0 0 3.5px ${C.gold}, 0 18px 40px -18px rgba(0,0,0,.6)` } : undefined}
     >
-      <Image src={imageUrl(img.id)} alt={alt} fill priority={priority} sizes={sizes} className="object-cover" />
+      <Image src={img.url} alt={alt} fill priority={priority} sizes={sizes} unoptimized={img.url.startsWith("blob:")} className="object-cover" />
     </div>
   );
 }
 
-export function ProductCreative({ product, categoryTitle }: { product: StoreProduct; categoryTitle: string }) {
+export function ProductCreative({ product, categoryTitle }: { product: Product; categoryTitle: string }) {
   const [hero, ...rest] = product.images;
   if (!hero) return null;
   const sides = rest.slice(0, 2);

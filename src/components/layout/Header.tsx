@@ -73,12 +73,6 @@ export function Header({
           ))}
           {themeToggle && <ThemeToggle lightMode={lightMode} />}
           <BagButton />
-          <Link
-            href="/login"
-            className="border border-gold/50 px-5 py-2.5 text-[0.65rem] uppercase tracking-[0.3em] text-gold transition-colors duration-500 hover:bg-gold hover:text-noir"
-          >
-            Sign in
-          </Link>
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
@@ -130,20 +124,13 @@ export function Header({
                 </motion.li>
               ))}
             </ul>
-            <div className="mt-10 grid grid-cols-2 gap-3">
+            <div className="mt-10">
               <Link
-                href="/login"
+                href="/shop"
                 onClick={() => setOpen(false)}
-                className="bg-gold py-3.5 text-center text-[0.7rem] uppercase tracking-[0.3em] text-noir"
+                className="block bg-gold py-3.5 text-center text-[0.7rem] uppercase tracking-[0.3em] text-noir"
               >
-                Sign in
-              </Link>
-              <Link
-                href="/partner"
-                onClick={() => setOpen(false)}
-                className="border border-gold/50 py-3.5 text-center text-[0.7rem] uppercase tracking-[0.3em] text-gold"
-              >
-                Partners
+                Shop the collection
               </Link>
             </div>
             {themeToggle && (

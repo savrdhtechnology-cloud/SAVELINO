@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { addToBag, openBag } from "@/lib/store/cart";
-import { imageUrl, inr, type StoreProduct } from "@/lib/store/types";
+import { inr, type Product } from "@/lib/data/types";
 import { BagIcon } from "./ProductCard";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export function ProductGallery({ product }: { product: StoreProduct }) {
+export function ProductGallery({ product }: { product: Product }) {
   const [active, setActive] = useState(0);
   const img = product.images[active] ?? product.images[0];
   const ratio = img?.width && img?.height ? img.width / img.height : 4 / 5;
@@ -22,7 +22,7 @@ export function ProductGallery({ product }: { product: StoreProduct }) {
           <AnimatePresence mode="wait">
             {img ? (
               <motion.div key={img.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }} className="absolute inset-0">
-                <Image src={imageUrl(img.id)} alt={product.name} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-contain" />
+                <Image src={img.url} alt={product.name} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-contain" />
               </motion.div>
             ) : (
               <span className="absolute inset-0 flex items-center justify-center font-display text-7xl italic text-gold/25">S</span>
@@ -40,7 +40,7 @@ export function ProductGallery({ product }: { product: StoreProduct }) {
                 aria-label={`Photo ${i + 1}`}
                 className={`relative block h-20 w-20 overflow-hidden rounded-lg border transition-colors md:h-24 md:w-24 ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}
               >
-                <Image src={imageUrl(im.id)} alt="" fill sizes="96px" className="object-cover" />
+                <Image src={im.url} alt="" fill sizes="96px" className="object-cover" />
               </button>
             </li>
           ))}
@@ -79,7 +79,7 @@ export function FeatureBadges({ features }: { features: string[] }) {
   );
 }
 
-export function BuyBox({ product, whatsapp }: { product: StoreProduct; whatsapp: string }) {
+export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: string }) {
   const router = useRouter();
   const [color, setColor] = useState(product.colors.length === 1 ? product.colors[0].name : "");
   const [size, setSize] = useState(product.sizes.length === 1 ? product.sizes[0] : "");
@@ -95,7 +95,7 @@ export function BuyBox({ product, whatsapp }: { product: StoreProduct; whatsapp:
       slug: product.slug,
       name: product.name,
       price: product.price,
-      image: product.images[0] ? imageUrl(product.images[0].id) : null,
+      image: product.images[0] ? product.images[0].url : null,
       size,
       color,
       qty,

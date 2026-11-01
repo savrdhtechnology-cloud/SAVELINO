@@ -6,24 +6,18 @@ import { Button } from "@/components/ui/Button";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { CategoryImage } from "@/components/ui/CategoryImage";
-import { categoryImageUrl, enabledCategories, findCategory } from "@/lib/catalogue";
-import { getLiveProducts } from "@/lib/store/products-server";
+import { categoryImageUrl, resolveCategories } from "@/lib/catalogue";
+import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { ProductGrid } from "@/components/store/ProductCard";
-import { getSiteSettings } from "@/lib/settings-server";
-import { BUILTIN_CATEGORY_SLUGS } from "@/lib/settings";
-import { TRYON_DISCLAIMER, isTryOnCategory } from "@/lib/tryon/config";
 
 type Params = { params: Promise<{ slug: string }> };
 
-/** Built-in categories are pre-rendered; custom ones from CRM → Categories render on demand. */
-export function generateStaticParams() {
-  return BUILTIN_CATEGORY_SLUGS.map((slug) => ({ slug }));
-}
+const findCategory = async (slug: string) => resolveCategories(await getVisibleCategories()).find((c) => c.slug === slug);
 
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const c = findCategory((await getSiteSettings()).catalogue, slug);
+  const c = await findCategory(slug);
   if (!c) return {};
   return {
     title: c.title,
@@ -35,13 +29,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function CollectionPage({ params }: Params) {
   const { slug } = await params;
-  const { catalogue } = await getSiteSettings();
-  const c = findCategory(catalogue, slug);
+  const all = resolveCategories(await getVisibleCategories());
+  const c = all.find((x) => x.slug === slug);
   if (!c) notFound();
-  const others = enabledCategories(catalogue)
+  const others = all
     .filter((o) => o.slug !== c.slug)
     .slice(0, 4);
-  const products = await getLiveProducts(c.slug);
+  const products = await getLiveProducts(c.id);
 
   return (
     <PageShell>
@@ -75,25 +69,15 @@ export default async function CollectionPage({ params }: Params) {
                 ))}
               </ul>
             </Reveal>
-            {isTryOnCategory(c.slug) && (
-              <Reveal delay={0.25} className="mt-10 flex flex-wrap items-center gap-5 border border-gold/40 bg-[linear-gradient(120deg,rgba(212,175,55,0.12),transparent_60%)] p-6">
-                <div className="min-w-[220px] flex-1">
-                  <p className="eyebrow">AI Virtual Try-On</p>
-                  <p className="mt-2 text-sm leading-relaxed text-ivory/70">Preview this piece on your own photo — front, sides and back.</p>
-                  <p className="mt-2 text-[0.68rem] text-ivory/45">{TRYON_DISCLAIMER}</p>
-                </div>
-                <Button href={`/virtual-try-on?product=${c.slug}`}>Try Virtually</Button>
-              </Reveal>
-            )}
             {products.length === 0 && (
             <Reveal delay={0.3} className="mt-10 border border-gold/20 bg-noir-soft p-6">
               <p className="eyebrow">Shopping opens soon</p>
               <p className="mt-3 text-sm leading-relaxed text-ivory/65">
-                The online catalogue and checkout for this collection are being connected. Create an account to be ready
-                when pieces go live.
+                New pieces for this collection are being finished by hand. Explore the shop or ask us about custom
+                stitching in the meantime.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button href="/register">Create account</Button>
+                <Button href="/shop">Visit the shop</Button>
                 {c.slug.includes("blouse") && (
                   <Button href="/custom-stitching" variant="outline">
                     Custom stitching

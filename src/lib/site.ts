@@ -21,7 +21,7 @@ export const primaryNav: NavItem[] = [
   { label: "Custom Stitching", href: "/custom-stitching" },
   { label: "Lookbook", href: "/lookbook" },
   { label: "Our Story", href: "/our-story" },
-  { label: "Partners", href: "/partner" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const helpNav: NavItem[] = [

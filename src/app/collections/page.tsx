@@ -3,8 +3,8 @@ import Link from "next/link";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { ImageReveal } from "@/components/ui/Reveal";
 import { CategoryImage } from "@/components/ui/CategoryImage";
-import { enabledCategories } from "@/lib/catalogue";
-import { getSiteSettings } from "@/lib/settings-server";
+import { resolveCategories } from "@/lib/catalogue";
+import { getVisibleCategories } from "@/lib/data/catalog-server";
 
 export const metadata: Metadata = {
   title: "All collections",
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionsIndexPage() {
-  const collections = enabledCategories((await getSiteSettings()).catalogue);
+  const collections = resolveCategories(await getVisibleCategories());
   return (
     <PageShell>
       <PageIntro

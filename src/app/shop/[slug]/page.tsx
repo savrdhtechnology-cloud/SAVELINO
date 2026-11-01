@@ -5,10 +5,10 @@ import { PageShell } from "@/components/layout/PageShell";
 import { ProductCard } from "@/components/store/ProductCard";
 import { BuyBox, FeatureBadges, ProductGallery } from "@/components/store/ProductDetail";
 import { ProductCreative } from "@/components/store/ProductCreative";
-import { findCategory } from "@/lib/catalogue";
+import { resolveCategories } from "@/lib/catalogue";
 import { getSiteSettings } from "@/lib/settings-server";
-import { getLiveProduct, getLiveProducts } from "@/lib/store/products-server";
-import { imageUrl, inr } from "@/lib/store/types";
+import { getLiveProduct, getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { inr } from "@/lib/data/types";
 import { site } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: p.name,
     description: p.subtitle || p.description.slice(0, 160),
     alternates: { canonical: `/shop/${p.slug}` },
-    openGraph: { title: `${p.name} · SAVLINO`, description: p.subtitle, images: p.images[0] ? [{ url: imageUrl(p.images[0].id) }] : [] },
+    openGraph: { title: `${p.name} · SAVLINO`, description: p.subtitle, images: p.images[0] ? [{ url: p.images[0].url }] : [] },
   };
 }
 
@@ -30,8 +30,8 @@ export default async function ProductPage({ params }: Props) {
   const product = await getLiveProduct(slug);
   if (!product) notFound();
   const settings = await getSiteSettings();
-  const category = findCategory(settings.catalogue, product.category);
-  const related = (await getLiveProducts(product.category)).filter((p) => p.id !== product.id).slice(0, 4);
+  const category = resolveCategories(await getVisibleCategories()).find((c) => c.id === product.category_id);
+  const related = product.category_id ? (await getLiveProducts(product.category_id)).filter((p) => p.id !== product.id).slice(0, 4) : [];
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
 
   const jsonLd = {
@@ -39,7 +39,7 @@ export default async function ProductPage({ params }: Props) {
     "@type": "Product",
     name: product.name,
     description: product.description || product.subtitle,
-    image: product.images.map((i) => `${site.url}${imageUrl(i.id)}`),
+    image: product.images.map((i) => (i.url.startsWith("http") ? i.url : `${site.url}${i.url}`)),
     brand: { "@type": "Brand", name: site.name },
     offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: "https://schema.org/InStock", url: `${site.url}/shop/${product.slug}` },
   };

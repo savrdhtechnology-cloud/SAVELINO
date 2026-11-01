@@ -3,7 +3,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { getSupabaseEnv } from "./env";
-import type { UserRole } from "@/lib/types";
+
+export type StaffRole = "none" | "staff" | "admin";
 
 export async function createSupabaseServerClient() {
   const env = getSupabaseEnv();
@@ -28,9 +29,9 @@ export async function createSupabaseServerClient() {
 export type SessionContext =
   | { configured: false }
   | { configured: true; user: null }
-  | { configured: true; user: { id: string; email: string | null }; role: UserRole };
+  | { configured: true; user: { id: string; email: string | null; name: string }; role: StaffRole };
 
-/** Resolves the signed-in user and their role (role is read from the database, never from the client). */
+/** The signed-in CRM user and their role (read from public.profiles, never from the client). */
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { configured: false };
@@ -38,7 +39,9 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { configured: true, user: null };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  const role = ((profile as unknown as { role?: UserRole } | null)?.role ?? "customer") as UserRole;
-  return { configured: true, user: { id: user.id, email: user.email ?? null }, role };
+  const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).maybeSingle();
+  const p = profile as { role?: StaffRole; full_name?: string } | null;
+  return { configured: true, user: { id: user.id, email: user.email ?? null, name: p?.full_name || user.email || "Admin" }, role: p?.role ?? "none" };
 });
+
+export const isStaffRole = (role: StaffRole) => role === "staff" || role === "admin";

@@ -8,7 +8,7 @@ import { BagDrawer } from "@/components/store/Bag";
 import { googleFontsHref } from "@/lib/fonts";
 import "./globals.css";
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
     default: `${site.name} — ${site.tagline}`,
@@ -44,6 +44,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
 };
+
+/** Homepage title and description come from CRM → Website → SEO. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getSiteSettings();
+  return {
+    ...baseMetadata,
+    title: { default: seo.title || `${site.name} — ${site.tagline}`, template: `%s · ${site.name}` },
+    description: seo.description || site.description,
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#0B0B0B",

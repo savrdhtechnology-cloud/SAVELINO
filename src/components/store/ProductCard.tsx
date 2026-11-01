@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { imageUrl, inr, type StoreProduct } from "@/lib/store/types";
+import { inr, type Product } from "@/lib/data/types";
 
 /** Product tile styled after the SAVLINO product creatives: framed photo, colour dots, size chips and a Shop Now pill. */
-export function ProductCard({ product, priority }: { product: StoreProduct; priority?: boolean }) {
+export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
   const [cover, second] = product.images;
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
   return (
@@ -13,7 +13,7 @@ export function ProductCard({ product, priority }: { product: StoreProduct; prio
           {cover ? (
             <>
               <Image
-                src={imageUrl(cover.id)}
+                src={cover.url}
                 alt={product.name}
                 fill
                 priority={priority}
@@ -23,7 +23,7 @@ export function ProductCard({ product, priority }: { product: StoreProduct; prio
               />
               {second && (
                 <Image
-                  src={imageUrl(second.id)}
+                  src={second.url}
                   alt=""
                   fill
                   sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
@@ -75,7 +75,7 @@ export function BagIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   );
 }
 
-export function ProductGrid({ products }: { products: StoreProduct[] }) {
+export function ProductGrid({ products }: { products: Product[] }) {
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-7 xl:grid-cols-4">
       {products.map((p, i) => (

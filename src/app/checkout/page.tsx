@@ -12,7 +12,14 @@ export default async function CheckoutPage() {
       <section className="mx-auto max-w-[1200px] px-5 py-12 md:px-10 md:py-16">
         <p className="eyebrow">Checkout</p>
         <h1 className="mt-3 font-display text-4xl text-ivory md:text-5xl">Almost yours</h1>
-        <CheckoutForm shippingFee={commerce.shippingFee} freeShippingAbove={commerce.freeShippingAbove} whatsapp={brand.whatsapp} />
+        <CheckoutForm
+          shippingFee={commerce.shippingFee}
+          freeShippingAbove={commerce.freeShippingAbove}
+          whatsapp={brand.whatsapp}
+          codEnabled={commerce.codEnabled}
+          upiId={commerce.upiId}
+          upiName={commerce.upiName}
+        />
       </section>
     </PageShell>
   );

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/store/ProductCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import type { StoreProduct } from "@/lib/store/types";
+import type { Product } from "@/lib/data/types";
 
 /** Homepage "Shop the collection": the newest live products, straight from the store. */
-export function ShopSection({ products }: { products: StoreProduct[] }) {
+export function ShopSection({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
   return (
     <section id="shop" aria-label="Shop the collection" className="relative overflow-hidden bg-noir py-24 md:py-32">

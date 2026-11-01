@@ -19,15 +19,6 @@ const fixedColumns = [
     ],
   },
   { title: "Help", links: helpNav },
-  {
-    title: "Account",
-    links: [
-      { label: "Sign in", href: "/login" },
-      { label: "Create account", href: "/register" },
-      { label: "Partner program", href: "/partner" },
-      { label: "Partner login", href: "/partner/login" },
-    ],
-  },
 ];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
