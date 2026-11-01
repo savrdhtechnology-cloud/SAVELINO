@@ -40,6 +40,11 @@ $$;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Users created before this script ran also get a profile.
+insert into public.profiles (id, email)
+select id, email from auth.users
+on conflict (id) do nothing;
+
 create or replace function public.touch_updated_at() returns trigger language plpgsql as $$
 begin
   new.updated_at = now();
