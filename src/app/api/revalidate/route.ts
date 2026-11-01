@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { SETTINGS_TAG } from "@/lib/settings-server";
-import { PRODUCTS_TAG } from "@/lib/products-server";
+import { STORE_TAG } from "@/lib/store/products-server";
 import { getSessionContext } from "@/lib/supabase/server";
 
 /** Called by CRM Settings/Studio after saving so the website shows changes immediately. Admins only. */
@@ -11,7 +11,7 @@ export async function POST() {
     return NextResponse.json({ ok: false }, { status: 403 });
   }
   revalidateTag(SETTINGS_TAG);
-  revalidateTag(PRODUCTS_TAG);
+  revalidateTag(STORE_TAG);
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }

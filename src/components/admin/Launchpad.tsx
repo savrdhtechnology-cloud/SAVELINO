@@ -10,6 +10,7 @@ const extraDescriptions: Record<string, string> = {
   analytics: "Sales and fulfilment trends.",
   apps: "Every app in SAVLINO OS.",
   studio: "Website & CRM themes, fonts, motion, mouse effects, hero, sections.",
+  store: "Website shop on Neon: products with photos, colours, sizes — and customer orders.",
   categories: "Which categories the website shows, their order and copy.",
   settings: "Business details, commerce rules, appearance.",
   "virtual-try-ons": "AI try-on sessions, consent, previews and conversion.",

@@ -17,6 +17,8 @@ import { PartnerProgram } from "@/components/sections/PartnerProgram";
 import { CustomerEntry } from "@/components/sections/CustomerEntry";
 import { site } from "@/lib/site";
 import { enabledCategories } from "@/lib/catalogue";
+import { ShopSection } from "@/components/sections/ShopSection";
+import { getLiveProducts } from "@/lib/store/products-server";
 
 export default async function Home() {
   const settings = await getSiteSettings();
@@ -27,6 +29,7 @@ export default async function Home() {
   const ownSection: Record<string, SectionId> = { "designer-blouses": "designer-blouses", "ready-made-blouses": "ready-made" };
   const collectionItems = enabled.filter((c) => !(ownSection[c.slug] && visibleSections.has(ownSection[c.slug])));
   const enabledSet = new Set(enabledSlugs);
+  const liveProducts = (await getLiveProducts()).filter((p) => enabledSet.has(p.category));
 
   const SECTIONS: Record<SectionId, ReactNode> = {
     "designer-blouses": enabledSet.has("designer-blouses") ? <DesignerBlouses /> : null,
@@ -65,6 +68,7 @@ export default async function Home() {
       <SiteHeader />
       <main id="main">
         <Hero content={settings.hero} />
+        <ShopSection products={liveProducts} />
         {settings.sections
           .filter((sec) => sec.visible)
           .map((sec) => (

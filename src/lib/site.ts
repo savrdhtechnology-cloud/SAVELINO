@@ -16,7 +16,7 @@ export const site = {
 export type NavItem = { label: string; href: string };
 
 export const primaryNav: NavItem[] = [
-  { label: "Blouses", href: "/collections/designer-blouses" },
+  { label: "Shop", href: "/shop" },
   { label: "Collections", href: "/collections" },
   { label: "Custom Stitching", href: "/custom-stitching" },
   { label: "Lookbook", href: "/lookbook" },

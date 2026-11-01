@@ -88,8 +88,8 @@ export function CategoriesApp({ live }: { live: boolean }) {
           </Card>
           <Card title="Products">
             <p className="text-sm leading-relaxed text-ivory/60">
-              Add products in <Link href="/admin/products" className="text-gold underline-offset-4 hover:underline">Products</Link> and pick their category.
-              Live products appear on that category’s page while the category is switched on.
+              Add products in <Link href="/admin/store" className="text-gold underline-offset-4 hover:underline">Store</Link> and pick their category.
+              Live products appear in the shop and on that category’s page while the category is switched on.
             </p>
           </Card>
         </div>

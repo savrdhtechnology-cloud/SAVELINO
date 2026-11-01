@@ -630,7 +630,7 @@ export const navGroups: NavGroup[] = [
   { title: "Catalogue", items: ["products", "collections", "inventory", "materials", "suppliers"].map((s) => moduleNav(s)) },
   { title: "Partners", items: ["partners", "commissions"].map((s) => moduleNav(s)) },
   { title: "Finance", items: ["expenses"].map((s) => moduleNav(s)) },
-  { title: "Website", items: [{ slug: "studio", title: "Studio", icon: ICONS.studio }, { slug: "categories", title: "Categories", icon: ICONS.collections }, { slug: "virtual-try-ons", title: "Virtual Try-Ons", icon: ICONS.tryon }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
+  { title: "Website", items: [{ slug: "store", title: "Store", icon: ICONS.products }, { slug: "studio", title: "Studio", icon: ICONS.studio }, { slug: "categories", title: "Categories", icon: ICONS.collections }, { slug: "virtual-try-ons", title: "Virtual Try-Ons", icon: ICONS.tryon }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
   { title: "System", items: [{ slug: "settings", title: "Settings", icon: ICONS.settings }] },
 ];
 

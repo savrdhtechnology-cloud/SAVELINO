@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { primaryNav } from "@/lib/site";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
+import { BagButton } from "@/components/store/Bag";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -71,6 +72,7 @@ export function Header({
             <NavLink key={item.href} {...item} />
           ))}
           {themeToggle && <ThemeToggle lightMode={lightMode} />}
+          <BagButton />
           <Link
             href="/login"
             className="border border-gold/50 px-5 py-2.5 text-[0.65rem] uppercase tracking-[0.3em] text-gold transition-colors duration-500 hover:bg-gold hover:text-noir"
@@ -79,13 +81,15 @@ export function Header({
           </Link>
         </div>
 
+        <div className="flex items-center gap-1 lg:hidden">
+        <BagButton />
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="mobile-menu"
           aria-label={open ? "Close menu" : "Open menu"}
-          className="relative flex h-11 w-11 items-center justify-center lg:hidden"
+          className="relative flex h-11 w-11 items-center justify-center"
         >
           <span
             className={`absolute h-px w-6 bg-gold transition-transform duration-500 ${open ? "rotate-45" : "-translate-y-1.5"}`}
@@ -94,6 +98,7 @@ export function Header({
             className={`absolute h-px w-6 bg-gold transition-transform duration-500 ${open ? "-rotate-45" : "translate-y-1.5"}`}
           />
         </button>
+        </div>
       </div>
 
       <AnimatePresence>

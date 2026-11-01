@@ -4,6 +4,7 @@ import { themeCss } from "@/lib/settings";
 import { getSiteSettings } from "@/lib/settings-server";
 import { StudioBridge } from "@/components/site/StudioBridge";
 import { SiteEffects } from "@/components/site/SiteEffects";
+import { BagDrawer } from "@/components/store/Bag";
 import { googleFontsHref } from "@/lib/fonts";
 import "./globals.css";
 
@@ -86,6 +87,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           Skip to content
         </a>
         {children}
+        <BagDrawer />
       </body>
     </html>
   );

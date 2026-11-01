@@ -7,7 +7,8 @@ import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { CategoryImage } from "@/components/ui/CategoryImage";
 import { categoryImageUrl, enabledCategories, findCategory } from "@/lib/catalogue";
-import { getCategoryProducts } from "@/lib/products-server";
+import { getLiveProducts } from "@/lib/store/products-server";
+import { ProductGrid } from "@/components/store/ProductCard";
 import { getSiteSettings } from "@/lib/settings-server";
 import { BUILTIN_CATEGORY_SLUGS } from "@/lib/settings";
 import { TRYON_DISCLAIMER, isTryOnCategory } from "@/lib/tryon/config";
@@ -19,7 +20,6 @@ export function generateStaticParams() {
   return BUILTIN_CATEGORY_SLUGS.map((slug) => ({ slug }));
 }
 
-const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
@@ -41,7 +41,7 @@ export default async function CollectionPage({ params }: Params) {
   const others = enabledCategories(catalogue)
     .filter((o) => o.slug !== c.slug)
     .slice(0, 4);
-  const products = await getCategoryProducts(c.slug);
+  const products = await getLiveProducts(c.slug);
 
   return (
     <PageShell>
@@ -124,27 +124,9 @@ export default async function CollectionPage({ params }: Params) {
           <div className="mx-auto max-w-[1440px] px-5 md:px-10">
             <p className="eyebrow">The pieces</p>
             <h2 className="mt-3 font-display text-4xl text-ivory md:text-5xl">{c.title}</h2>
-            <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-              {products.map((p) => (
-                <li key={p.id} className="group">
-                  <div className="relative aspect-[3/4] overflow-hidden border border-gold/20 bg-noir-soft">
-                    {p.image_url ? (
-                      <CategoryImage
-                        src={p.image_url}
-                        alt={p.name}
-                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 48vw"
-                        className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"
-                      />
-                    ) : (
-                      <span className="absolute inset-0 flex items-center justify-center font-display text-5xl italic text-gold/30">S</span>
-                    )}
-                  </div>
-                  <p className="mt-4 font-display text-xl leading-tight text-ivory">{p.name}</p>
-                  {p.description && <p className="mt-1 line-clamp-2 text-sm text-ivory/55">{p.description}</p>}
-                  <p className="mt-2 text-[0.72rem] uppercase tracking-[0.22em] text-gold">{inr.format(p.price)}</p>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-10">
+              <ProductGrid products={products} />
+            </div>
           </div>
         </section>
       )}
