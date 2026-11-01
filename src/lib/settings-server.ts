@@ -6,11 +6,15 @@ import { DEFAULT_SETTINGS, mergeSettings, type SiteSettings } from "./settings";
 
 export const SETTINGS_TAG = "site-settings";
 
-/** Public website settings (cached; Studio/Settings saves revalidate the tag). */
-export const getSiteSettings = unstable_cache(
-  async (): Promise<SiteSettings> => {
+/**
+ * Raw stored settings (cached; Studio/Settings saves revalidate the tag). Only the
+ * stored JSON is cached — merging with the current defaults happens per request, so a
+ * cache entry written by an older deployment can never hand out an outdated shape.
+ */
+const getStoredSettings = unstable_cache(
+  async (): Promise<unknown> => {
     const env = getSupabaseEnv();
-    if (!env) return DEFAULT_SETTINGS;
+    if (!env) return null;
     try {
       const client = createClient(env.url, env.anonKey, { auth: { persistSession: false } });
       const { data } = await (client.from("site_settings") as unknown as {
@@ -19,11 +23,20 @@ export const getSiteSettings = unstable_cache(
         .select("data")
         .eq("id", 1)
         .maybeSingle();
-      return mergeSettings(data?.data);
+      return data?.data ?? null;
     } catch {
-      return DEFAULT_SETTINGS;
+      return null;
     }
   },
-  ["site-settings-v1"],
+  ["site-settings-raw-v2"],
   { tags: [SETTINGS_TAG], revalidate: 300 },
 );
+
+/** Public website settings, always in the current shape. */
+export async function getSiteSettings(): Promise<SiteSettings> {
+  try {
+    return mergeSettings(await getStoredSettings());
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
