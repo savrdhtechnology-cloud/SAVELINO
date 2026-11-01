@@ -18,7 +18,7 @@ export function SiteEffects(props: EffectsConfig) {
     return () => window.removeEventListener(EFFECTS_PREVIEW_EVENT, on);
   }, []);
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/worker")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/worker") || pathname.startsWith("/studio")) return null;
   const cfg = preview ?? props;
   return <Effects key={`${cfg.background}-${cfg.cursor}`} {...cfg} />;
 }

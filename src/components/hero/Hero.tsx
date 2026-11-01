@@ -6,7 +6,8 @@ import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { Monogram } from "@/components/ui/Logo";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { Button } from "@/components/ui/Button";
-import { DEFAULT_SETTINGS, HERO_PRESET_PALETTES, type SiteSettings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, HERO_PRESETS, HERO_PRESET_PALETTES, type HeroPreset, type SiteSettings } from "@/lib/settings";
+import { HERO_PREVIEW_EVENT } from "@/components/site/StudioBridge";
 
 const MonogramScene = dynamic(() => import("@/components/three/MonogramScene"), { ssr: false });
 
@@ -34,8 +35,22 @@ function supportsWebGL() {
   }
 }
 
-export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettings["hero"] }) {
+type HeroLook = { preset?: HeroPreset; height?: number; spotlight?: number };
+
+/**
+ * Homepage hero. `still` renders the static monogram only (Studio thumbnails).
+ * Inside the CRM preview frame the hero also follows unsaved Appearance Studio choices.
+ */
+export function Hero({ content: saved = DEFAULT_SETTINGS.hero, still = false }: { content?: SiteSettings["hero"]; still?: boolean }) {
   const reduce = useReducedMotion();
+  const [look, setLook] = useState<HeroLook | null>(null);
+  useEffect(() => {
+    const on = (e: Event) => setLook((e as CustomEvent<HeroLook>).detail);
+    window.addEventListener(HERO_PREVIEW_EVENT, on);
+    return () => window.removeEventListener(HERO_PREVIEW_EVENT, on);
+  }, []);
+  const content = { ...saved, ...(look ?? {}) };
+  if (!HERO_PRESETS.includes(content.preset)) content.preset = "classic-3d";
   const sectionRef = useRef<HTMLElement>(null);
   const [mode, setMode] = useState<"pending" | "3d" | "static">("pending");
   const [mobile, setMobile] = useState(false);
@@ -53,8 +68,8 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
 
   useEffect(() => {
     if (reduce === null) return;
-    setMode(reduce || !supportsWebGL() ? "static" : "3d");
-  }, [reduce]);
+    setMode(still || reduce || !supportsWebGL() ? "static" : "3d");
+  }, [reduce, still]);
 
   // Pause rendering entirely when the hero is off-screen.
   useEffect(() => {
@@ -70,32 +85,46 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
   const sceneScale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1, 0.86]);
   const fade = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
 
-  const preset = HERO_PRESET_PALETTES[content.preset || "classic-3d"];
-  const classic = !content.preset || content.preset === "classic-3d";
-  const showStatic = mode !== "3d" || !ready;
+  const preset = HERO_PRESET_PALETTES[content.preset];
+  const classic = content.preset === "classic-3d";
+  const light = (content.spotlight ?? 70) / 100;
+  const showStatic = !classic || mode !== "3d" || !ready;
 
   return (
     <section
       ref={sectionRef}
       id="top"
       aria-label="SAVLINO — A Legacy of Elegance"
-      className="grain relative min-h-[620px] w-full overflow-hidden bg-noir"
-      style={{height:`${content.height || 100}svh`, background:classic?undefined:preset.background}}
+      className="grain relative min-h-[620px] w-full overflow-hidden bg-noir transition-[background-color] duration-700"
+      style={{ height: `${content.height || 100}svh`, backgroundColor: classic ? undefined : preset.background }}
     >
-      {!classic && <div aria-hidden className="pointer-events-none absolute inset-0"
-        style={{background:`radial-gradient(ellipse at 70% 42%, ${preset.accent}95 0%, transparent 50%), linear-gradient(125deg, ${preset.background} 0%, ${preset.shade} 95%)`,opacity:(content.spotlight ?? 70)/100}}/>}
-      {/* Soft gold light */}
+      {!classic && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 transition-opacity duration-700"
+          style={{
+            background: `radial-gradient(ellipse at 50% 38%, ${preset.accent}66 0%, transparent 52%), linear-gradient(125deg, ${preset.background} 0%, ${preset.shade} 100%)`,
+            opacity: 0.35 + light * 0.65,
+          }}
+        />
+      )}
+      {/* Soft light behind the monogram */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[38%] h-[80vmin] w-[80vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.22)_0%,rgba(212,175,55,0.06)_40%,transparent_70%)] blur-2xl"
+        className="pointer-events-none absolute left-1/2 top-[38%] h-[80vmin] w-[80vmin] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+        style={{
+          background: `radial-gradient(circle, ${classic ? "rgba(212,175,55,0.22)" : `${preset.accent}55`} 0%, ${classic ? "rgba(212,175,55,0.06)" : `${preset.accent}14`} 40%, transparent 70%)`,
+          opacity: classic ? 1 : 0.4 + light * 0.6,
+        }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-noir via-noir/60 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent"
+        style={{ backgroundImage: `linear-gradient(to top, ${classic ? "var(--color-noir)" : preset.background}, ${classic ? "color-mix(in srgb, var(--color-noir) 60%, transparent)" : `${preset.background}99`}, transparent)` }}
       />
 
-      {classic && <motion.div style={{ scale: sceneScale, opacity: fade }} className="absolute inset-0">
-        {/* Static approved monogram: SSR placeholder, reduced-motion and no-WebGL view. */}
+      <motion.div style={{ scale: sceneScale, opacity: fade }} className="absolute inset-0">
+        {/* Static approved monogram: SSR placeholder, reduced-motion, no-WebGL and the colour presets. */}
         <div
           className={`absolute left-1/2 top-[36.8%] aspect-square h-[38.3%] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 md:top-[38.1%] md:h-[58.1%] ${
             showStatic ? "opacity-100" : "opacity-0"
@@ -104,14 +133,14 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
           <Monogram size={774} priority className="h-full! w-full! object-contain" />
         </div>
 
-        {mode === "3d" && (
+        {classic && mode === "3d" && (
           <div className={`absolute inset-0 transition-opacity duration-1000 ${ready ? "opacity-100" : "opacity-0"}`}>
             <SceneBoundary onError={() => setMode("static")}>
               <MonogramScene active={visible} mobile={mobile} onReady={() => setReady(true)} />
             </SceneBoundary>
           </div>
         )}
-      </motion.div>}
+      </motion.div>
 
       <motion.div
         style={{ y: textY, opacity: fade }}

@@ -9,7 +9,11 @@ type Msg =
   | { type: "savlino:studio:vars"; vars: Record<string, string> }
   | { type: "savlino:studio:text"; key: string; value: string }
   | { type: "savlino:studio:mode"; mode: "dark" | "light" | "porcelain" }
-  | { type: "savlino:studio:effects"; effects: EffectsConfig };
+  | { type: "savlino:studio:effects"; effects: EffectsConfig }
+  | { type: "savlino:studio:hero"; hero: Record<string, unknown> };
+
+/** Unsaved hero look (preset, height, light) sent from the CRM Appearance Studio. */
+export const HERO_PREVIEW_EVENT = "savlino:hero-preview";
 
 /** The site loads only its chosen typefaces; the Studio preview needs every option. */
 function loadAllFonts() {
@@ -39,6 +43,8 @@ export function StudioBridge() {
         if (["dark", "light", "porcelain"].includes(e.data.mode)) document.documentElement.setAttribute("data-theme", e.data.mode);
       } else if (e.data.type === "savlino:studio:effects") {
         window.dispatchEvent(new CustomEvent(EFFECTS_PREVIEW_EVENT, { detail: e.data.effects }));
+      } else if (e.data.type === "savlino:studio:hero") {
+        window.dispatchEvent(new CustomEvent(HERO_PREVIEW_EVENT, { detail: e.data.hero }));
       } else if (e.data.type === "savlino:studio:text") {
         const { key, value } = e.data;
         document.querySelectorAll<HTMLElement>(`[data-studio="${CSS.escape(key)}"]`).forEach((el) => {
