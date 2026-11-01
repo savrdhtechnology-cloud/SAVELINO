@@ -155,6 +155,10 @@ export function defaultSettings(categorySlug = "designer-blouses", categoryName 
     singles: true,
     skip: [],
     showRaw: false,
+    backgroundAuto: true,
+    backgroundColor: "#A66F7C",
+    backgroundOpacity: 0.36,
+    backgroundSize: 1,
     framing: {},
   };
 }
@@ -218,7 +222,33 @@ function labelLines(label: string): string[] {
   return [w.slice(0, mid).join(" "), w.slice(mid).join(" ")];
 }
 
-function background(ctx: Ctx, W: number, H: number, seed = 1) {
+/** Samples vivid garment colours rather than pale walls/skin where possible. */
+function garmentTint(src: Source): string {
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = 40;
+  const cx = cv.getContext("2d", { willReadFrequently: true });
+  if (!cx) return "#A66F7C";
+  cx.drawImage(src.bitmap, 0, 0, 40, 40);
+  const pixels = cx.getImageData(0, 0, 40, 40).data;
+  const buckets = new Map<number, { n: number; r: number; g: number; b: number }>();
+  for (let i = 0; i < pixels.length; i += 4) {
+    const [r,g,b] = [pixels[i],pixels[i+1],pixels[i+2]];
+    const high = Math.max(r,g,b), low = Math.min(r,g,b);
+    if (high < 55 || high - low < 48 || high > 245 && low > 210) continue;
+    // Skip typical warm skin/wall tones unless there are no stronger garment colours.
+    if (r > g * 1.17 && g > b * 1.12 && r - b < 150) continue;
+    const hue = Math.atan2(Math.sqrt(3)*(g-b),2*r-g-b);
+    const key = Math.round((hue+Math.PI)*12/(2*Math.PI));
+    const hit = buckets.get(key) ?? { n: 0, r: 0, g: 0, b: 0 };
+    hit.n++; hit.r+=r; hit.g+=g; hit.b+=b;
+    buckets.set(key,hit);
+  }
+  const winner = [...buckets.values()].sort((x,y)=>y.n-x.n)[0];
+  if (!winner) return "#A66F7C";
+  const hex = (v:number)=>Math.round(v/winner.n).toString(16).padStart(2,"0");
+  return "#"+hex(winner.r)+hex(winner.g)+hex(winner.b);
+}
+function background(ctx: Ctx, W: number, H: number, seed = 1, settings?: CreativeSettings, source?: Source) {
   const g = ctx.createRadialGradient(W * 0.3, H * 0.34, 0, W * 0.3, H * 0.34, Math.max(W, H) * 0.95);
   g.addColorStop(0, "#b8917a");
   g.addColorStop(0.36, "#8d6852");
@@ -226,6 +256,19 @@ function background(ctx: Ctx, W: number, H: number, seed = 1) {
   g.addColorStop(1, "#33221b");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
+  const tint = settings?.backgroundAuto && source ? garmentTint(source) : (settings?.backgroundColor || "#A66F7C");
+  const opacity = Math.max(0,Math.min(1,settings?.backgroundOpacity ?? 0.36));
+  const spread = Math.max(0.4,Math.min(2.5,settings?.backgroundSize ?? 1));
+  if (/^#[0-9a-f]{6}$/i.test(tint) && opacity > 0) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    const glow = ctx.createRadialGradient(W*0.38,H*0.34,0,W*0.38,H*0.34,Math.max(W,H)*0.64*spread);
+    glow.addColorStop(0,tint);
+    glow.addColorStop(1,"transparent");
+    ctx.fillStyle=glow;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
   // soft warm bokeh
   const rand = mulberry(seed);
   for (let i = 0; i < 14; i++) {
@@ -594,7 +637,7 @@ export function renderCombo(input: RenderInput, scale = 1): HTMLCanvasElement {
   if (!ctx || !sources.length) return canvas;
   ctx.scale(k, k);
   const hide = s.hideFaces;
-  background(ctx, W, H, 7);
+  background(ctx, W, H, 7, input.settings, input.sources[0]);
 
   // Hero: large, edges melting into the background.
   feathered(ctx, sources[0], hide, 175, 0, 740, H, { l: 90, r: 70, t: 40 });
@@ -651,7 +694,7 @@ export function renderSingle(input: RenderInput, index: number, scale = 1): HTML
   if (!ctx || !src) return canvas;
   ctx.scale(scale, scale);
   const hide = s.hideFaces;
-  background(ctx, W, H, 11 + index);
+  background(ctx, W, H, 11 + index, input.settings, input.sources[index]);
 
   if (style === "classic") {
     logo(ctx, W / 2, 36, 66, s.brandLine);
