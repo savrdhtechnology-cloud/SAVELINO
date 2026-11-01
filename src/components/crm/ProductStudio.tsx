@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { COLOR_PRESETS, SIZE_OPTIONS, inr, slugify, type Category, type Color, type CreativeSettings, type Product, type ProductImage } from "@/lib/data/types";
-import { CreativePanel, buildSources, useBitmaps, type Faces } from "./CreativePanel";
+import { CreativeDesign, CreativeFraming, CreativeGallery, buildSources, useBitmaps, useCreativePreviews, type Faces } from "./CreativePanel";
 import { canvasBlob, defaultSettings, loadCreativeFonts, mergeSettings, renderAll } from "./creative";
 import { db, dominantColor, fetchCategories, fetchProduct, must, nearestColor, removeMedia, revalidateSite, uploadBlob, uploadMedia, useLoad } from "./data";
-import { Area, Badge, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, toast } from "./ui";
+import { Area, Badge, EASE, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, Tabs, toast } from "./ui";
 
 type Photo = { key: string; url: string; file?: File; id?: string; path?: string | null; width: number | null; height: number | null };
 
@@ -26,7 +26,7 @@ type Details = {
   stock: number;
 };
 
-const STEPS = ["Raw Upload", "Auto Analyze", "Details", "Creatives", "Approve & Publish"];
+type Step = "photos" | "details" | "design" | "framing";
 const ROLE = (i: number) => (i === 0 ? "Main" : i < 3 ? "Side" : i < 7 ? "Detail" : "Extra");
 const FEATURES_BY_CATEGORY: Record<string, string[]> = {
   "designer-blouses": ["Premium Fabric", "Fine Stitching", "Perfect Fit"],
@@ -127,13 +127,9 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
 
   useEffect(() => () => photos.forEach((p) => p.file && URL.revokeObjectURL(p.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const step = useMemo(() => {
-    if (status === "live") return 5;
-    if (photos.length === 0) return 0;
-    if (!analysis && !product) return 1;
-    if (!d.name || d.price <= 0) return 2;
-    return 4;
-  }, [photos.length, analysis, d.name, d.price, status, product]);
+  const [tab, setTab] = useState<Step>(product ? "details" : "photos");
+  const [framePhoto, setFramePhoto] = useState<string | null>(null);
+  const { previews, rendering, detecting } = useCreativePreviews({ photos, settings: cs, faces, setFaces, colors: d.colors, sizes: d.sizes, getBitmap: bitmaps.get });
 
   async function analyze(list: Photo[] = photos, force = false) {
     const main = list[0];
@@ -200,7 +196,7 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
         compare_at_price: d.compare_at_price > d.price ? Math.round(d.compare_at_price) : null,
         colors: d.colors,
         sizes: d.sizes,
-        features: d.features.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 6),
+        features: cs.features.slice(0, 6),
         stock: Math.max(0, Math.round(d.stock)),
         status: target,
       };
@@ -311,11 +307,196 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
     addFiles(e.dataTransfer.files);
   };
 
+  const done: Record<Step, boolean> = { photos: photos.length > 0, details: Boolean(d.name && d.price > 0), design: previews.length > 0, framing: false };
+  const STEP_LIST: { value: Step; label: string; icon: string }[] = [
+    { value: "photos", label: "1 · Photos", icon: ICONS.upload },
+    { value: "details", label: "2 · Details", icon: ICONS.draft },
+    { value: "design", label: "3 · Design", icon: ICONS.sparkle },
+    { value: "framing", label: "4 · Framing", icon: ICONS.image },
+  ];
+  const next = (t: Step, label: string) => (
+    <button type="button" onClick={() => setTab(t)} className="crm-btn mt-5 w-full justify-center">
+      {label} <Icon d={ICONS.arrow} />
+    </button>
+  );
+
+  const photosStep = (
+    <>
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        onClick={() => fileRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
+        className="flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-dashed px-5 py-5 transition-colors"
+        style={{ borderColor: dragOver ? "var(--crm-accent)" : "var(--crm-border)", background: dragOver ? "color-mix(in srgb, var(--crm-accent) 8%, transparent)" : undefined }}
+      >
+        <motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 2.4 }} className="crm-accent">
+          <Icon d={ICONS.upload} className="h-8 w-8" />
+        </motion.span>
+        <span>
+          <span className="crm-serif block text-lg">Drop raw photos or click</span>
+          <span className="block text-xs crm-muted">Main (back view) first · then side angles · then close-ups</span>
+        </span>
+        <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
+      </div>
+
+      {photos.length > 0 && (
+        <ul className="mt-4 grid grid-cols-4 gap-2">
+          <AnimatePresence>
+            {photos.map((p, i) => (
+              <motion.li key={p.key} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className={`group relative overflow-hidden rounded-xl ${i === 0 ? "col-span-2 row-span-2" : ""}`} style={{ boxShadow: `0 0 0 ${i === 0 ? 2 : 1}px var(--crm-accent)` }}>
+                <div className="aspect-square">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.url} alt="" className="h-full w-full object-cover" />
+                </div>
+                <span className="absolute left-1 top-1 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase" style={{ background: i === 0 ? "var(--crm-accent)" : "rgba(0,0,0,.65)", color: i === 0 ? "var(--crm-accent-ink)" : "#fff" }}>
+                  {ROLE(i)}
+                </span>
+                <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/75 p-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button type="button" title="Move left" onClick={() => move(i, i - 1)} className="px-1 text-white">
+                    ←
+                  </button>
+                  {i > 0 && (
+                    <button type="button" onClick={() => move(i, 0)} className="text-[0.55rem] font-semibold text-[#f0d38a]">
+                      Main
+                    </button>
+                  )}
+                  <button type="button" title="Remove" onClick={() => setPhotos((l) => l.filter((x) => x.key !== p.key))} className="px-1 text-[#ff9b9b]">
+                    ✕
+                  </button>
+                  <button type="button" title="Move right" onClick={() => move(i, i + 1)} className="px-1 text-white">
+                    →
+                  </button>
+                </div>
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ul>
+      )}
+
+      {photos.length > 0 && (
+        <div className="crm-panel-soft mt-4 flex items-center justify-between gap-3 p-3 text-sm">
+          {analysis ? (
+            <span className="flex items-center gap-2">
+              <span className="h-4 w-4 rounded-full" style={{ background: analysis.color.hex }} /> Colour detected: <b>{analysis.color.name}</b>
+            </span>
+          ) : (
+            <span className="crm-muted">Name and colour are suggested automatically.</span>
+          )}
+          <button type="button" onClick={() => void analyze(photos, true)} className="crm-chip">
+            <Icon d={ICONS.sparkle} className="h-3.5 w-3.5" /> {analysis ? "Redo" : "Analyze"}
+          </button>
+        </div>
+      )}
+      {photos.length > 0 && next("details", "Next: details")}
+    </>
+  );
+
+  const detailsStep = (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Product name *" value={d.name} onChange={(e) => set({ name: e.target.value })} placeholder="Rani Pink Pearl Scallop Blouse" className="sm:col-span-2" />
+        <Field label="Price (₹) *" type="number" min={0} value={d.price || ""} onChange={(e) => set({ price: Number(e.target.value) })} placeholder="1999" />
+        <Field label="MRP (₹) · shows % off" type="number" min={0} value={d.compare_at_price || ""} onChange={(e) => set({ compare_at_price: Number(e.target.value) })} placeholder="2499" />
+        <Select
+          label="Category *"
+          value={d.category_id}
+          onChange={(e) => {
+            set({ category_id: e.target.value });
+            const c = categories.find((x) => x.id === e.target.value);
+            const def = defaultSettings(c?.slug, c?.name);
+            setCs((x) => ({ ...x, brandLine: def.brandLine, titleTop: def.titleTop, titleBottom: def.titleBottom, tagline: def.tagline, features: def.features }));
+          }}
+        >
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+              {c.is_visible ? "" : " (hidden)"}
+            </option>
+          ))}
+        </Select>
+        <Field label="Stock" type="number" min={0} value={d.stock || ""} onChange={(e) => set({ stock: Number(e.target.value) })} placeholder="0" />
+        <Field label="Short line" value={d.subtitle} onChange={(e) => set({ subtitle: e.target.value })} className="sm:col-span-2" placeholder="Designer blouse with pearl-scallop sleeves" />
+        <Area label="Description" rows={3} value={d.description} onChange={(e) => set({ description: e.target.value })} className="sm:col-span-2" />
+      </div>
+
+      <div className="mt-4">
+        <span className="crm-label">Colours {d.colors.length > 0 && <span className="crm-muted normal-case">· {d.colors.map((c) => c.name).join(", ")}</span>}</span>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {[...COLOR_PRESETS, ...d.colors.filter((c) => !COLOR_PRESETS.some((p) => p.name === c.name))].map((c) => {
+            const on = d.colors.some((x) => x.name === c.name);
+            return (
+              <button
+                key={c.name}
+                type="button"
+                title={c.name}
+                aria-pressed={on}
+                onClick={() => set({ colors: on ? d.colors.filter((x) => x.name !== c.name) : [...d.colors, c] })}
+                className="relative h-8 w-8 rounded-full transition-transform hover:scale-110"
+                style={{ background: c.hex, boxShadow: on ? "0 0 0 2px var(--crm-panel), 0 0 0 4px var(--crm-accent)" : "inset 0 0 0 1px rgba(255,255,255,.2)" }}
+              >
+                {on && <Icon d={ICONS.check} className="absolute inset-0 m-auto h-4 w-4 text-white mix-blend-difference" />}
+              </button>
+            );
+          })}
+          <span className="flex items-center gap-1">
+            <input type="color" value={custom.hex} onChange={(e) => setCustom((x) => ({ ...x, hex: e.target.value }))} className="h-8 w-8 cursor-pointer rounded-full border-0 bg-transparent" aria-label="Pick colour" />
+            <input value={custom.name} onChange={(e) => setCustom((x) => ({ ...x, name: e.target.value }))} placeholder="Own colour" className="crm-input h-8 w-28 py-1 text-xs" />
+            <button
+              type="button"
+              className="crm-chip"
+              onClick={() => {
+                const name = custom.name.trim();
+                if (!name || d.colors.some((x) => x.name === name)) return;
+                set({ colors: [...d.colors, { name, hex: custom.hex.toUpperCase() }] });
+                setCustom((x) => ({ ...x, name: "" }));
+              }}
+            >
+              +
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <span className="crm-label">Sizes</span>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {SIZE_OPTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              data-on={d.sizes.includes(s)}
+              onClick={() => set({ sizes: d.sizes.includes(s) ? d.sizes.filter((x) => x !== s) : SIZE_OPTIONS.filter((o) => o === s || d.sizes.includes(o)) })}
+              className="crm-chip min-w-10 justify-center"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <details className="mt-4">
+        <summary className="cursor-pointer text-sm crm-accent">SKU & web address</summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Field label="SKU" value={d.sku} onChange={(e) => set({ sku: e.target.value })} placeholder="SV-BL-001" />
+          <Field label="Web address" value={d.slug} onChange={(e) => set({ slug: e.target.value })} placeholder="made from the name" />
+        </div>
+      </details>
+      {next("design", "Next: creative design")}
+    </>
+  );
+
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-5 pb-24">
       <PageHeader
         section="Product Studio"
-        subtitle={id ? `Editing · ${d.name}` : "Turn raw blouse photos into shop-ready products"}
+        subtitle={id ? `Editing · ${d.name}` : "Raw photos → shop-ready product in 4 steps"}
         actions={
           <>
             <Badge status={status} />
@@ -333,210 +514,51 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
         }
       />
 
-      {/* Stepper */}
-      <Panel delay={0.05}>
-        <ol className="flex flex-wrap items-center justify-between gap-3">
-          {STEPS.map((s, i) => {
-            const done = step > i;
-            const current = step === i;
-            return (
-              <li key={s} className="flex flex-1 items-center gap-3">
-                <motion.span
-                  animate={current ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-                  transition={current ? { repeat: Infinity, duration: 2 } : undefined}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-sm font-bold"
-                  style={{
-                    borderColor: "var(--crm-accent)",
-                    background: done ? "linear-gradient(180deg, var(--crm-accent-2), var(--crm-accent))" : current ? "color-mix(in srgb, var(--crm-accent) 15%, transparent)" : "transparent",
-                    color: done ? "var(--crm-accent-ink)" : "var(--crm-accent)",
-                  }}
-                >
-                  {done ? <Icon d={ICONS.check} /> : i + 1}
-                </motion.span>
-                <span className={`text-sm ${current ? "font-semibold" : "crm-muted"}`}>{s}</span>
-                {i < STEPS.length - 1 && <span className="hidden h-px flex-1 md:block" style={{ background: done ? "var(--crm-accent)" : "var(--crm-border-soft)" }} />}
-              </li>
-            );
-          })}
-        </ol>
-      </Panel>
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        options={STEP_LIST.map((x) => ({
+          value: x.value,
+          icon: done[x.value] ? ICONS.check : x.icon,
+          label: x.label,
+        }))}
+      />
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_1fr]">
-        {/* 1–2. Upload, arrange, analyze */}
-        <Panel title="Raw photos" icon={ICONS.upload} subtitle="1 main (back view) · 2 side angles · up to 4 close-up details" delay={0.1}>
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]">
+        <AnimatePresence mode="wait">
+          <motion.section key={tab} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.3, ease: EASE }} className="crm-panel min-w-0 p-5">
+            {tab === "photos" && photosStep}
+            {tab === "details" && detailsStep}
+            {tab === "design" && (
+              <>
+                <CreativeDesign settings={cs} onChange={setCs} />
+                {next("framing", "Next: photo framing")}
+              </>
+            )}
+            {tab === "framing" && <CreativeFraming photos={photos} settings={cs} onChange={setCs} faces={faces} active={framePhoto} setActive={setFramePhoto} />}
+          </motion.section>
+        </AnimatePresence>
+
+        <div className="min-w-0 lg:sticky lg:top-[88px]">
+          <CreativeGallery
+            previews={previews}
+            settings={cs}
+            onChange={setCs}
+            rendering={rendering}
+            detecting={detecting}
+            hasPhotos={photos.length > 0}
+            onPickPhoto={(k) => {
+              setFramePhoto(k);
+              setTab("framing");
             }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={onDrop}
-            onClick={() => fileRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
-            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-colors"
-            style={{ borderColor: dragOver ? "var(--crm-accent)" : "var(--crm-border)", background: dragOver ? "color-mix(in srgb, var(--crm-accent) 8%, transparent)" : undefined }}
-          >
-            <motion.span animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 2.4 }} className="crm-accent">
-              <Icon d={ICONS.upload} className="h-8 w-8" />
-            </motion.span>
-            <p className="crm-serif text-lg">Drop raw photos here or click to choose</p>
-            <p className="text-xs crm-muted">JPG / PNG / WebP — resized in your browser before upload</p>
-            <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-          </div>
-
-          {photos.length > 0 && (
-            <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-              <AnimatePresence>
-                {photos.map((p, i) => (
-                  <motion.li key={p.key} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className={`group relative overflow-hidden rounded-xl ${i === 0 ? "col-span-2 row-span-2" : ""}`} style={{ boxShadow: `0 0 0 ${i === 0 ? 2 : 1}px var(--crm-accent)` }}>
-                    <div className="aspect-square">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.url} alt="" className="h-full w-full object-cover" />
-                    </div>
-                    <span className="absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase" style={{ background: i === 0 ? "var(--crm-accent)" : "rgba(0,0,0,.65)", color: i === 0 ? "var(--crm-accent-ink)" : "#fff" }}>
-                      {ROLE(i)}
-                    </span>
-                    {p.file && <span className="absolute right-1.5 top-1.5 rounded-full bg-black/65 px-1.5 py-0.5 text-[0.55rem] text-white">new</span>}
-                    <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/70 p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button type="button" title="Move left" onClick={() => move(i, i - 1)} className="px-1.5 text-white">
-                        ←
-                      </button>
-                      {i > 0 && (
-                        <button type="button" onClick={() => move(i, 0)} className="text-[0.6rem] font-semibold text-[#f0d38a]">
-                          Make main
-                        </button>
-                      )}
-                      <button type="button" title="Remove" onClick={() => setPhotos((l) => l.filter((x) => x.key !== p.key))} className="px-1.5 text-[#ff9b9b]">
-                        ✕
-                      </button>
-                      <button type="button" title="Move right" onClick={() => move(i, i + 1)} className="px-1.5 text-white">
-                        →
-                      </button>
-                    </div>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </ul>
-          )}
-
-          <div className="crm-panel-soft mt-4 flex flex-wrap items-center justify-between gap-3 p-3">
-            <div className="flex items-center gap-3 text-sm">
-              <Icon d={ICONS.sparkle} className="h-5 w-5 crm-accent" />
-              {analysis ? (
-                <span>
-                  Auto analyzed: main colour{" "}
-                  <span className="inline-flex items-center gap-1.5 align-middle">
-                    <span className="h-4 w-4 rounded-full ring-1 ring-white/20" style={{ background: analysis.hex }} /> → <span className="h-4 w-4 rounded-full" style={{ background: analysis.color.hex }} />
-                    <b>{analysis.color.name}</b>
-                  </span>
-                </span>
-              ) : (
-                <span className="crm-muted">Upload photos — colour, name and features are suggested automatically.</span>
-              )}
-            </div>
-            <button type="button" disabled={!photos.length} onClick={() => void analyze(photos, true)} className="crm-btn">
-              <Icon d={ICONS.sparkle} /> {analysis ? "Regenerate" : "Analyze"}
-            </button>
-          </div>
-        </Panel>
-
-        {/* 3. Details */}
-        <Panel title="Product details" icon={ICONS.draft} delay={0.15}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Product name *" value={d.name} onChange={(e) => set({ name: e.target.value })} placeholder="Rani Pink Pearl Scallop Blouse" className="sm:col-span-2" />
-            <Field label="Price (₹) *" type="number" min={0} value={d.price || ""} onChange={(e) => set({ price: Number(e.target.value) })} placeholder="1999" />
-            <Field label="MRP (₹) — shows % off" type="number" min={0} value={d.compare_at_price || ""} onChange={(e) => set({ compare_at_price: Number(e.target.value) })} placeholder="2499" />
-            <Select
-              label="Category *"
-              value={d.category_id}
-              onChange={(e) => {
-                set({ category_id: e.target.value });
-                const c = categories.find((x) => x.id === e.target.value);
-                const def = defaultSettings(c?.slug, c?.name);
-                setCs((x) => ({ ...x, brandLine: def.brandLine, titleTop: def.titleTop, titleBottom: def.titleBottom, tagline: def.tagline, features: def.features }));
-              }}
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                  {c.is_visible ? "" : " (hidden)"}
-                </option>
-              ))}
-            </Select>
-            <Field label="Stock" type="number" min={0} value={d.stock || ""} onChange={(e) => set({ stock: Number(e.target.value) })} placeholder="0" />
-            <Field label="Short line" value={d.subtitle} onChange={(e) => set({ subtitle: e.target.value })} className="sm:col-span-2" placeholder="Designer blouse with pearl-scallop sleeves" />
-            <Area label="Description" value={d.description} onChange={(e) => set({ description: e.target.value })} className="sm:col-span-2" />
-            <Field label="Features (comma separated)" value={d.features} onChange={(e) => set({ features: e.target.value })} className="sm:col-span-2" />
-            <Field label="SKU" value={d.sku} onChange={(e) => set({ sku: e.target.value })} placeholder="SV-BL-001" />
-            <Field label="Web address" value={d.slug} onChange={(e) => set({ slug: e.target.value })} placeholder="made from the name" />
-          </div>
-
-          <div className="mt-5">
-            <span className="crm-label">Colours</span>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {[...COLOR_PRESETS, ...d.colors.filter((c) => !COLOR_PRESETS.some((p) => p.name === c.name))].map((c) => {
-                const on = d.colors.some((x) => x.name === c.name);
-                return (
-                  <button
-                    key={c.name}
-                    type="button"
-                    title={c.name}
-                    data-on={on}
-                    onClick={() => set({ colors: on ? d.colors.filter((x) => x.name !== c.name) : [...d.colors, c] })}
-                    className="crm-chip"
-                  >
-                    <span className="h-4 w-4 rounded-full ring-1 ring-white/20" style={{ background: c.hex }} />
-                    {c.name}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-2 flex items-end gap-2">
-              <Field label="Custom colour" value={custom.name} onChange={(e) => setCustom((x) => ({ ...x, name: e.target.value }))} placeholder="Wine" className="flex-1" />
-              <input type="color" value={custom.hex} onChange={(e) => setCustom((x) => ({ ...x, hex: e.target.value }))} className="h-[42px] w-12 cursor-pointer rounded-lg border bg-transparent" style={{ borderColor: "var(--crm-border-soft)" }} aria-label="Pick colour" />
-              <button
-                type="button"
-                className="crm-btn h-[42px]"
-                onClick={() => {
-                  const name = custom.name.trim();
-                  if (!name || d.colors.some((x) => x.name === name)) return;
-                  set({ colors: [...d.colors, { name, hex: custom.hex.toUpperCase() }] });
-                  setCustom((x) => ({ ...x, name: "" }));
-                }}
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5">
-            <span className="crm-label">Sizes</span>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {SIZE_OPTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  data-on={d.sizes.includes(s)}
-                  onClick={() => set({ sizes: d.sizes.includes(s) ? d.sizes.filter((x) => x !== s) : SIZE_OPTIONS.filter((o) => o === s || d.sizes.includes(o)) })}
-                  className="crm-chip min-w-11 justify-center"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        </Panel>
+          />
+        </div>
       </div>
 
-      {/* 4. Creatives */}
-      <CreativePanel photos={photos} settings={cs} onChange={setCs} faces={faces} setFaces={setFaces} colors={d.colors} sizes={d.sizes} getBitmap={bitmaps.get} />
-
-      {/* 5. Approve & publish */}
+      {/* Approve & publish */}
       <div className="crm-panel sticky bottom-4 z-20 flex flex-wrap items-center gap-3 p-3">
         <span className="hidden text-sm crm-muted md:block">
-          {d.price > 0 ? inr(d.price) : "No price yet"} · {photos.length} photos · {d.colors.length} colours · {d.sizes.length} sizes
+          {d.name || "Untitled"} · {d.price > 0 ? inr(d.price) : "no price yet"} · {photos.length} photos · {previews.filter((p) => !cs.skip.includes(p.id)).length} creatives
         </span>
         <div className="ml-auto flex flex-wrap gap-2">
           {id && (
@@ -555,4 +577,3 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
     </div>
   );
 }
-
