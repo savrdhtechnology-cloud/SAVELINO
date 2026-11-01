@@ -21,6 +21,15 @@
 }
 
 :root {
+  /* Font families (loaded via the Google Fonts stylesheet in app/layout.tsx). */
+  --font-bodoni: "Bodoni Moda";
+  --font-cormorant: "Cormorant Garamond";
+  --font-manrope: "Manrope";
+  --font-playfair: "Playfair Display";
+  --font-dmserif: "DM Serif Display";
+  --font-inter: "Inter";
+  --font-poppins: "Poppins";
+  --font-lora: "Lora";
   color-scheme: dark;
   --header-h: 84px;
 }

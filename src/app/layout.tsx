@@ -1,38 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Bodoni_Moda, Cormorant_Garamond, DM_Serif_Display, Inter, Lora, Manrope, Playfair_Display, Poppins } from "next/font/google";
 import { site } from "@/lib/site";
 import { themeCss } from "@/lib/settings";
 import { getSiteSettings } from "@/lib/settings-server";
 import { StudioBridge } from "@/components/site/StudioBridge";
 import "./globals.css";
 
-const bodoni = Bodoni_Moda({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-bodoni",
-  display: "swap",
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-
-// Optional typefaces chosen in Studio / CRM settings (not preloaded to keep the first paint light).
-const playfair = Playfair_Display({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-playfair", display: "swap", preload: false });
-const dmserif = DM_Serif_Display({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-dmserif", display: "swap", preload: false });
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap", preload: false });
-const poppins = Poppins({ subsets: ["latin"], weight: ["300", "400", "500", "600"], variable: "--font-poppins", display: "swap", preload: false });
-const lora = Lora({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-lora", display: "swap", preload: false });
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
+// Typefaces load from Google Fonts at runtime (not next/font/google), so the build never
+// depends on fetching and parsing Google's CSS. CSS variables are defined in globals.css.
+const GOOGLE_FONTS_HREF =
+  "https://fonts.googleapis.com/css2" +
+  "?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900" +
+  "&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600" +
+  "&family=Manrope:wght@200..800" +
+  "&family=Playfair+Display:ital,wght@0,400..900;1,400..900" +
+  "&family=DM+Serif+Display:ital@0;1" +
+  "&family=Inter:wght@100..900" +
+  "&family=Poppins:wght@300;400;500;600" +
+  "&family=Lora:ital,wght@0,400..700;1,400..700" +
+  "&display=swap";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -85,9 +70,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       lang="en"
       data-theme={settings.theme.mode}
       suppressHydrationWarning
-      className={`${bodoni.variable} ${cormorant.variable} ${manrope.variable} ${playfair.variable} ${dmserif.variable} ${inter.variable} ${poppins.variable} ${lora.variable}`}
     >
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
         {settings.theme.allowToggle && (
           // Applies a visitor's saved light/dark choice before paint (no flash).
           <script
