@@ -85,6 +85,23 @@ export const CRM_THEME_LABELS: Record<CrmTheme, string> = { luxe: "SAVLINO Luxe"
 
 export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+export const HERO_PRESETS = ["classic-3d", "royal-cinema", "rose-silk", "purple-aura", "midnight-gold", "ivory-editorial", "emerald-court", "champagne-atelier"] as const;
+export type HeroPreset = (typeof HERO_PRESETS)[number];
+export const HERO_PRESET_LABELS: Record<HeroPreset,string> = {
+  "classic-3d":"Classic 3D Monogram", "royal-cinema":"Royal Cinema", "rose-silk":"Rose Silk",
+  "purple-aura":"Purple Aura", "midnight-gold":"Midnight Gold", "ivory-editorial":"Ivory Editorial",
+  "emerald-court":"Emerald Court", "champagne-atelier":"Champagne Atelier"
+};
+export const HERO_PRESET_PALETTES: Record<HeroPreset,{background:string;accent:string;shade:string}> = {
+  "classic-3d":{background:"#0B0B0B",accent:"#D4AF37",shade:"#6B0F1A"},
+  "royal-cinema":{background:"#1D080D",accent:"#E0B65E",shade:"#680C23"},
+  "rose-silk":{background:"#330F1D",accent:"#F0B4AC",shade:"#9C345D"},
+  "purple-aura":{background:"#1C092A",accent:"#E8A8F1",shade:"#782CB0"},
+  "midnight-gold":{background:"#070B12",accent:"#E3C67A",shade:"#2C3853"},
+  "ivory-editorial":{background:"#EDE1D1",accent:"#9B7133",shade:"#C4A58F"},
+  "emerald-court":{background:"#061D18",accent:"#C5B46E",shade:"#106F58"},
+  "champagne-atelier":{background:"#473125",accent:"#F1D6A8",shade:"#986E54"}
+};
 export type SiteSettings = {
   brand: {
     name: string;
@@ -138,6 +155,9 @@ export type SiteSettings = {
   };
   seo: { title: string; description: string };
   hero: {
+    preset: HeroPreset;
+    height: number;
+    spotlight: number;
     eyebrow: string;
     title: string;
     subtitle: string;
@@ -190,6 +210,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
 
   hero: {
+    preset: "classic-3d",
+    height: 100,
+    spotlight: 70,
     eyebrow: "Timeless women’s luxury",
     title: "A Legacy of Elegance",
     subtitle: "Designer blouses, heirloom sarees and intimate essentials — tradition in style, always.",
@@ -228,6 +251,9 @@ export function mergeSettings(stored: unknown): SiteSettings {
   for (const group of ["brand", "commerce", "theme", "hero", "announcement", "crm", "effects", "seo"] as const) {
     mergeInto(out[group] as unknown as Record<string, unknown>, src[group]);
   }
+  if (!HERO_PRESETS.includes(out.hero.preset)) out.hero.preset = "classic-3d";
+  out.hero.height = Math.max(65, Math.min(110, out.hero.height));
+  out.hero.spotlight = Math.max(0, Math.min(100, out.hero.spotlight));
   if (!isThemeMode(out.theme.mode)) out.theme.mode = "dark";
   if (!CRM_THEMES.includes(out.crm.theme)) out.crm.theme = "luxe";
   if (!(out.theme.displayFont in HEADING_FONTS)) out.theme.displayFont = "bodoni";
