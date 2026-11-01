@@ -6,7 +6,7 @@ import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { Monogram } from "@/components/ui/Logo";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { Button } from "@/components/ui/Button";
-import { DEFAULT_SETTINGS, type SiteSettings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, HERO_PRESET_PALETTES, type SiteSettings } from "@/lib/settings";
 
 const MonogramScene = dynamic(() => import("@/components/three/MonogramScene"), { ssr: false });
 
@@ -70,6 +70,8 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
   const sceneScale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1, 0.86]);
   const fade = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
 
+  const preset = HERO_PRESET_PALETTES[content.preset || "classic-3d"];
+  const classic = !content.preset || content.preset === "classic-3d";
   const showStatic = mode !== "3d" || !ready;
 
   return (
@@ -77,8 +79,11 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
       ref={sectionRef}
       id="top"
       aria-label="SAVLINO — A Legacy of Elegance"
-      className="grain relative h-[100svh] min-h-[620px] w-full overflow-hidden bg-noir"
+      className="grain relative min-h-[620px] w-full overflow-hidden bg-noir"
+      style={{height:`${content.height || 100}svh`, background:classic?undefined:preset.background}}
     >
+      {!classic && <div aria-hidden className="pointer-events-none absolute inset-0"
+        style={{background:`radial-gradient(ellipse at 70% 42%, ${preset.accent}95 0%, transparent 50%), linear-gradient(125deg, ${preset.background} 0%, ${preset.shade} 95%)`,opacity:(content.spotlight ?? 70)/100}}/>}
       {/* Soft gold light */}
       <div
         aria-hidden
@@ -89,7 +94,7 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
         className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-noir via-noir/60 to-transparent"
       />
 
-      <motion.div style={{ scale: sceneScale, opacity: fade }} className="absolute inset-0">
+      {classic && <motion.div style={{ scale: sceneScale, opacity: fade }} className="absolute inset-0">
         {/* Static approved monogram: SSR placeholder, reduced-motion and no-WebGL view. */}
         <div
           className={`absolute left-1/2 top-[36.8%] aspect-square h-[38.3%] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 md:top-[38.1%] md:h-[58.1%] ${
@@ -106,7 +111,7 @@ export function Hero({ content = DEFAULT_SETTINGS.hero }: { content?: SiteSettin
             </SceneBoundary>
           </div>
         )}
-      </motion.div>
+      </motion.div>}
 
       <motion.div
         style={{ y: textY, opacity: fade }}
