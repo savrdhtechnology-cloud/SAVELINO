@@ -1,9 +1,9 @@
-import { enabledCategories } from "@/lib/catalogue";
-import { getSiteSettings } from "@/lib/settings-server";
+import { resolveCategories } from "@/lib/catalogue";
+import { getVisibleCategories } from "@/lib/data/catalog-server";
 import { Footer } from "./Footer";
 
 /** Server wrapper: passes the website's switched-on categories to the client footer. */
 export async function SiteFooter() {
-  const { catalogue } = await getSiteSettings();
-  return <Footer categories={enabledCategories(catalogue).map((c) => ({ label: c.title, href: `/collections/${c.slug}` }))} />;
+  const categories = resolveCategories(await getVisibleCategories());
+  return <Footer categories={categories.map((c) => ({ label: c.title, href: `/collections/${c.slug}` }))} />;
 }

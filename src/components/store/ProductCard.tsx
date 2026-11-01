@@ -1,10 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { imageUrl, inr, type StoreProduct } from "@/lib/store/types";
+import { inr, type Product } from "@/lib/data/types";
 
 /** Product tile styled after the SAVLINO product creatives: framed photo, colour dots, size chips and a Shop Now pill. */
-export function ProductCard({ product, priority }: { product: StoreProduct; priority?: boolean }) {
-  const [cover, second] = product.images;
+export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
+  // Portrait images fill the 4:5 tile best (the single creatives); the wide combined creative is for the product page.
+  const portrait = product.images.filter((i) => !i.width || !i.height || i.height >= i.width);
+  const [cover, second] = portrait.length ? portrait : product.images;
+  const fit = product.generated ? "50% 50%" : "28% 50%";
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
   return (
     <Link href={`/shop/${product.slug}`} className="group block">
@@ -13,22 +16,22 @@ export function ProductCard({ product, priority }: { product: StoreProduct; prio
           {cover ? (
             <>
               <Image
-                src={imageUrl(cover.id)}
+                src={cover.url}
                 alt={product.name}
                 fill
                 priority={priority}
                 sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
                 className={`object-cover transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105 ${second ? "group-hover:opacity-0" : ""}`}
-                style={{ objectPosition: "28% 50%" }}
+                style={{ objectPosition: fit }}
               />
               {second && (
                 <Image
-                  src={imageUrl(second.id)}
+                  src={second.url}
                   alt=""
                   fill
                   sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
                   className="object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-                  style={{ objectPosition: "28% 50%" }}
+                  style={{ objectPosition: fit }}
                 />
               )}
             </>
@@ -75,7 +78,7 @@ export function BagIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   );
 }
 
-export function ProductGrid({ products }: { products: StoreProduct[] }) {
+export function ProductGrid({ products }: { products: Product[] }) {
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-7 xl:grid-cols-4">
       {products.map((p, i) => (

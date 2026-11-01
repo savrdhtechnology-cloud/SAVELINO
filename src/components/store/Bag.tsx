@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { BAG_OPEN_EVENT, openBag, useBag } from "@/lib/store/cart";
-import { inr } from "@/lib/store/types";
+import { inr } from "@/lib/data/types";
 import { BagIcon } from "./ProductCard";
 
 const EASE = [0.22, 1, 0.36, 1] as const;

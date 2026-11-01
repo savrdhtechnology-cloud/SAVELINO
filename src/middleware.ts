@@ -1,18 +1,13 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Routes that require a signed-in user. Role checks happen server-side in each layout. */
-const PROTECTED = ["/account", "/partner/dashboard", "/admin", "/worker"];
-
+/** Keeps the Supabase session fresh and sends signed-out visitors of the CRM to its login page. */
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // Backend not provisioned yet: portals render their architecture preview.
   if (!url || !anonKey) return NextResponse.next();
 
   let response = NextResponse.next({ request });
-
   const supabase = createServerClient(url, anonKey, {
     cookies: {
       getAll() {
@@ -31,16 +26,13 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  if (!user && PROTECTED.some((p) => path === p || path.startsWith(`${p}/`))) {
+  if (!user && path.startsWith("/admin") && path !== "/admin/login") {
     const login = request.nextUrl.clone();
-    login.pathname = path.startsWith("/partner") ? "/partner/login" : "/login";
+    login.pathname = "/admin/login";
     login.search = `?next=${encodeURIComponent(path)}`;
     return NextResponse.redirect(login);
   }
-
   return response;
 }
 
-export const config = {
-  matcher: ["/account/:path*", "/partner/dashboard/:path*", "/admin/:path*", "/worker/:path*", "/worker", "/login", "/register", "/partner/login"],
-};
+export const config = { matcher: ["/admin/:path*"] };

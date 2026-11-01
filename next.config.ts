@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
+    // Product photos uploaded from the CRM live in Supabase Storage.
+    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" }],
   },
   async headers() {
     return [

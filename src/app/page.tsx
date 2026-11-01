@@ -13,25 +13,25 @@ import { Heritage } from "@/components/sections/Heritage";
 import { Craftsmanship } from "@/components/sections/Craftsmanship";
 import { Lookbook } from "@/components/sections/Lookbook";
 import { Collections } from "@/components/sections/Collections";
-import { PartnerProgram } from "@/components/sections/PartnerProgram";
-import { CustomerEntry } from "@/components/sections/CustomerEntry";
 import { site } from "@/lib/site";
-import { enabledCategories } from "@/lib/catalogue";
+import { resolveCategories } from "@/lib/catalogue";
 import { ShopSection } from "@/components/sections/ShopSection";
-import { getLiveProducts } from "@/lib/store/products-server";
+import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 
 export default async function Home() {
   const settings = await getSiteSettings();
-  const enabled = enabledCategories(settings.catalogue);
+  const enabled = resolveCategories(await getVisibleCategories());
   const enabledSlugs = enabled.map((c) => c.slug);
   const visibleSections = new Set(settings.sections.filter((s) => s.visible).map((s) => s.id));
   // Blouses have their own homepage sections; the collections section lists the rest (or everything if those are hidden).
   const ownSection: Record<string, SectionId> = { "designer-blouses": "designer-blouses", "ready-made-blouses": "ready-made" };
   const collectionItems = enabled.filter((c) => !(ownSection[c.slug] && visibleSections.has(ownSection[c.slug])));
   const enabledSet = new Set(enabledSlugs);
-  const liveProducts = (await getLiveProducts()).filter((p) => enabledSet.has(p.category));
+  const visibleIds = new Set(enabled.map((c) => c.id));
+  const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
 
   const SECTIONS: Record<SectionId, ReactNode> = {
+    shop: <ShopSection products={liveProducts} />,
     "designer-blouses": enabledSet.has("designer-blouses") ? <DesignerBlouses /> : null,
     showcase: <ProductShowcase enabled={enabled} />,
     signature: <SignatureGallery enabled={enabledSlugs} />,
@@ -41,8 +41,6 @@ export default async function Home() {
     craftsmanship: <Craftsmanship />,
     lookbook: <Lookbook enabled={enabledSlugs} />,
     collections: <Collections items={collectionItems} />,
-    partners: <PartnerProgram />,
-    account: <CustomerEntry />,
   };
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,7 +66,6 @@ export default async function Home() {
       <SiteHeader />
       <main id="main">
         <Hero content={settings.hero} />
-        <ShopSection products={liveProducts} />
         {settings.sections
           .filter((sec) => sec.visible)
           .map((sec) => (

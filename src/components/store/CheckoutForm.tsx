@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useBag } from "@/lib/store/cart";
-import { inr } from "@/lib/store/types";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { inr } from "@/lib/data/types";
 
 const STATES = [
   "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh",
@@ -17,12 +18,16 @@ const STATES = [
 
 const input = "mt-1.5 w-full rounded-xl border border-gold/25 bg-noir-soft px-4 py-3 text-sm text-ivory outline-none transition-colors placeholder:text-ivory/30 focus:border-gold";
 
-export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp }: { shippingFee: number; freeShippingAbove: number; whatsapp: string }) {
+type Props = { shippingFee: number; freeShippingAbove: number; whatsapp: string; codEnabled: boolean; upiId: string; upiName: string };
+type Done = { orderNo: string; total: number; phone: string; method: "cod" | "upi" };
+
+export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnabled, upiId, upiName }: Props) {
   const { lines, subtotal, clear } = useBag();
-  const [payment, setPayment] = useState<"cod" | "whatsapp">("cod");
+  const upiReady = upiId.includes("@");
+  const [payment, setPayment] = useState<"cod" | "upi">(codEnabled || !upiReady ? "cod" : "upi");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [done, setDone] = useState<{ orderNo: string; total: number } | null>(null);
+  const [done, setDone] = useState<Done | null>(null);
   const shipping = freeShippingAbove > 0 && subtotal >= freeShippingAbove ? 0 : shippingFee;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -30,14 +35,14 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp }: { shi
     if (busy) return;
     const f = new FormData(e.currentTarget);
     const get = (k: string) => String(f.get(k) ?? "");
+    if (get("website")) return;
+    const db = createSupabaseBrowserClient();
+    if (!db) return setError("Ordering is not open yet — please try again soon.");
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/store/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          website: get("website"),
+      const { data, error: err } = await db.rpc("place_order", {
+        payload: {
           payment,
           customer: {
             name: get("name"),
@@ -50,11 +55,11 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp }: { shi
             notes: get("notes"),
           },
           items: lines.map((l) => ({ productId: l.productId, size: l.size, color: l.color, qty: l.qty })),
-        }),
+        },
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string; orderNo?: string; total?: number };
-      if (!res.ok || !data.orderNo) throw new Error(data.error ?? "Could not place the order");
-      setDone({ orderNo: data.orderNo, total: data.total ?? subtotal + shipping });
+      if (err) throw new Error(err.message);
+      const res = data as { orderNo: string; total: number };
+      setDone({ orderNo: res.orderNo, total: res.total, phone: get("phone"), method: payment });
       clear();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -64,34 +69,7 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp }: { shi
     }
   }
 
-  if (done) {
-    const wa = whatsapp.replace(/[^\d]/g, "");
-    return (
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mt-10 max-w-2xl rounded-2xl border border-gold/30 bg-noir-soft p-8 md:p-10">
-        <p className="eyebrow">Order received</p>
-        <p className="mt-4 font-display text-4xl text-ivory">Thank you!</p>
-        <p className="mt-4 text-ivory/70">
-          Your order number is <span className="font-medium text-gold">{done.orderNo}</span> for {inr(done.total)}. Our team will call you shortly to confirm
-          {payment === "whatsapp" ? " and share the UPI payment details." : " — you pay in cash when it arrives."}
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          {wa && (
-            <a
-              href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hi SAVLINO, I just placed order ${done.orderNo}.`)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full bg-burgundy px-6 py-3.5 text-[0.65rem] uppercase tracking-[0.25em] text-ivory"
-            >
-              Message us on WhatsApp
-            </a>
-          )}
-          <Link href="/shop" className="rounded-full border border-gold/50 px-6 py-3.5 text-[0.65rem] uppercase tracking-[0.25em] text-gold">
-            Continue shopping
-          </Link>
-        </div>
-      </motion.div>
-    );
-  }
+  if (done) return <OrderPlaced done={done} whatsapp={whatsapp} upiId={upiId} upiName={upiName} />;
 
   if (lines.length === 0) {
     return (
@@ -139,8 +117,9 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp }: { shi
         </Section>
         <Section title="Payment">
           <div className="grid gap-3 sm:grid-cols-2">
-            <PayOption active={payment === "cod"} onClick={() => setPayment("cod")} title="Cash on delivery" note="Pay in cash when your order arrives." />
-            <PayOption active={payment === "whatsapp"} onClick={() => setPayment("whatsapp")} title="UPI / bank transfer" note="We call or WhatsApp you with payment details." />
+            {codEnabled && <PayOption active={payment === "cod"} onClick={() => setPayment("cod")} title="Cash on delivery" note="Pay in cash when your order arrives." />}
+            {upiReady && <PayOption active={payment === "upi"} onClick={() => setPayment("upi")} title="Pay by UPI" note="GPay, PhonePe, Paytm — pay right after placing the order." />}
+            {!codEnabled && !upiReady && <p className="text-sm text-ivory/60">We’ll call you to arrange payment.</p>}
           </div>
         </Section>
       </div>
@@ -223,5 +202,79 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
+  );
+}
+
+function OrderPlaced({ done, whatsapp, upiId, upiName }: { done: Done; whatsapp: string; upiId: string; upiName: string }) {
+  const [utr, setUtr] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+  const [error, setError] = useState("");
+  const wa = whatsapp.replace(/[^\d]/g, "");
+  const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName || "SAVLINO")}&am=${done.total}&cu=INR&tn=${encodeURIComponent(done.orderNo)}`;
+
+  async function sendUtr(e: FormEvent) {
+    e.preventDefault();
+    const db = createSupabaseBrowserClient();
+    if (!db) return;
+    setState("sending");
+    setError("");
+    const { error: err } = await db.rpc("submit_payment_reference", { p_order_no: done.orderNo, p_phone: done.phone, p_reference: utr });
+    if (err) {
+      setError(err.message);
+      setState("idle");
+    } else setState("sent");
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mt-10 max-w-2xl rounded-2xl border border-gold/30 bg-noir-soft p-8 md:p-10">
+      <p className="eyebrow">Order received</p>
+      <p className="mt-4 font-display text-4xl text-ivory">Thank you!</p>
+      <p className="mt-4 text-ivory/70">
+        Order <span className="font-medium text-gold">{done.orderNo}</span> · {inr(done.total)}
+      </p>
+
+      {done.method === "upi" ? (
+        <div className="mt-8 space-y-5 rounded-xl border border-gold/25 p-5">
+          <p className="text-sm text-ivory/75">
+            Pay <span className="text-gold">{inr(done.total)}</span> to <span className="font-mono text-ivory">{upiId}</span> ({upiName || "SAVLINO"}).
+          </p>
+          <a href={upiLink} className="block rounded-full bg-burgundy py-3.5 text-center text-[0.68rem] font-medium uppercase tracking-[0.25em] text-ivory md:hidden">
+            Pay with UPI app
+          </a>
+          {state === "sent" ? (
+            <p className="rounded-lg bg-gold/10 px-4 py-3 text-sm text-gold">Thanks — we’ve received your reference and will confirm your payment shortly.</p>
+          ) : (
+            <form onSubmit={sendUtr} className="space-y-3">
+              <label className="block">
+                <span className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/55">After paying, enter the UTR / reference number</span>
+                <input value={utr} onChange={(e) => setUtr(e.target.value)} required minLength={6} maxLength={40} className={input} placeholder="e.g. 427386591204" />
+              </label>
+              {error && <p className="text-sm text-gold">{error}</p>}
+              <button type="submit" disabled={state === "sending"} className="w-full rounded-full border border-gold/60 py-3 text-[0.65rem] uppercase tracking-[0.25em] text-gold disabled:opacity-60">
+                {state === "sending" ? "Sending…" : "Submit payment reference"}
+              </button>
+            </form>
+          )}
+        </div>
+      ) : (
+        <p className="mt-4 text-ivory/70">We’ll call you shortly to confirm. You pay in cash when it arrives.</p>
+      )}
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        {wa && (
+          <a
+            href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hi SAVLINO, I just placed order ${done.orderNo}.`)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full bg-burgundy px-6 py-3.5 text-[0.65rem] uppercase tracking-[0.25em] text-ivory"
+          >
+            Message us on WhatsApp
+          </a>
+        )}
+        <Link href="/shop" className="rounded-full border border-gold/50 px-6 py-3.5 text-[0.65rem] uppercase tracking-[0.25em] text-gold">
+          Continue shopping
+        </Link>
+      </div>
+    </motion.div>
   );
 }

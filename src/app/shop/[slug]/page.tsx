@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
 import { ProductCard } from "@/components/store/ProductCard";
 import { BuyBox, FeatureBadges, ProductGallery } from "@/components/store/ProductDetail";
-import { findCategory } from "@/lib/catalogue";
+import { ProductCreative } from "@/components/store/ProductCreative";
+import { resolveCategories } from "@/lib/catalogue";
 import { getSiteSettings } from "@/lib/settings-server";
-import { getLiveProduct, getLiveProducts } from "@/lib/store/products-server";
-import { imageUrl, inr } from "@/lib/store/types";
+import { getLiveProduct, getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { inr } from "@/lib/data/types";
 import { site } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -20,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: p.name,
     description: p.subtitle || p.description.slice(0, 160),
     alternates: { canonical: `/shop/${p.slug}` },
-    openGraph: { title: `${p.name} · SAVLINO`, description: p.subtitle, images: p.images[0] ? [{ url: imageUrl(p.images[0].id) }] : [] },
+    openGraph: { title: `${p.name} · SAVLINO`, description: p.subtitle, images: p.images[0] ? [{ url: p.images[0].url }] : [] },
   };
 }
 
@@ -29,16 +31,19 @@ export default async function ProductPage({ params }: Props) {
   const product = await getLiveProduct(slug);
   if (!product) notFound();
   const settings = await getSiteSettings();
-  const category = findCategory(settings.catalogue, product.category);
-  const related = (await getLiveProducts(product.category)).filter((p) => p.id !== product.id).slice(0, 4);
+  const category = resolveCategories(await getVisibleCategories()).find((c) => c.id === product.category_id);
+  const related = product.category_id ? (await getLiveProducts(product.category_id)).filter((p) => p.id !== product.id).slice(0, 4) : [];
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
+  // Generated creatives: the wide combined creative leads the page, the rest go in the gallery.
+  const combo = product.generated ? product.images.find((i) => i.width && i.height && i.width > i.height) : undefined;
+  const galleryImages = combo && product.images.length > 1 ? product.images.filter((i) => i.id !== combo.id) : product.images;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description || product.subtitle,
-    image: product.images.map((i) => `${site.url}${imageUrl(i.id)}`),
+    image: product.images.map((i) => (i.url.startsWith("http") ? i.url : `${site.url}${i.url}`)),
     brand: { "@type": "Brand", name: site.name },
     offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: "https://schema.org/InStock", url: `${site.url}/shop/${product.slug}` },
   };
@@ -59,8 +64,22 @@ export default async function ProductPage({ params }: Props) {
             </>
           )}
         </nav>
-        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
-          <ProductGallery product={product} />
+        {combo ? (
+          <div className="mb-12 overflow-hidden rounded-3xl border border-gold/30 md:mb-16" style={{ aspectRatio: `${combo.width} / ${combo.height}` }}>
+            <div className="relative h-full w-full">
+              <Image src={combo.url} alt={`${product.name} — SAVLINO`} fill priority sizes="(min-width: 1280px) 1200px, 100vw" className="object-cover" />
+            </div>
+          </div>
+        ) : (
+          !product.generated &&
+          product.images.length >= 2 && (
+            <div className="mb-12 md:mb-16">
+              <ProductCreative product={product} categoryTitle={category?.title ?? "Designer Blouses"} />
+            </div>
+          )
+        )}
+        <div id="buy" className="grid scroll-mt-28 gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
+          <ProductGallery product={{ ...product, images: galleryImages }} />
           <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:self-start">
             <p className="eyebrow">{category?.title ?? "SAVLINO"}</p>
             <h1 className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[1.02] text-ivory">{product.name}</h1>

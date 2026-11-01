@@ -70,7 +70,7 @@ export default function CustomStitchingPage() {
               Online custom orders open soon. Create an account now and your measurements will be ready to save.
             </p>
             <div className="mt-6">
-              <Button href="/register">Create account</Button>
+              <Button href="/contact">Ask about stitching</Button>
             </div>
           </div>
         </aside>

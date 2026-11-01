@@ -388,3 +388,190 @@ body {
     display: none;
   }
 }
+
+/* ═════════════════════════ SAVLINO Commerce CRM ═════════════════════════
+   Tokens are set per theme by CrmShell (luxe / royal / ivory). */
+.crm {
+  min-height: 100vh;
+  background: var(--crm-bg);
+  color: var(--crm-text);
+  font-family: var(--crm-body);
+  color-scheme: var(--crm-scheme);
+}
+.crm-silk {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 45% at 70% -5%, color-mix(in srgb, var(--crm-wash) 75%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 0% 100%, color-mix(in srgb, var(--crm-wash) 45%, transparent), transparent 70%),
+    linear-gradient(115deg, transparent 35%, color-mix(in srgb, var(--crm-accent) 6%, transparent) 48%, transparent 60%);
+}
+.crm-heading {
+  font-family: var(--crm-heading);
+}
+.crm-serif {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+}
+.crm-gold-text {
+  background: linear-gradient(100deg, var(--crm-accent) 0%, var(--crm-accent-2) 30%, var(--crm-accent) 55%, var(--crm-accent-2) 80%, var(--crm-accent) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: crm-shimmer 7s linear infinite;
+}
+@keyframes crm-shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+.crm-muted {
+  color: var(--crm-muted);
+}
+.crm-accent {
+  color: var(--crm-accent);
+}
+.crm-panel {
+  position: relative;
+  background: var(--crm-panel);
+  border: 1px solid var(--crm-border);
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 24px 60px -36px rgba(0, 0, 0, 0.85);
+}
+.crm-panel-soft {
+  background: var(--crm-panel-2);
+  border: 1px solid var(--crm-border-soft);
+  border-radius: 12px;
+}
+.crm-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--crm-muted);
+}
+.crm-input {
+  width: 100%;
+  margin-top: 6px;
+  background: var(--crm-input);
+  border: 1px solid var(--crm-border-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  color: var(--crm-text);
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.crm-input::placeholder {
+  color: color-mix(in srgb, var(--crm-text) 35%, transparent);
+}
+.crm-input:focus {
+  border-color: var(--crm-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-accent) 18%, transparent);
+}
+.crm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--crm-border);
+  color: var(--crm-text);
+  background: transparent;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.15s;
+  white-space: nowrap;
+}
+.crm-btn:hover {
+  border-color: var(--crm-accent);
+  color: var(--crm-accent);
+}
+.crm-btn:active {
+  transform: scale(0.97);
+}
+.crm-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.crm-btn-gold {
+  background: linear-gradient(180deg, var(--crm-accent-2), var(--crm-accent));
+  border-color: transparent;
+  color: var(--crm-accent-ink);
+  box-shadow: 0 10px 30px -14px var(--crm-accent);
+}
+.crm-btn-gold:hover {
+  color: var(--crm-accent-ink);
+  filter: brightness(1.08);
+}
+.crm-btn-wine {
+  background: linear-gradient(180deg, #8a1a2b, #5c0d18);
+  border-color: transparent;
+  color: #fff3e6;
+}
+.crm-btn-wine:hover {
+  color: #fff3e6;
+  filter: brightness(1.12);
+}
+.crm-btn-danger:hover {
+  border-color: var(--crm-danger);
+  color: var(--crm-danger);
+}
+.crm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--crm-border-soft);
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  color: var(--crm-muted);
+  transition: all 0.2s;
+}
+.crm-chip:hover {
+  border-color: var(--crm-accent);
+  color: var(--crm-text);
+}
+.crm-chip[data-on="true"] {
+  background: color-mix(in srgb, var(--crm-wash) 85%, transparent);
+  border-color: var(--crm-accent);
+  color: var(--crm-text);
+}
+.crm-table th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--crm-muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--crm-border-soft);
+}
+.crm-table td {
+  padding: 11px 12px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--crm-border-soft);
+}
+.crm-table tbody tr {
+  transition: background 0.2s;
+}
+.crm-table tbody tr:hover {
+  background: color-mix(in srgb, var(--crm-accent) 5%, transparent);
+}
+.crm-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.crm-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--crm-accent) 35%, transparent);
+  border-radius: 99px;
+}

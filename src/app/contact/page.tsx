@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const quick = [
   { t: "Custom stitching", d: "Measurements, design references and timelines.", href: "/custom-stitching" },
   { t: "Size help", d: "Find your standard size before you order.", href: "/size-guide" },
-  { t: "Partners", d: "Boutiques, stylists and creators.", href: "/partner" },
+  { t: "Shop", d: "Questions about a piece or your order.", href: "/shop" },
   { t: "FAQ", d: "Quick answers to common questions.", href: "/faq" },
 ];
 
