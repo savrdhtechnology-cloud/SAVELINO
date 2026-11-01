@@ -7,6 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BODY_FONTS, FONT_PRESETS, HEADING_FONTS } from "@/lib/fonts";
 import {
   BG_EFFECTS,
+  HERO_PRESETS,
+  HERO_PRESET_LABELS,
+  HERO_PRESET_PALETTES,
+  type HeroPreset,
   BG_EFFECT_LABELS,
   CRM_THEMES,
   CRM_THEME_LABELS,
@@ -65,7 +69,7 @@ export function Website() {
   if (loading || !data) {
     return (
       <div className="space-y-6">
-        <PageHeader section="Website Management" subtitle="Build, customise and publish your storefront" />
+        <PageHeader section="Appearance Studio" subtitle="Choose a premium look for your storefront" />
         <Skeleton className="h-[640px]" />
       </div>
     );
@@ -168,7 +172,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
 
   return (
     <div className="space-y-6 pb-24">
-      <PageHeader section="Website Management" subtitle="Build, customise and publish your SAVLINO storefront" />
+      <PageHeader section="Appearance Studio" subtitle="Select a theme, customise the hero and preview before publishing" />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Stat icon={ICONS.globe} label="Site status" value={<span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[var(--crm-success)]" /> Live</span>} />
@@ -180,8 +184,8 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
         value={tab}
         onChange={setTab}
         options={[
-          { value: "manager", label: "Website Manager", icon: ICONS.layers },
-          { value: "theme", label: "Theme & Design", icon: ICONS.palette },
+          { value: "manager", label: "Homepage & Hero", icon: ICONS.layers },
+          { value: "theme", label: "Themes & Design", icon: ICONS.palette },
         ]}
       />
 
@@ -198,7 +202,35 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
                   </div>
                 </Panel>
 
-                <Panel title="Homepage Hero" icon={ICONS.image}>
+                <Panel title="Cinematic Hero Studio" icon={ICONS.image}>
+                  <p className="mb-3 text-xs crm-muted">Eight luxury visual presets · choose one as the website default when you publish.</p>
+                  <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {HERO_PRESETS.map((id) => {
+                      const p = HERO_PRESET_PALETTES[id];
+                      const selected = (s.hero.preset || "classic-3d") === id;
+                      return <button type="button" key={id} onClick={() => patch("hero",{preset:id})}
+                        aria-pressed={selected}
+                        className="rounded-xl border p-2 text-left transition hover:scale-[1.02]"
+                        style={{borderColor:selected?"var(--crm-accent)":"var(--crm-border-soft)",boxShadow:selected?"0 0 0 1px var(--crm-accent)":undefined}}>
+                        <div className="relative h-20 overflow-hidden rounded-lg"
+                          style={{background:`radial-gradient(circle at 75% 40%, ${p.accent}80, transparent 45%),linear-gradient(120deg,${p.background},${p.shade})`}}>
+                          <div className="absolute bottom-3 left-2 text-[10px] font-serif italic text-white">SAVLINO</div>
+                        </div>
+                        <div className="mt-2 text-xs">{HERO_PRESET_LABELS[id]}</div>
+                        <span className="text-[10px] crm-muted">{selected?"Selected default":"Select theme"}</span>
+                      </button>;
+                    })}
+                  </div>
+                  <div className="mb-5 grid gap-4 sm:grid-cols-2">
+                    <label className="text-xs crm-muted">Hero height · {s.hero.height ?? 100}vh
+                      <input className="mt-2 w-full accent-[#D4AF37]" type="range" min="65" max="110" value={s.hero.height ?? 100}
+                        onChange={(e)=>patch("hero",{height:Number(e.target.value)})}/>
+                    </label>
+                    <label className="text-xs crm-muted">Background light · {s.hero.spotlight ?? 70}%
+                      <input className="mt-2 w-full accent-[#D4AF37]" type="range" min="0" max="100" value={s.hero.spotlight ?? 70}
+                        onChange={(e)=>patch("hero",{spotlight:Number(e.target.value)})}/>
+                    </label>
+                  </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Small line" value={s.hero.eyebrow} onChange={(e) => patch("hero", { eyebrow: e.target.value })} />
                     <Field label="Title" value={s.hero.title} onChange={(e) => patch("hero", { title: e.target.value })} />
