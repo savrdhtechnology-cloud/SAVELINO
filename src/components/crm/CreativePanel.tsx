@@ -209,6 +209,28 @@ export function CreativePanel({
               <Toggle checked={settings.showRaw} onChange={(v) => set({ showRaw: v })} label="Also show raw photos on the website" hint="After the creatives, in the product gallery" />
             </div>
 
+            {/* Background colour controls shared by preview and published images. */}
+            <div className="crm-panel-soft space-y-3 p-4">
+              <span className="crm-label">Creative background colour</span>
+              <Toggle checked={settings.backgroundAuto ?? true} onChange={(v) => set({ backgroundAuto: v })} label="Auto colour from photo" hint="Samples vibrant garment colours for a matching background glow" />
+              <div className="flex items-center gap-3">
+                <label htmlFor="creative-bg-picker" className="text-xs crm-muted">Manual colour</label>
+                <input id="creative-bg-picker" type="color" value={settings.backgroundColor || "#A66F7C"}
+                  disabled={settings.backgroundAuto ?? true}
+                  onChange={(e) => set({ backgroundColor: e.target.value })}
+                  className="h-9 w-14 cursor-pointer rounded border border-white/20 bg-transparent disabled:opacity-40" />
+                <input aria-label="Background hex colour" className="crm-input w-28"
+                  value={settings.backgroundColor || "#A66F7C"} disabled={settings.backgroundAuto ?? true}
+                  onChange={(e) => /^#[0-9a-f]{6}$/i.test(e.target.value) && set({ backgroundColor: e.target.value })}
+                  maxLength={7} />
+              </div>
+              <Range label="Colour opacity" value={settings.backgroundOpacity ?? 0.36} min={0} max={1} step={0.05}
+                show={(v) => `${Math.round(v*100)}%`} onChange={(v) => set({ backgroundOpacity: v })} />
+              <Range label="Colour spread / size" value={settings.backgroundSize ?? 1} min={0.4} max={2.5} step={0.1}
+                show={(v) => `${v.toFixed(1)}×`} onChange={(v) => set({ backgroundSize: v })} />
+              <button type="button" className="crm-btn" onClick={() => set({ backgroundAuto: true, backgroundColor: "#A66F7C", backgroundOpacity: 0.36, backgroundSize: 1 })}>Reset background</button>
+            </div>
+
             {/* Framing for one photo */}
             <div className="crm-panel-soft p-4">
               <div className="flex items-center justify-between gap-2">
