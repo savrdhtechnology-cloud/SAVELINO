@@ -50,6 +50,11 @@ export type CreativeSettings = {
   skip: string[];
   /** Also show the raw photos on the website after the creatives. */
   showRaw: boolean;
+  /** Photo-inspired background tint controls (saved with each product). */
+  backgroundAuto: boolean;
+  backgroundColor: string;
+  backgroundOpacity: number;
+  backgroundSize: number;
   /** Framing per raw photo id. */
   framing: Record<string, Framing>;
 };
