@@ -24,7 +24,7 @@ export default function ShippingReturnsPage() {
                 <ul>
                   <li>Ready-made pieces are dispatched once payment is verified.</li>
                   <li>Custom-stitched pieces are dispatched after they are made to your measurements.</li>
-                  <li>You will receive a tracking number, and live status in your account under Order tracking.</li>
+                  <li>You will receive the courier tracking number on WhatsApp or SMS once your order ships.</li>
                 </ul>
                 <p>Delivery timelines and shipping charges are shown at checkout.</p>
               </>
@@ -36,7 +36,7 @@ export default function ShippingReturnsPage() {
               <>
                 <p>
                   Unworn ready-made pieces with original tags and packaging can be returned or exchanged within the
-                  window shown on your order. Requests are raised from your account under Returns &amp; exchanges.
+                  window shown on your order. To raise a request, contact us with your order number.
                 </p>
                 <ul>
                   <li>Custom-stitched pieces are made for you and are not eligible for return; fit alterations may be offered.</li>

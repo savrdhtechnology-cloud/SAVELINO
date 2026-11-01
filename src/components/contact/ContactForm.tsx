@@ -7,7 +7,7 @@ const field =
   "mt-2 w-full border border-gold/25 bg-transparent px-4 py-3.5 text-ivory placeholder:text-ivory/30 outline-none transition-colors focus:border-gold";
 const labelCls = "text-[0.62rem] uppercase tracking-[0.28em] text-ivory/60";
 
-const topics = ["Custom stitching", "Ready-made sizing", "Partner program", "Order help", "Something else"];
+const topics = ["Custom stitching", "Ready-made sizing", "Order help", "Something else"];
 
 export function ContactForm({ configured }: { configured: boolean }) {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error" | "offline">("idle");

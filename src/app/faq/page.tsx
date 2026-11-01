@@ -4,7 +4,7 @@ import { PageIntro, PageShell } from "@/components/layout/PageShell";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Answers to common questions about SAVLINO blouses, custom stitching, sizing, orders and the partner program.",
+  description: "Answers to common questions about SAVLINO blouses, custom stitching, sizing and orders.",
   alternates: { canonical: "/faq" },
 };
 
@@ -64,7 +64,7 @@ const groups: { title: string; items: { q: string; a: React.ReactNode }[] }[] = 
     items: [
       {
         q: "How will I track my order?",
-        a: "Once ordering opens, every order will appear in your account with live shipment tracking.",
+        a: "We share your order number at checkout and send the courier tracking number on WhatsApp or SMS as soon as your order ships.",
       },
       {
         q: "What is your returns policy?",
@@ -77,19 +77,6 @@ const groups: { title: string; items: { q: string; a: React.ReactNode }[] }[] = 
             page. Custom-stitched pieces are made for you and follow separate terms.
           </>
         ),
-      },
-    ],
-  },
-  {
-    title: "Partner program",
-    items: [
-      {
-        q: "Who can become a SAVLINO partner?",
-        a: "Boutiques, stylists, tailors and creators. Every application is reviewed by our team.",
-      },
-      {
-        q: "How is commission paid?",
-        a: "Commission is credited on verified, delivered orders placed with your referral code or link. Rates and payout terms are shared with approved partners.",
       },
     ],
   },

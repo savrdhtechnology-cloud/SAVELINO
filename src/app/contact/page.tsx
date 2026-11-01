@@ -7,7 +7,7 @@ import { getSiteSettings } from "@/lib/settings-server";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with SAVLINO about custom stitching, sizing, orders or the partner program.",
+  description: "Get in touch with SAVLINO about custom stitching, sizing or your order.",
   alternates: { canonical: "/contact" },
 };
 
