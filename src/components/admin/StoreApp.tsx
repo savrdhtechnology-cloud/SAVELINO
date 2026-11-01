@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "@/lib/admin/store";
@@ -173,18 +174,18 @@ function Overview() {
       <ul className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s, i) => (
           <motion.li key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.5, ease: EASE }}>
-            <a href={s.href} className="block border border-gold/15 bg-noir-soft/50 p-5 transition-colors hover:border-gold/50">
+            <Link href={s.href} className="block border border-gold/15 bg-noir-soft/50 p-5 transition-colors hover:border-gold/50">
               <span className="text-[0.58rem] uppercase tracking-[0.28em] text-ivory/50">{s.label}</span>
               <span className="mt-3 block font-display text-4xl text-ivory">{s.value}</span>
-            </a>
+            </Link>
           </motion.li>
         ))}
       </ul>
 
       {drafts > 0 && (
-        <a href="/admin/products" className="block border border-gold/40 bg-gold/10 px-5 py-4 text-sm text-ivory/80 hover:border-gold">
+        <Link href="/admin/products" className="block border border-gold/40 bg-gold/10 px-5 py-4 text-sm text-ivory/80 hover:border-gold">
           {drafts} {drafts === 1 ? "product is" : "products are"} still in drafts — add a price and publish to show {drafts === 1 ? "it" : "them"} on the website →
-        </a>
+        </Link>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -204,20 +205,20 @@ function Overview() {
               ))}
             </ul>
           )}
-          <a href="/admin/orders" className="text-[0.6rem] uppercase tracking-[0.22em] text-gold hover:underline">
+          <Link href="/admin/orders" className="text-[0.6rem] uppercase tracking-[0.22em] text-gold hover:underline">
             All orders →
-          </a>
+          </Link>
         </Card>
         <Card title="Quick actions">
-          <a href="/admin/products?new=1" className="block bg-gold px-4 py-3 text-center text-[0.62rem] font-medium uppercase tracking-[0.22em] text-noir hover:bg-gold-light">
+          <Link href="/admin/products?new=1" className="block bg-gold px-4 py-3 text-center text-[0.62rem] font-medium uppercase tracking-[0.22em] text-noir hover:bg-gold-light">
             + Add a product
-          </a>
-          <a href="/admin/categories" className="block border border-gold/30 px-4 py-3 text-center text-[0.62rem] uppercase tracking-[0.22em] text-gold hover:border-gold">
+          </Link>
+          <Link href="/admin/categories" className="block border border-gold/30 px-4 py-3 text-center text-[0.62rem] uppercase tracking-[0.22em] text-gold hover:border-gold">
             Choose categories on the website
-          </a>
-          <a href="/admin/studio" className="block border border-gold/30 px-4 py-3 text-center text-[0.62rem] uppercase tracking-[0.22em] text-gold hover:border-gold">
+          </Link>
+          <Link href="/admin/studio" className="block border border-gold/30 px-4 py-3 text-center text-[0.62rem] uppercase tracking-[0.22em] text-gold hover:border-gold">
             Website look (Studio)
-          </a>
+          </Link>
         </Card>
       </div>
     </div>
