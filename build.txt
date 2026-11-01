@@ -1,0 +1,98 @@
+
+> savlino@0.1.0 build
+> node scripts/store-migrate.mjs && next build
+
+[store-db] skipped (no DATABASE_URL)
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+   ▲ Next.js 15.5.27
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (113kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (268kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled successfully in 17.9s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/44) ...
+   Generating static pages (11/44) 
+   Generating static pages (22/44) 
+   Generating static pages (33/44) 
+ ✓ Generating static pages (44/44)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                         Size  First Load JS  Revalidate  Expire
+┌ ○ /                                            9.97 kB         226 kB          2m      1y
+├ ○ /_not-found                                    189 B         103 kB          5m      1y
+├ ƒ /account                                       176 B         106 kB
+├ ƒ /account/[section]                             176 B         106 kB
+├ ƒ /account/try-ons                               176 B         106 kB
+├ ƒ /admin                                       5.02 kB         236 kB
+├ ƒ /admin/[module]                              50.7 kB         336 kB
+├ ƒ /api/admin/photo-template/analyze              189 B         103 kB
+├ ƒ /api/revalidate                                189 B         103 kB
+├ ƒ /api/store/admin/images/[id]                   189 B         103 kB
+├ ƒ /api/store/admin/orders                        189 B         103 kB
+├ ƒ /api/store/admin/orders/[id]                   189 B         103 kB
+├ ƒ /api/store/admin/products                      189 B         103 kB
+├ ƒ /api/store/admin/products/[id]                 189 B         103 kB
+├ ƒ /api/store/admin/products/[id]/images          189 B         103 kB
+├ ƒ /api/store/admin/session                       189 B         103 kB
+├ ƒ /api/store/image/[id]                          189 B         103 kB
+├ ƒ /api/store/orders                              189 B         103 kB
+├ ƒ /api/virtual-try-on/[sessionId]                189 B         103 kB
+├ ƒ /api/virtual-try-on/[sessionId]/add-to-cart    189 B         103 kB
+├ ƒ /api/virtual-try-on/[sessionId]/event          189 B         103 kB
+├ ƒ /api/virtual-try-on/[sessionId]/save           189 B         103 kB
+├ ƒ /api/virtual-try-on/generate                 1.08 kB         104 kB
+├ ƒ /api/virtual-try-on/session                  1.08 kB         104 kB
+├ ƒ /api/virtual-try-on/upload                     189 B         103 kB
+├ ○ /apple-icon.png                                  0 B            0 B
+├ ƒ /auth/callback                                 189 B         103 kB
+├ ○ /checkout                                    3.69 kB         168 kB          5m      1y
+├ ○ /collections                                   850 B         165 kB          5m      1y
+├ ● /collections/[slug]                          1.22 kB         165 kB          5m      1y
+├   ├ /collections/designer-blouses                                              2m      1y
+├   ├ /collections/ready-made-blouses                                            2m      1y
+├   ├ /collections/sarees                                                        2m      1y
+├   └ [+4 more paths]
+├ ○ /contact                                     1.59 kB         235 kB          5m      1y
+├ ○ /craftsmanship                                 252 B         172 kB          5m      1y
+├ ○ /custom-stitching                              845 B         165 kB          5m      1y
+├ ○ /faq                                           453 B         165 kB          5m      1y
+├ ○ /icon.png                                        0 B            0 B
+├ ○ /image-consent                                 453 B         165 kB          5m      1y
+├ ○ /login                                       2.22 kB         235 kB          5m      1y
+├ ○ /lookbook                                    4.58 kB         213 kB          5m      1y
+├ ○ /manifest.webmanifest                          189 B         103 kB
+├ ○ /opengraph-image.jpg                             0 B            0 B
+├ ○ /our-story                                   3.71 kB         172 kB          5m      1y
+├ ○ /partner                                     1.22 kB         165 kB          5m      1y
+├ ƒ /partner/dashboard                             645 B         107 kB
+├ ƒ /partner/dashboard/[section]                   176 B         106 kB
+├ ○ /partner/login                               2.22 kB         235 kB          5m      1y
+├ ○ /partner/register                            2.22 kB         235 kB          5m      1y
+├ ○ /privacy                                       453 B         165 kB          5m      1y
+├ ○ /register                                    2.22 kB         235 kB          5m      1y
+├ ○ /robots.txt                                    189 B         103 kB
+├ ○ /shipping-returns                              453 B         165 kB          5m      1y
+├ ƒ /shop                                          438 B         165 kB
+├ ƒ /shop/[slug]                                 2.97 kB         167 kB
+├ ○ /sitemap.xml                                   189 B         103 kB          5m      1y
+├ ○ /size-guide                                    453 B         165 kB          5m      1y
+├ ○ /terms                                         423 B         164 kB          5m      1y
+├ ○ /try-on-terms                                  453 B         165 kB          5m      1y
+├ ƒ /virtual-try-on                              7.34 kB         171 kB
+├ ƒ /virtual-try-on/[sessionId]                  4.76 kB         169 kB
+└ ƒ /worker                                       5.9 kB         266 kB
++ First Load JS shared by all                     103 kB
+  ├ chunks/1255-8dc91b756d944555.js              46.2 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js          54.2 kB
+  └ other shared chunks (total)                  2.12 kB
+
+
+ƒ Middleware                                     93.8 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
