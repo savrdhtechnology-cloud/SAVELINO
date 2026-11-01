@@ -15,7 +15,44 @@ export type Category = {
   created_at?: string;
 };
 
-export type ProductImage = { id: string; product_id?: string; url: string; storage_path?: string | null; position: number; width: number | null; height: number | null };
+/** "photo" = raw upload from the CRM; "creative" = branded image generated from those photos. */
+export type ImageKind = "photo" | "creative";
+
+export type ProductImage = {
+  id: string;
+  product_id?: string;
+  url: string;
+  storage_path?: string | null;
+  position: number;
+  width: number | null;
+  height: number | null;
+  kind?: ImageKind;
+};
+
+/** How a raw photo sits inside a creative frame (fractions of the photo). */
+export type Framing = { top: number; zoom: number; x: number; y: number };
+
+/** Product Studio creative settings, saved on the product (products.creative). */
+export type CreativeSettings = {
+  brandLine: string;
+  titleTop: string;
+  titleBottom: string;
+  tagline: string;
+  features: string[];
+  showColors: boolean;
+  showSizes: boolean;
+  showShopNow: boolean;
+  hideFaces: boolean;
+  singleStyle: "classic" | "elegant" | "mix";
+  combo: boolean;
+  singles: boolean;
+  /** Generated items left out of the website, e.g. "combo" or "single:<image id>". */
+  skip: string[];
+  /** Also show the raw photos on the website after the creatives. */
+  showRaw: boolean;
+  /** Framing per raw photo id. */
+  framing: Record<string, Framing>;
+};
 
 export type ProductStatus = "draft" | "live" | "archived";
 
@@ -38,6 +75,9 @@ export type Product = {
   created_at: string;
   updated_at?: string;
   images: ProductImage[];
+  creative?: Partial<CreativeSettings> | null;
+  /** Website only: true when images are generated creatives (set by the catalogue loader). */
+  generated?: boolean;
 };
 
 export type OrderItem = { productId: string; slug: string; name: string; price: number; size: string; color: string; qty: number };

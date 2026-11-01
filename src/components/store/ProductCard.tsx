@@ -4,7 +4,10 @@ import { inr, type Product } from "@/lib/data/types";
 
 /** Product tile styled after the SAVLINO product creatives: framed photo, colour dots, size chips and a Shop Now pill. */
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
-  const [cover, second] = product.images;
+  // Portrait images fill the 4:5 tile best (the single creatives); the wide combined creative is for the product page.
+  const portrait = product.images.filter((i) => !i.width || !i.height || i.height >= i.width);
+  const [cover, second] = portrait.length ? portrait : product.images;
+  const fit = product.generated ? "50% 50%" : "28% 50%";
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
   return (
     <Link href={`/shop/${product.slug}`} className="group block">
@@ -19,7 +22,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
                 priority={priority}
                 sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
                 className={`object-cover transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105 ${second ? "group-hover:opacity-0" : ""}`}
-                style={{ objectPosition: "28% 50%" }}
+                style={{ objectPosition: fit }}
               />
               {second && (
                 <Image
@@ -28,7 +31,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
                   fill
                   sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
                   className="object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-                  style={{ objectPosition: "28% 50%" }}
+                  style={{ objectPosition: fit }}
                 />
               )}
             </>

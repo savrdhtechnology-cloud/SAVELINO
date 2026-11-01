@@ -95,7 +95,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
       slug: product.slug,
       name: product.name,
       price: product.price,
-      image: product.images[0] ? product.images[0].url : null,
+      image: (product.images.find((i) => !i.width || !i.height || i.height >= i.width) ?? product.images[0])?.url ?? null,
       size,
       color,
       qty,

@@ -7,14 +7,24 @@ import type { Category, Product } from "./types";
 /** Tag revalidated by the CRM after any catalogue change. */
 export const CATALOG_TAG = "catalog";
 
-const PRODUCT_SELECT = "*, images:product_images(id, url, position, width, height)";
+const PRODUCT_SELECT = "*, images:product_images(id, url, position, width, height, kind)";
 
 function anon() {
   const env = getSupabaseEnv();
   return env ? createClient(env.url, env.anonKey, { auth: { persistSession: false } }) : null;
 }
 
-const sortImages = (p: Product): Product => ({ ...p, images: [...(p.images ?? [])].sort((a, b) => a.position - b.position) });
+/**
+ * Orders photos and, when the CRM generated branded creatives, shows those instead of the raw
+ * photos (raw photos follow only if "show raw photos" was ticked in the Product Studio).
+ */
+const sortImages = (p: Product): Product => {
+  const all = [...(p.images ?? [])].sort((a, b) => a.position - b.position);
+  const creatives = all.filter((i) => i.kind === "creative");
+  const photos = all.filter((i) => i.kind !== "creative");
+  if (!creatives.length) return { ...p, images: photos, generated: false };
+  return { ...p, images: p.creative?.showRaw ? [...creatives, ...photos] : creatives, generated: true };
+};
 
 /** Visible categories, in CRM order. */
 export const getVisibleCategories = unstable_cache(
@@ -40,7 +50,7 @@ export const getLiveProducts = unstable_cache(
     if (error) console.error("[catalog] products", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["live-products-v1"],
+  ["live-products-v2"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -52,6 +62,6 @@ export const getLiveProduct = unstable_cache(
     if (error) console.error("[catalog] product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["live-product-v1"],
+  ["live-product-v2"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );

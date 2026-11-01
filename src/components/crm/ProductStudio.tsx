@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
-import { ProductCreative } from "@/components/store/ProductCreative";
-import { COLOR_PRESETS, SIZE_OPTIONS, inr, slugify, type Category, type Color, type Product } from "@/lib/data/types";
-import { db, dominantColor, fetchCategories, fetchProduct, must, nearestColor, removeMedia, revalidateSite, uploadMedia, useLoad } from "./data";
-import { Area, Badge, EASE, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, toast } from "./ui";
+import { COLOR_PRESETS, SIZE_OPTIONS, inr, slugify, type Category, type Color, type CreativeSettings, type Product, type ProductImage } from "@/lib/data/types";
+import { CreativePanel, buildSources, useBitmaps, type Faces } from "./CreativePanel";
+import { canvasBlob, defaultSettings, loadCreativeFonts, mergeSettings, renderAll } from "./creative";
+import { db, dominantColor, fetchCategories, fetchProduct, must, nearestColor, removeMedia, revalidateSite, uploadBlob, uploadMedia, useLoad } from "./data";
+import { Area, Badge, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, toast } from "./ui";
 
 type Photo = { key: string; url: string; file?: File; id?: string; path?: string | null; width: number | null; height: number | null };
 
@@ -25,7 +26,7 @@ type Details = {
   stock: number;
 };
 
-const STEPS = ["Raw Upload", "Auto Analyze", "Details", "Creative Preview", "Approve & Publish"];
+const STEPS = ["Raw Upload", "Auto Analyze", "Details", "Creatives", "Approve & Publish"];
 const ROLE = (i: number) => (i === 0 ? "Main" : i < 3 ? "Side" : i < 7 ? "Detail" : "Extra");
 const FEATURES_BY_CATEGORY: Record<string, string[]> = {
   "designer-blouses": ["Premium Fabric", "Fine Stitching", "Perfect Fit"],
@@ -87,9 +88,17 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
   const [id, setId] = useState<string | null>(product?.id ?? null);
   const [status, setStatus] = useState(product?.status ?? "draft");
   const [photos, setPhotos] = useState<Photo[]>(() =>
-    (product?.images ?? []).map((im) => ({ key: im.id, id: im.id, url: im.url, path: im.storage_path ?? null, width: im.width, height: im.height })),
+    (product?.images ?? [])
+      .filter((im) => im.kind !== "creative")
+      .sort((a, b) => a.position - b.position)
+      .map((im) => ({ key: im.id, id: im.id, url: im.url, path: im.storage_path ?? null, width: im.width, height: im.height })),
   );
   const [saved, setSaved] = useState<Photo[]>(photos);
+  const [creatives, setCreatives] = useState<ProductImage[]>(() => (product?.images ?? []).filter((im) => im.kind === "creative"));
+  const initialCat = categories.find((c) => c.id === (product?.category_id ?? defaultCat));
+  const [cs, setCs] = useState<CreativeSettings>(() => mergeSettings(product?.creative, defaultSettings(initialCat?.slug, initialCat?.name)));
+  const [faces, setFaces] = useState<Faces>({});
+  const bitmaps = useBitmaps();
   const [d, setD] = useState<Details>(() =>
     product
       ? {
@@ -110,6 +119,7 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
   );
   const [analysis, setAnalysis] = useState<{ hex: string; color: Color } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [progress, setProgress] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [custom, setCustom] = useState({ name: "", hex: "#C9A13B" });
   const set = (p: Partial<Details>) => setD((x) => ({ ...x, ...p }));
@@ -218,13 +228,55 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
           final.push(p);
         }
       }
+      // Temporary keys of new photos become their ids — carry framing, faces and decoded bitmaps over.
+      const renamed: Record<string, string> = {};
+      photos.forEach((p, i) => {
+        if (p.key !== final[i].key) renamed[p.key] = final[i].key;
+      });
+      Object.entries(renamed).forEach(([from, to]) => bitmaps.rename(from, to));
+      const framing = Object.fromEntries(Object.entries(cs.framing).filter(([k]) => final.some((p) => p.key === (renamed[k] ?? k))).map(([k, v]) => [renamed[k] ?? k, v]));
+      const skip = cs.skip.map((x) => (x.startsWith("single:") && renamed[x.slice(7)] ? `single:${renamed[x.slice(7)]}` : x));
+      const nextCs: CreativeSettings = { ...cs, framing, skip };
+      const nextFaces: Faces = Object.fromEntries(Object.entries(faces).map(([k, v]) => [renamed[k] ?? k, v]));
+
+      // Branded creatives: render full size, replace the previous set.
+      setProgress("Generating creatives…");
+      const made: ProductImage[] = [];
+      const fresh = final.map((p) => ({ key: p.key, url: p.url, file: undefined as File | undefined }));
+      if (final.length && (nextCs.combo || nextCs.singles)) {
+        await loadCreativeFonts();
+        const sources = await buildSources(fresh, nextCs, nextFaces, bitmaps.get);
+        const items = renderAll({ sources, settings: nextCs, colors: d.colors, sizes: d.sizes }).filter((r) => !nextCs.skip.includes(r.id));
+        for (const [i, r] of items.entries()) {
+          const blob = await canvasBlob(r.canvas);
+          const up = await uploadBlob(`products/${pid}/creatives`, blob, r.canvas.width, r.canvas.height);
+          const ins = must(
+            await client
+              .from("product_images")
+              .insert({ product_id: pid, url: up.url, storage_path: up.path, position: 100 + i, width: up.width, height: up.height, kind: "creative" })
+              .select("id")
+              .single(),
+          ) as { id: string };
+          made.push({ id: ins.id, url: up.url, storage_path: up.path, position: 100 + i, width: up.width, height: up.height, kind: "creative" });
+        }
+      }
+      if (creatives.length) {
+        must(await client.from("product_images").delete().in("id", creatives.map((c) => c.id)).select("id"));
+        await removeMedia(creatives.map((c) => c.storage_path ?? "").filter(Boolean));
+      }
+      must(await client.from("products").update({ creative: nextCs }).eq("id", pid).select("id"));
+      setCreatives(made);
+      setCs(nextCs);
+      setFaces(nextFaces);
+
       photos.forEach((p) => p.file && URL.revokeObjectURL(p.url));
       setPhotos(final);
       setSaved(final);
       setStatus(target);
       set({ slug: row.slug });
       await revalidateSite();
-      toast(target === "live" ? "Published — live on the website" : "Saved as draft");
+      const n = made.length;
+      toast(target === "live" ? `Published — live on the website${n ? ` with ${n} creative${n > 1 ? "s" : ""}` : ""}` : `Saved as draft${n ? ` · ${n} creative${n > 1 ? "s" : ""} ready` : ""}`);
       if (!id && pid) {
         setId(pid);
         window.history.replaceState(null, "", `/admin/studio?id=${pid}`);
@@ -234,6 +286,7 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
       toast(msg.includes("products_slug_key") ? "Another product already uses this web address — change it in Details" : msg, "error");
     } finally {
       setBusy(null);
+      setProgress("");
     }
   }
 
@@ -241,7 +294,7 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
     if (!id || !window.confirm(`Delete “${d.name}” and all its photos? This can’t be undone.`)) return;
     setBusy("delete");
     try {
-      await removeMedia(saved.map((p) => p.path ?? "").filter(Boolean));
+      await removeMedia([...saved.map((p) => p.path ?? ""), ...creatives.map((c) => c.storage_path ?? "")].filter(Boolean));
       must(await db().from("products").delete().eq("id", id).select("id"));
       await revalidateSite();
       toast("Product deleted");
@@ -251,26 +304,6 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
       setBusy(null);
     }
   }
-
-  const preview: Product = {
-    id: id ?? "preview",
-    slug: d.slug || "preview",
-    sku: d.sku || null,
-    name: d.name || "Your product",
-    category_id: d.category_id,
-    subtitle: d.subtitle,
-    description: d.description,
-    price: d.price,
-    compare_at_price: d.compare_at_price || null,
-    colors: d.colors,
-    sizes: d.sizes,
-    features: d.features.split(",").map((s) => s.trim()).filter(Boolean),
-    stock: d.stock,
-    status,
-    sort_order: 0,
-    created_at: new Date().toISOString(),
-    images: photos.map((p, i) => ({ id: p.key, url: p.url, position: i, width: p.width, height: p.height })),
-  };
 
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -415,7 +448,16 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
             <Field label="Product name *" value={d.name} onChange={(e) => set({ name: e.target.value })} placeholder="Rani Pink Pearl Scallop Blouse" className="sm:col-span-2" />
             <Field label="Price (₹) *" type="number" min={0} value={d.price || ""} onChange={(e) => set({ price: Number(e.target.value) })} placeholder="1999" />
             <Field label="MRP (₹) — shows % off" type="number" min={0} value={d.compare_at_price || ""} onChange={(e) => set({ compare_at_price: Number(e.target.value) })} placeholder="2499" />
-            <Select label="Category *" value={d.category_id} onChange={(e) => set({ category_id: e.target.value })}>
+            <Select
+              label="Category *"
+              value={d.category_id}
+              onChange={(e) => {
+                set({ category_id: e.target.value });
+                const c = categories.find((x) => x.id === e.target.value);
+                const def = defaultSettings(c?.slug, c?.name);
+                setCs((x) => ({ ...x, brandLine: def.brandLine, titleTop: def.titleTop, titleBottom: def.titleBottom, tagline: def.tagline, features: def.features }));
+              }}
+            >
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -488,16 +530,8 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
         </Panel>
       </div>
 
-      {/* 4. Creative preview */}
-      <Panel title="Creative preview" icon={ICONS.image} subtitle="Exactly how the product page arranges your photos" delay={0.2}>
-        {photos.length > 0 ? (
-          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, ease: EASE }}>
-            <ProductCreative product={preview} categoryTitle={category?.name ?? "Designer Blouses"} />
-          </motion.div>
-        ) : (
-          <p className="py-10 text-center crm-muted">Add photos to see the creative.</p>
-        )}
-      </Panel>
+      {/* 4. Creatives */}
+      <CreativePanel photos={photos} settings={cs} onChange={setCs} faces={faces} setFaces={setFaces} colors={d.colors} sizes={d.sizes} getBitmap={bitmaps.get} />
 
       {/* 5. Approve & publish */}
       <div className="crm-panel sticky bottom-4 z-20 flex flex-wrap items-center gap-3 p-3">
@@ -511,10 +545,10 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
             </button>
           )}
           <button type="button" onClick={() => void save("draft")} disabled={Boolean(busy)} className="crm-btn">
-            <Icon d={ICONS.draft} /> {busy === "draft" ? "Saving…" : status === "live" ? "Unpublish (draft)" : "Save draft"}
+            <Icon d={ICONS.draft} /> {busy === "draft" ? progress || "Saving…" : status === "live" ? "Unpublish (draft)" : "Save draft"}
           </button>
           <button type="button" onClick={() => void save("live")} disabled={Boolean(busy)} className="crm-btn crm-btn-wine">
-            <Icon d={ICONS.check} /> {busy === "live" ? "Publishing…" : status === "live" ? "Update live product" : "Approve & publish"}
+            <Icon d={ICONS.check} /> {busy === "live" ? progress || "Publishing…" : status === "live" ? "Update live product" : "Approve & publish"}
           </button>
         </div>
       </div>

@@ -45,15 +45,19 @@ export function useLoad<T>(loader: () => Promise<T>, deps: unknown[] = []) {
   return { data, setData, error, loading, reload };
 }
 
-const byPosition = (p: Product): Product => ({ ...p, images: [...(p.images ?? [])].sort((a, b) => a.position - b.position) });
+/** Generated creatives first (they are what the website shows), then raw photos. */
+const byPosition = (p: Product): Product => ({
+  ...p,
+  images: [...(p.images ?? [])].sort((a, b) => (a.kind === "creative" ? 0 : 1) - (b.kind === "creative" ? 0 : 1) || a.position - b.position),
+});
 
 export async function fetchProducts(): Promise<Product[]> {
-  const rows = must(await db().from("products").select("*, images:product_images(id, url, storage_path, position, width, height)").order("sort_order").order("created_at", { ascending: false }));
+  const rows = must(await db().from("products").select("*, images:product_images(id, url, storage_path, position, width, height, kind)").order("sort_order").order("created_at", { ascending: false }));
   return (rows as Product[]).map(byPosition);
 }
 
 export async function fetchProduct(id: string): Promise<Product | null> {
-  const row = must(await db().from("products").select("*, images:product_images(id, url, storage_path, position, width, height)").eq("id", id).maybeSingle());
+  const row = must(await db().from("products").select("*, images:product_images(id, url, storage_path, position, width, height, kind)").eq("id", id).maybeSingle());
   return row ? byPosition(row as Product) : null;
 }
 
@@ -97,6 +101,17 @@ export async function toWebp(file: File): Promise<{ blob: Blob; width: number; h
 /** Uploads a photo to the public "media" bucket and returns its public URL. */
 export async function uploadMedia(folder: string, file: File) {
   const { blob, width, height } = await toWebp(file);
+  const ext = blob.type === "image/webp" ? "webp" : "jpg";
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const client = db();
+  const up = await client.storage.from("media").upload(path, blob, { contentType: blob.type, cacheControl: "31536000", upsert: false });
+  if (up.error) throw new Error(up.error.message);
+  const { data } = client.storage.from("media").getPublicUrl(path);
+  return { url: data.publicUrl, path, width, height };
+}
+
+/** Uploads an already-encoded image (e.g. a generated creative). */
+export async function uploadBlob(folder: string, blob: Blob, width: number, height: number) {
   const ext = blob.type === "image/webp" ? "webp" : "jpg";
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
   const client = db();

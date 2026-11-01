@@ -115,6 +115,7 @@ export function Products({ initialQuery = "", initialStatus = "all" }: { initial
             sizes: p.sizes,
             features: p.features,
             stock: p.stock,
+            creative: p.creative ?? {},
             status: "draft",
           })
           .select("id")
@@ -122,7 +123,7 @@ export function Products({ initialQuery = "", initialStatus = "all" }: { initial
       ) as { id: string };
       if (p.images.length) {
         // The copy reuses the same files (no storage path, so deleting the copy never removes the originals' photos).
-        must(await client.from("product_images").insert(p.images.map((im) => ({ product_id: copy.id, url: im.url, position: im.position, width: im.width, height: im.height }))).select("id"));
+        must(await client.from("product_images").insert(p.images.map((im) => ({ product_id: copy.id, url: im.url, position: im.position, width: im.width, height: im.height, kind: im.kind ?? "photo" }))).select("id"));
       }
       toast("Duplicated as a draft");
       router.push(`/admin/studio?id=${copy.id}`);
