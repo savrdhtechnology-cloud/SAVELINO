@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Color, CreativeLayout, CreativeSettings, Framing } from "@/lib/data/types";
-import { DEFAULT_FRAMING, DEFAULT_LAYOUT, FEATURE_PRESETS, ICON_PATHS, iconFor, loadBitmap, loadCreativeFonts, renderAll, type Source } from "./creative";
+import type { Color, CreativeSettings, Framing } from "@/lib/data/types";
+import { BG_PRESETS, DEFAULT_FRAMING, FEATURE_PRESETS, ICON_PATHS, iconFor, loadBitmap, loadCreativeFonts, renderAll, type Source } from "./creative";
 import { findFaceBottom } from "./faces";
 import { EASE, Field, ICONS, Icon, Toggle, toast } from "./ui";
 
@@ -119,7 +119,7 @@ export function useCreativePreviews({
 
 export function CreativeDesign({ settings, onChange }: { settings: CreativeSettings; onChange: (s: CreativeSettings) => void }) {
   const [custom, setCustom] = useState("");
-  const [more, setMore] = useState(false);
+  const customBg = Boolean(settings.bgColor && settings.bgColor !== "auto" && !BG_PRESETS.some((b) => b.value === settings.bgColor));
   const set = (p: Partial<CreativeSettings>) => onChange({ ...settings, ...p });
   const toggleFeature = (f: string) => {
     if (settings.features.includes(f)) return set({ features: settings.features.filter((x) => x !== f) });
@@ -150,6 +150,37 @@ export function CreativeDesign({ settings, onChange }: { settings: CreativeSetti
           ).map(([v, t, n]) => (
             <Choice key={v} on={settings.singleStyle === v} onClick={() => set({ singleStyle: v })} title={t} note={n} />
           ))}
+        </div>
+      </div>
+
+      <div>
+        <span className="crm-label">Background colour</span>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {BG_PRESETS.map((b) => {
+            const on = (settings.bgColor ?? "") === b.value;
+            return (
+              <button
+                key={b.name}
+                type="button"
+                title={b.name}
+                aria-pressed={on}
+                onClick={() => set({ bgColor: b.value })}
+                className="relative h-9 w-9 rounded-full transition-transform hover:scale-110"
+                style={{ background: b.swatch, boxShadow: on ? "0 0 0 2px var(--crm-panel), 0 0 0 4px var(--crm-accent)" : "inset 0 0 0 1px rgba(255,255,255,.25)" }}
+              >
+                {b.value === "auto" && <span className="absolute inset-0 flex items-center justify-center text-[0.55rem] font-bold text-white drop-shadow">AUTO</span>}
+              </button>
+            );
+          })}
+          <label className="relative h-9 w-9 cursor-pointer overflow-hidden rounded-full" title="Own colour" style={{ boxShadow: customBg ? "0 0 0 2px var(--crm-panel), 0 0 0 4px var(--crm-accent)" : "inset 0 0 0 1px rgba(255,255,255,.25)", background: customBg ? settings.bgColor : "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}>
+            <input type="color" value={customBg ? (settings.bgColor as string) : "#7A4A3A"} onChange={(e) => set({ bgColor: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Own background colour" />
+            {!customBg && <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white drop-shadow">+</span>}
+          </label>
+        </div>
+        <p className="mt-1.5 text-[0.7rem] crm-muted">{BG_PRESETS.find((b) => b.value === (settings.bgColor ?? ""))?.name ?? `Own colour ${settings.bgColor}`} · text colour adjusts automatically</p>
+        <div className="mt-3 space-y-2">
+          <Toggle checked={settings.backgroundAuto ?? true} onChange={(v) => set({ backgroundAuto: v })} label="Soft glow from blouse colour" />
+          {(settings.backgroundAuto ?? true) && <Range label="Glow strength" value={settings.backgroundOpacity ?? 0.36} min={0} max={1} step={0.05} show={(v) => `${Math.round(v * 100)}%`} onChange={(v) => set({ backgroundOpacity: v })} />}
         </div>
       </div>
 
@@ -193,82 +224,13 @@ export function CreativeDesign({ settings, onChange }: { settings: CreativeSetti
         </div>
       </div>
 
-      <LayoutControls settings={settings} onChange={onChange} />
-
       <div className="crm-panel-soft space-y-3 p-3.5">
         <Toggle checked={settings.showColors} onChange={(v) => set({ showColors: v })} label="Show colours" />
         <Toggle checked={settings.showSizes} onChange={(v) => set({ showSizes: v })} label="Show sizes" />
         <Toggle checked={settings.showShopNow} onChange={(v) => set({ showShopNow: v })} label="Shop Now button" />
       </div>
 
-      <button type="button" onClick={() => setMore((x) => !x)} className="flex w-full items-center justify-between text-sm crm-accent">
-        Background colour & website options
-        <span className={`transition-transform ${more ? "rotate-180" : ""}`}>▾</span>
-      </button>
-      <AnimatePresence initial={false}>
-        {more && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
-            <div className="crm-panel-soft space-y-3 p-3.5">
-              <Toggle checked={settings.backgroundAuto ?? true} onChange={(v) => set({ backgroundAuto: v })} label="Background glow from photo colour" />
-              {!(settings.backgroundAuto ?? true) && (
-                <div className="flex items-center gap-3">
-                  <input type="color" value={settings.backgroundColor || "#A66F7C"} onChange={(e) => set({ backgroundColor: e.target.value })} className="h-9 w-12 cursor-pointer rounded border border-white/20 bg-transparent" aria-label="Glow colour" />
-                  <span className="font-mono text-xs crm-muted">{settings.backgroundColor || "#A66F7C"}</span>
-                </div>
-              )}
-              <Range label="Glow strength" value={settings.backgroundOpacity ?? 0.36} min={0} max={1} step={0.05} show={(v) => `${Math.round(v * 100)}%`} onChange={(v) => set({ backgroundOpacity: v })} />
-              <Range label="Glow size" value={settings.backgroundSize ?? 1} min={0.4} max={2.5} step={0.1} show={(v) => `${v.toFixed(1)}×`} onChange={(v) => set({ backgroundSize: v })} />
-              <Toggle checked={settings.showRaw} onChange={(v) => set({ showRaw: v })} label="Also show raw photos on the website" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/** Move and resize the SAVLINO logo and the feature icons on every creative. */
-function LayoutControls({ settings, onChange }: { settings: CreativeSettings; onChange: (s: CreativeSettings) => void }) {
-  const [open, setOpen] = useState(true);
-  const L: CreativeLayout = { ...DEFAULT_LAYOUT, ...(settings.layout ?? {}) };
-  const set = (p: Partial<CreativeLayout>) => onChange({ ...settings, layout: { ...L, ...p } });
-  const px = (v: number) => `${v > 0 ? "+" : ""}${Math.round(v)}`;
-  const pct = (v: number) => `${Math.round(v * 100)}%`;
-  return (
-    <div className="crm-panel-soft p-3.5">
-      <button type="button" onClick={() => setOpen((x) => !x)} className="flex w-full items-center justify-between text-sm">
-        <span className="crm-accent">Logo & icons — size and position</span>
-        <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
-            <div className="mt-3 space-y-3">
-              <Toggle checked={L.showLogo} onChange={(v) => set({ showLogo: v })} label="Show SAVLINO logo" />
-              {L.showLogo && (
-                <>
-                  <Range label="Logo size" value={L.logoScale} min={0.5} max={1.6} step={0.05} show={pct} onChange={(v) => set({ logoScale: v })} />
-                  <Range label="Logo left ↔ right" value={L.logoX} min={-150} max={300} step={2} show={px} onChange={(v) => set({ logoX: v })} />
-                  <Range label="Logo up ↔ down" value={L.logoY} min={-40} max={300} step={2} show={px} onChange={(v) => set({ logoY: v })} />
-                </>
-              )}
-              <div className="h-px" style={{ background: "var(--crm-border-soft)" }} />
-              <Toggle checked={L.showIcons} onChange={(v) => set({ showIcons: v })} label="Show feature icons" />
-              {L.showIcons && (
-                <>
-                  <Range label="Icon size" value={L.iconScale} min={0.5} max={1.6} step={0.05} show={pct} onChange={(v) => set({ iconScale: v })} />
-                  <Range label="Space between icons" value={L.iconGap} min={0.6} max={1.6} step={0.05} show={pct} onChange={(v) => set({ iconGap: v })} />
-                  <Range label="Icons left ↔ right" value={L.iconsX} min={-80} max={300} step={2} show={px} onChange={(v) => set({ iconsX: v })} />
-                  <Range label="Icons up ↔ down" value={L.iconsY} min={-250} max={250} step={2} show={px} onChange={(v) => set({ iconsY: v })} />
-                </>
-              )}
-              <button type="button" className="crm-btn w-full justify-center" onClick={() => onChange({ ...settings, layout: { ...DEFAULT_LAYOUT } })}>
-                Reset logo & icons
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Toggle checked={settings.showRaw} onChange={(v) => set({ showRaw: v })} label="Also show raw photos on the website" />
     </div>
   );
 }

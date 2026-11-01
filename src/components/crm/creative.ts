@@ -14,23 +14,8 @@ import type { Color, CreativeLayout, CreativeSettings, Framing } from "@/lib/dat
 
 export const DEFAULT_FRAMING: Framing = { top: 0, zoom: 1, x: 0.5, y: 0 };
 
+/** Logo & icons are placed automatically (kept as one place to tune the layout). */
 export const DEFAULT_LAYOUT: CreativeLayout = { showLogo: true, logoScale: 1, logoX: 0, logoY: 0, showIcons: true, iconScale: 1, iconGap: 1, iconsX: 0, iconsY: 0 };
-const layoutOf = (s: CreativeSettings): CreativeLayout => {
-  const l = { ...DEFAULT_LAYOUT, ...(s.layout ?? {}) };
-  const clamp = (v: number, a: number, b: number, d: number) => (Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d);
-  return {
-    showLogo: l.showLogo !== false,
-    logoScale: clamp(l.logoScale, 0.5, 1.6, 1),
-    logoX: clamp(l.logoX, -300, 300, 0),
-    logoY: clamp(l.logoY, -100, 400, 0),
-    showIcons: l.showIcons !== false,
-    iconScale: clamp(l.iconScale, 0.5, 1.6, 1),
-    iconGap: clamp(l.iconGap, 0.6, 1.6, 1),
-    iconsX: clamp(l.iconsX, -100, 300, 0),
-    iconsY: clamp(l.iconsY, -300, 300, 0),
-  };
-};
-
 /** A column of feature icons centred where the default layout centres it, then moved/scaled by the layout. */
 function iconColumn(ctx: Ctx, feats: string[], L: CreativeLayout, x: number, center: number, step0: number, r: number, label: number) {
   if (!L.showIcons || !feats.length) return;
@@ -274,12 +259,76 @@ function garmentTint(src: Source): string {
   const hex = (v:number)=>Math.round(v/winner.n).toString(16).padStart(2,"0");
   return "#"+hex(winner.r)+hex(winner.g)+hex(winner.b);
 }
+/** Background colour presets for the Creative Studio ("" = SAVLINO brown, "auto" = from the blouse). */
+export const BG_PRESETS: { name: string; value: string; swatch: string }[] = [
+  { name: "SAVLINO brown", value: "", swatch: "#8d6852" },
+  { name: "Auto · matches blouse", value: "auto", swatch: "conic-gradient(#d6246e, #f2a900, #1c7fa6, #1f7a3a, #d6246e)" },
+  { name: "Wine", value: "#6E1A2C", swatch: "#6E1A2C" },
+  { name: "Rose", value: "#A65D6E", swatch: "#A65D6E" },
+  { name: "Royal blue", value: "#1E3A6E", swatch: "#1E3A6E" },
+  { name: "Emerald", value: "#1E5A48", swatch: "#1E5A48" },
+  { name: "Plum", value: "#4A2A55", swatch: "#4A2A55" },
+  { name: "Charcoal", value: "#2E2A2A", swatch: "#2E2A2A" },
+  { name: "Beige", value: "#D9C3A5", swatch: "#D9C3A5" },
+];
+
+function baseColor(settings?: CreativeSettings, source?: Source): string | null {
+  const v = settings?.bgColor ?? "";
+  if (v === "auto") {
+    if (!source) return null;
+    const [h, s] = toHsl(garmentTint(source));
+    return fromHsl(h, Math.min(0.45, s * 0.7), 0.32); // muted, deep version of the blouse colour
+  }
+  return /^#[0-9a-f]{6}$/i.test(v) ? v : null;
+}
+
+function toHsl(hex: string): [number, number, number] {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, s, l];
+}
+
+function fromHsl(h: number, s: number, l: number): string {
+  const f = (n: number) => {
+    const k = (n + h * 12) % 12;
+    const a = s * Math.min(l, 1 - l);
+    return Math.round((l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+/** Four gradient stops (light centre → deep edge) from one colour. */
+function shades(hex: string): [string, string, string, string] {
+  const [h, s, l] = toHsl(hex);
+  const c = (dl: number, ds = 1) => fromHsl(h, Math.min(1, s * ds), Math.max(0.04, Math.min(0.92, l + dl)));
+  return [c(0.16, 0.85), c(0), c(-0.17), c(-0.24)];
+}
+
+function luminance(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 function background(ctx: Ctx, W: number, H: number, seed = 1, settings?: CreativeSettings, source?: Source) {
   const g = ctx.createRadialGradient(W * 0.3, H * 0.34, 0, W * 0.3, H * 0.34, Math.max(W, H) * 0.95);
-  g.addColorStop(0, "#b8917a");
-  g.addColorStop(0.36, "#8d6852");
-  g.addColorStop(0.74, "#4d3328");
-  g.addColorStop(1, "#33221b");
+  const base = baseColor(settings, source);
+  const stops = base ? shades(base) : ["#b8917a", "#8d6852", "#4d3328", "#33221b"];
+  g.addColorStop(0, stops[0]);
+  g.addColorStop(0.36, stops[1]);
+  g.addColorStop(0.74, stops[2]);
+  g.addColorStop(1, stops[3]);
+  const light = base ? luminance(stops[1]) > 0.55 : false;
+  TEXT = light ? "#2A1D17" : C.ivory;
+  TEXT_SOFT = light ? "rgba(42,29,23,0.85)" : "rgba(255,246,232,0.92)";
+  GOLD = light ? "#8A6424" : C.gold;
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   const tint = settings?.backgroundAuto && source ? garmentTint(source) : (settings?.backgroundColor || "#A66F7C");
@@ -310,7 +359,7 @@ function background(ctx: Ctx, W: number, H: number, seed = 1, settings?: Creativ
   // vignette
   const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
   v.addColorStop(0, "rgba(0,0,0,0)");
-  v.addColorStop(1, "rgba(20,10,6,0.45)");
+  v.addColorStop(1, light ? "rgba(60,40,30,0.18)" : "rgba(20,10,6,0.45)");
   ctx.fillStyle = v;
   ctx.fillRect(0, 0, W, H);
 }
@@ -355,7 +404,7 @@ function lotus(ctx: Ctx, x: number, y: number, w: number) {
   ctx.save();
   ctx.translate(x - 50 * s, y);
   ctx.scale(s, s);
-  ctx.strokeStyle = C.gold;
+  ctx.strokeStyle = GOLD;
   ctx.lineWidth = 2.6;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
@@ -373,10 +422,15 @@ function lotus(ctx: Ctx, x: number, y: number, w: number) {
   ctx.restore();
 }
 
+/** Text colour on the background — switches to dark ink automatically on light backgrounds. */
+let TEXT = C.ivory;
+let TEXT_SOFT = "rgba(255,246,232,0.92)";
+let GOLD = C.gold;
+
 /** Lotus + SAVLINO® + collection line, centred on x. Returns the bottom y. */
 function logo(ctx: Ctx, x: number, y: number, size: number, line: string) {
   lotus(ctx, x, y, size * 1.25);
-  ctx.fillStyle = C.ivory;
+  ctx.fillStyle = TEXT;
   ctx.font = `500 ${size}px ${FONTS.brand}`;
   ctx.textBaseline = "alphabetic";
   const base = y + size * 0.85 + size * 0.95;
@@ -384,14 +438,14 @@ function logo(ctx: Ctx, x: number, y: number, size: number, line: string) {
   ctx.font = `500 ${size * 0.26}px ${FONTS.sans}`;
   ctx.fillText("®", x + w / 2 + size * 0.05, base - size * 0.62);
   ctx.font = `500 ${size * 0.235}px ${FONTS.sans}`;
-  ctx.fillStyle = "rgba(255,246,232,0.92)";
+  ctx.fillStyle = TEXT_SOFT;
   spaced(ctx, line.toUpperCase(), x, base + size * 0.55, size * 0.075, "center");
   return base + size * 0.62;
 }
 
 function featureIcon(ctx: Ctx, label: string, cx: number, cy: number, r: number, labelSize: number) {
   ctx.save();
-  ctx.strokeStyle = C.gold;
+  ctx.strokeStyle = GOLD;
   ctx.lineWidth = Math.max(1.5, r * 0.06);
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -404,22 +458,22 @@ function featureIcon(ctx: Ctx, label: string, cx: number, cy: number, r: number,
   ctx.lineJoin = "round";
   ctx.stroke(new Path2D(ICON_PATHS[iconFor(label)]));
   ctx.restore();
-  ctx.fillStyle = C.ivory;
+  ctx.fillStyle = TEXT;
   ctx.font = `500 ${labelSize}px ${FONTS.sans}`;
   ctx.textAlign = "center";
   labelLines(label).forEach((l, i) => ctx.fillText(l, cx, cy + r + labelSize * 1.35 + i * labelSize * 1.15));
   ctx.textAlign = "left";
 }
 
-function goldGradient(ctx: Ctx, y0: number, y1: number) {
+function goldGradient(ctx: Ctx, y0: number, y1: number, deep = false) {
   const g = ctx.createLinearGradient(0, y0, 0, y1);
-  g.addColorStop(0, C.goldLight);
-  g.addColorStop(0.55, C.gold);
-  g.addColorStop(1, C.goldDeep);
+  g.addColorStop(0, deep ? "#B98E3E" : C.goldLight);
+  g.addColorStop(0.55, deep ? "#8A6424" : C.gold);
+  g.addColorStop(1, deep ? "#5E4216" : C.goldDeep);
   return g;
 }
 
-function title(ctx: Ctx, top: string, bottom: string, x: number, y: number, size0: number, indent: number, maxW: number) {
+function title(ctx: Ctx, top: string, bottom: string, x: number, y: number, size0: number, indent: number, maxW: number, topColor: string = C.ivory) {
   ctx.save();
   // Shrink long titles so they never run into the photos or the info bar.
   ctx.font = `italic 500 ${size0 * 0.78}px ${FONTS.script}`;
@@ -430,11 +484,12 @@ function title(ctx: Ctx, top: string, bottom: string, x: number, y: number, size
   ctx.shadowColor = "rgba(0,0,0,0.35)";
   ctx.shadowBlur = size * 0.12;
   ctx.shadowOffsetY = size * 0.04;
-  ctx.fillStyle = C.ivory;
+  ctx.fillStyle = topColor;
+  if (topColor !== C.ivory) ctx.shadowColor = "rgba(0,0,0,0.12)";
   ctx.font = `italic 500 ${size * 0.78}px ${FONTS.script}`;
   ctx.fillText(top, x, y);
   ctx.font = `italic 500 ${size}px ${FONTS.script}`;
-  ctx.fillStyle = goldGradient(ctx, y + size * 0.1, y + size * 1.05);
+  ctx.fillStyle = goldGradient(ctx, y + size * 0.1, y + size * 1.05, topColor !== C.ivory);
   ctx.fillText(bottom, x + indent, y + size * 0.98);
   ctx.restore();
 }
@@ -677,7 +732,7 @@ export function renderCombo(input: RenderInput, scale = 1): HTMLCanvasElement {
   details.forEach((d, i) => framed(ctx, d.src, hide, 828 + i * (dw + 12), 680, dw, 238, 18, d.override));
 
   // Logo + feature icons.
-  const L = layoutOf(s);
+  const L = DEFAULT_LAYOUT;
   if (L.showLogo) logo(ctx, 192 + L.logoX, 30 + L.logoY, 52 * L.logoScale, s.brandLine);
   {
     const feats = s.features.slice(0, 4);
@@ -725,7 +780,7 @@ export function renderSingle(input: RenderInput, index: number, scale = 1): HTML
   background(ctx, W, H, 11 + index, input.settings, input.sources[index]);
 
   if (style === "classic") {
-    const L = layoutOf(s);
+    const L = DEFAULT_LAYOUT;
     if (L.showLogo) logo(ctx, W / 2 + L.logoX, 36 + L.logoY, 66 * L.logoScale, s.brandLine);
     framed(ctx, src, hide, 268, 262, 772, 900, 30);
     const feats = s.features.slice(0, 4);
@@ -788,10 +843,10 @@ export function renderSingle(input: RenderInput, index: number, scale = 1): HTML
       { x: 70, y: 470, r: 58, blur: 9 },
       { x: 170, y: 420, r: 34, blur: 7 },
     ]);
-    const L = layoutOf(s);
+    const L = DEFAULT_LAYOUT;
     if (L.showLogo) logo(ctx, 262 + L.logoX, 64 + L.logoY, 62 * L.logoScale, s.brandLine);
-    title(ctx, s.titleTop, s.titleBottom, 72, 640, 118, 52, 470);
-    ctx.fillStyle = C.ivory;
+    title(ctx, s.titleTop, s.titleBottom, 72, 640, 118, 52, 470, TEXT);
+    ctx.fillStyle = TEXT;
     ctx.font = `400 31px ${FONTS.sans}`;
     wrap(ctx, s.tagline, 400)
       .slice(0, 3)
