@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SiteHeader } from "./SiteHeader";
-import { Footer } from "./Footer";
+import { SiteFooter } from "./SiteFooter";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -9,7 +9,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       <main id="main" className="min-h-[70vh] pt-[calc(var(--header-h)+var(--announce-h,0px))]">
         {children}
       </main>
-      <Footer />
+      <SiteFooter />
     </>
   );
 }

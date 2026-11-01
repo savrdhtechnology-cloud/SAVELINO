@@ -20,7 +20,9 @@ const looks: Look[] = [
   { img: images.loungewear, title: "Slow Morning", caption: "Ivory satin lounge set", href: "/collections/loungewear" },
 ];
 
-export function Lookbook() {
+/** Only looks whose collection is switched on in CRM → Categories (all when not given). */
+export function Lookbook({ enabled }: { enabled?: string[] }) {
+  const visible = enabled ? looks.filter((l) => enabled.includes(l.href.replace("/collections/", ""))) : looks;
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +104,7 @@ export function Lookbook() {
           </p>
         </div>
 
-        {looks.map((look, i) => (
+        {visible.map((look, i) => (
           <Link
             key={look.title}
             href={look.href}

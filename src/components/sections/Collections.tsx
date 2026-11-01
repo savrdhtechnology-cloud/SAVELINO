@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { categorySlugs, getCollection, type Collection } from "@/lib/collections";
+import { CategoryImage } from "@/components/ui/CategoryImage";
+import type { Category } from "@/lib/catalogue";
 
 const tones: Record<string, string> = {
   "salwar-suits": "from-burgundy/40",
@@ -12,8 +12,8 @@ const tones: Record<string, string> = {
   loungewear: "from-ivory/10",
 };
 
-export function Collections() {
-  const items = categorySlugs.map((s) => getCollection(s)).filter((c): c is Collection => Boolean(c));
+export function Collections({ items }: { items: Category[] }) {
+  if (items.length === 0) return null;
 
   return (
     <section id="collections" aria-label="Collections" className="relative bg-noir py-24 md:py-36">
@@ -54,12 +54,10 @@ export function Collections() {
                 />
                 <Link href={`/collections/${c.slug}`} className="group relative block" tabIndex={-1} aria-hidden>
                   <ImageReveal className="aspect-[3/4] border border-gold/25">
-                    <Image
+                    <CategoryImage
                       src={c.image}
                       alt=""
-                      fill
                       sizes="(min-width: 768px) 440px, 90vw"
-                      placeholder="blur"
                       className="object-cover object-top transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
                     />
                   </ImageReveal>

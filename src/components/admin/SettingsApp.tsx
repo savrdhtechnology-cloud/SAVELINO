@@ -207,7 +207,7 @@ export function SettingsApp({ live }: { live: boolean }) {
   );
 }
 
-function Segmented({
+export function Segmented({
   label,
   value,
   options,

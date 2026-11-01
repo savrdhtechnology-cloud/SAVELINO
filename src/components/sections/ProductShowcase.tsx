@@ -8,12 +8,17 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { collections } from "@/lib/collections";
+import type { Category } from "@/lib/catalogue";
 
 const ProductCarousel = dynamic(() => import("@/components/three/ProductCarousel"), { ssr: false });
 
-const showcase = collections.filter((c) => c.slug !== "ready-made-blouses");
-
-export function ProductShowcase() {
+/** The 3D showcase uses the bundled photography, so it shows the built-in categories that are switched on. */
+export function ProductShowcase({ enabled }: { enabled: Category[] }) {
+  const titles = new Map(enabled.map((c) => [c.slug, c.title]));
+  const showcase = collections
+    .filter((c) => c.slug !== "ready-made-blouses" && titles.has(c.slug))
+    .map((c) => ({ ...c, title: titles.get(c.slug) ?? c.title }));
+  const key = showcase.map((c) => `${c.slug}:${c.title}`).join("|");
   const reduce = useReducedMotion();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
@@ -51,11 +56,13 @@ export function ProductShowcase() {
         src: c.image.src,
         aspect: c.image.width / c.image.height,
       })),
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [key],
   );
 
   const use3D = near && webgl && reduce === false;
   const current = showcase[focus] ?? showcase[0];
+  if (!current) return null;
 
   return (
     <section id="showcase" aria-labelledby="showcase-title" className="relative overflow-hidden bg-noir py-24 md:py-36">

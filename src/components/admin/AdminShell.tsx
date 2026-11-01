@@ -9,6 +9,8 @@ import { ICONS, navGroups } from "@/lib/admin/modules";
 import { resolveTheme, usePrefs, useSystemDark } from "@/lib/admin/prefs";
 import { DEFAULT_SETTINGS, type SiteSettings } from "@/lib/settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ALL_FONT_KEYS, googleFontsHref } from "@/lib/fonts";
+import { Effects } from "@/components/site/Effects";
 import { CommandPalette } from "./CommandPalette";
 import { EASE, Icon, Toaster } from "./ui";
 
@@ -24,6 +26,10 @@ function useClock() {
   return now;
 }
 
+/** Studio → CRM panel previews unsaved house defaults through this event (null = back to saved). */
+export const CRM_PREVIEW_EVENT = "savlino:crm-preview";
+const ALL_FONTS_HREF = googleFontsHref(ALL_FONT_KEYS);
+
 const clockFmt = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
 export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm }: Props) {
@@ -31,7 +37,14 @@ export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm
   const router = useRouter();
   const [prefs, setPrefs] = usePrefs();
   const systemDark = useSystemDark();
-  const theme = resolveTheme(prefs, house, systemDark);
+  const [housePreview, setHousePreview] = useState<SiteSettings["crm"] | null>(null);
+  useEffect(() => {
+    const on = (e: Event) => setHousePreview((e as CustomEvent<SiteSettings["crm"] | null>).detail);
+    window.addEventListener(CRM_PREVIEW_EVENT, on);
+    return () => window.removeEventListener(CRM_PREVIEW_EVENT, on);
+  }, []);
+  const activeHouse = housePreview ?? house;
+  const theme = resolveTheme(prefs, activeHouse, systemDark);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [palette, setPalette] = useState(false);
   const now = useClock();
@@ -130,7 +143,18 @@ export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm
         style={shellStyle}
         className="min-h-screen bg-noir text-ivory transition-colors duration-500"
       >
+        <link rel="stylesheet" href={ALL_FONTS_HREF} precedence="default" />
         <div aria-hidden className="pointer-events-none fixed inset-0" style={{ backgroundImage: theme.wallpaper }} />
+        {prefs.motion !== "reduced" && (
+          <Effects
+            key={`${activeHouse.background}-${activeHouse.cursor}`}
+            background={activeHouse.background}
+            cursor={activeHouse.cursor}
+            intensity="subtle"
+            mobile={false}
+            zIndex={0}
+          />
+        )}
 
         {/* OS menu bar */}
         <motion.header

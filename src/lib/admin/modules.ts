@@ -1,6 +1,7 @@
 import * as demo from "./demo";
 import * as biz from "./demo-business";
 import type { ModuleConfig, Row } from "./types";
+import { BUILTIN_CATEGORY_SLUGS } from "@/lib/settings";
 
 const shortId = (v: unknown) => (typeof v === "string" ? v.slice(0, 8) : v);
 const orderRef = (r: Row) => r.order_number ?? shortId(r.order_id);
@@ -103,20 +104,22 @@ export const adminModuleConfigs: ModuleConfig[] = [
     description: "Catalogue, pricing and visibility.",
     icon: ICONS.products,
     table: "products",
-    select: "id,name,slug,price,is_active,created_at",
+    select: "id,name,slug,price,category,image_url,is_active,created_at",
     orderBy: "created_at",
     columns: [
       { key: "name", label: "Product" },
-      { key: "collection", label: "Collection", wide: true },
+      { key: "category", label: "Category", wide: true, get: (r) => r.category ?? r.collection },
       { key: "price", label: "Price", format: "currency" },
       { key: "is_active", label: "Live", format: "bool" },
       { key: "created_at", label: "Added", format: "date", wide: true },
     ],
-    searchKeys: ["name", "slug", "collection"],
+    searchKeys: ["name", "slug", "category", "collection"],
     form: [
       { key: "name", label: "Product name", type: "text", required: true },
       { key: "slug", label: "URL slug", type: "text", required: true, placeholder: "noir-zardozi-blouse" },
+      { key: "category", label: "Category", type: "select", options: [...BUILTIN_CATEGORY_SLUGS], required: true },
       { key: "price", label: "Price (₹)", type: "number", required: true },
+      { key: "image_url", label: "Photo URL", type: "text", placeholder: "https://…/product.jpg" },
       { key: "description", label: "Description", type: "textarea" },
       { key: "is_active", label: "Visible on site", type: "checkbox" },
     ],
@@ -627,7 +630,7 @@ export const navGroups: NavGroup[] = [
   { title: "Catalogue", items: ["products", "collections", "inventory", "materials", "suppliers"].map((s) => moduleNav(s)) },
   { title: "Partners", items: ["partners", "commissions"].map((s) => moduleNav(s)) },
   { title: "Finance", items: ["expenses"].map((s) => moduleNav(s)) },
-  { title: "Website", items: [{ slug: "studio", title: "Studio", icon: ICONS.studio }, { slug: "virtual-try-ons", title: "Virtual Try-Ons", icon: ICONS.tryon }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
+  { title: "Website", items: [{ slug: "studio", title: "Studio", icon: ICONS.studio }, { slug: "categories", title: "Categories", icon: ICONS.collections }, { slug: "virtual-try-ons", title: "Virtual Try-Ons", icon: ICONS.tryon }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
   { title: "System", items: [{ slug: "settings", title: "Settings", icon: ICONS.settings }] },
 ];
 

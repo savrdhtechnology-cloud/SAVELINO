@@ -54,6 +54,59 @@ export const LIGHT_PALETTE: Palette = { gold: "#8E6C1E", noir: "#F7F2E7", ivory:
 export const PORCELAIN_PALETTE: Palette = { gold: "#8A6A1F", noir: "#F3F2EF", ivory: "#111111", burgundy: "#F3E6E2" };
 export const DEFAULT_PALETTES: Record<ThemeMode, Palette> = { dark: DARK_PALETTE, light: LIGHT_PALETTE, porcelain: PORCELAIN_PALETTE };
 
+/** Ambient background motion drawn over the page (pointer-events: none). */
+export const BG_EFFECTS = ["none", "aurora", "silk", "dust", "spotlight", "grain"] as const;
+export type BgEffect = (typeof BG_EFFECTS)[number];
+export const BG_EFFECT_LABELS: Record<BgEffect, { label: string; note: string }> = {
+  none: { label: "Still", note: "No background motion" },
+  aurora: { label: "Aurora", note: "Slow gold & burgundy glow drifting" },
+  silk: { label: "Silk sheen", note: "A light sweep, like satin catching light" },
+  dust: { label: "Gold dust", note: "Fine gold particles floating upward" },
+  spotlight: { label: "Spotlight", note: "A soft light that follows the mouse" },
+  grain: { label: "Film grain", note: "Subtle moving texture, editorial feel" },
+};
+
+/** Mouse effects (desktop / trackpad only; touch screens keep the normal behaviour). */
+export const CURSOR_EFFECTS = ["default", "ring", "glow", "sparkle", "halo"] as const;
+export type CursorEffect = (typeof CURSOR_EFFECTS)[number];
+export const CURSOR_EFFECT_LABELS: Record<CursorEffect, { label: string; note: string }> = {
+  default: { label: "Normal", note: "Standard pointer" },
+  ring: { label: "Gold ring", note: "A ring that trails the pointer and grows on links" },
+  glow: { label: "Soft glow", note: "A warm glow that follows the pointer" },
+  sparkle: { label: "Sparkle trail", note: "Tiny gold sparkles behind the pointer" },
+  halo: { label: "Halo dot", note: "A small dot with a fading halo on click" },
+};
+
+export const EFFECT_INTENSITIES = ["subtle", "medium", "bold"] as const;
+export type EffectIntensity = (typeof EFFECT_INTENSITIES)[number];
+
+/** Built-in website categories (they ship with photography). Custom ones can be added in CRM → Categories. */
+export const BUILTIN_CATEGORY_SLUGS = [
+  "designer-blouses",
+  "ready-made-blouses",
+  "sarees",
+  "salwar-suits",
+  "shapewear",
+  "lingerie",
+  "loungewear",
+] as const;
+
+/** Categories switched on for a fresh install: sarees and blouses. */
+const DEFAULT_ENABLED_CATEGORIES = new Set<string>(["designer-blouses", "ready-made-blouses", "sarees"]);
+
+/** Empty strings mean "use the built-in copy / photo". */
+export type CategorySetting = {
+  slug: string;
+  enabled: boolean;
+  title: string;
+  kicker: string;
+  summary: string;
+  image: string;
+};
+
+export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const MAX_CATEGORIES = 30;
+
 export type SiteSettings = {
   brand: {
     name: string;
@@ -94,7 +147,19 @@ export type SiteSettings = {
     radius: "sharp" | "soft";
     headingFont: HeadingFont;
     bodyFont: BodyFont;
+    background: BgEffect;
+    cursor: CursorEffect;
   };
+  /** Website background motion and mouse effects (Studio → Motion). */
+  effects: {
+    background: BgEffect;
+    intensity: EffectIntensity;
+    cursor: CursorEffect;
+    /** Also show background motion on phones. */
+    mobile: boolean;
+  };
+  /** Which categories the website shows, in order (CRM → Categories). */
+  catalogue: { categories: CategorySetting[] };
   hero: {
     eyebrow: string;
     title: string;
@@ -138,7 +203,11 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     light: { ...LIGHT_PALETTE },
     porcelain: { ...PORCELAIN_PALETTE },
   },
-  crm: { mode: "dark", accent: "gold", wallpaper: "silk", radius: "sharp", headingFont: "bodoni", bodyFont: "manrope" },
+  crm: { mode: "dark", accent: "gold", wallpaper: "silk", radius: "sharp", headingFont: "bodoni", bodyFont: "manrope", background: "none", cursor: "default" },
+  effects: { background: "none", intensity: "subtle", cursor: "default", mobile: false },
+  catalogue: {
+    categories: BUILTIN_CATEGORY_SLUGS.map((slug) => ({ slug, enabled: DEFAULT_ENABLED_CATEGORIES.has(slug), title: "", kicker: "", summary: "", image: "" })),
+  },
   hero: {
     eyebrow: "Timeless women’s luxury",
     title: "A Legacy of Elegance",
@@ -175,7 +244,7 @@ export function mergeSettings(stored: unknown): SiteSettings {
     const t = src.theme;
     src.theme = { ...t, dark: { gold: t.gold, noir: t.noir, ivory: t.ivory, burgundy: t.burgundy } };
   }
-  for (const group of ["brand", "commerce", "theme", "hero", "announcement", "crm"] as const) {
+  for (const group of ["brand", "commerce", "theme", "hero", "announcement", "crm", "effects"] as const) {
     mergeInto(out[group] as unknown as Record<string, unknown>, src[group]);
   }
   if (!isThemeMode(out.theme.mode)) out.theme.mode = "dark";
@@ -184,6 +253,14 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!(out.theme.bodyFont in BODY_FONTS)) out.theme.bodyFont = "manrope";
   if (!(out.crm.headingFont in HEADING_FONTS)) out.crm.headingFont = "bodoni";
   if (!(out.crm.bodyFont in BODY_FONTS)) out.crm.bodyFont = "manrope";
+  if (!BG_EFFECTS.includes(out.crm.background)) out.crm.background = "none";
+  if (!CURSOR_EFFECTS.includes(out.crm.cursor)) out.crm.cursor = "default";
+  if (!BG_EFFECTS.includes(out.effects.background)) out.effects.background = "none";
+  if (!CURSOR_EFFECTS.includes(out.effects.cursor)) out.effects.cursor = "default";
+  if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
+  if (isObj(src.catalogue) && Array.isArray(src.catalogue.categories)) {
+    out.catalogue.categories = mergeCategories(src.catalogue.categories);
+  }
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];
@@ -195,6 +272,31 @@ export function mergeSettings(stored: unknown): SiteSettings {
     }
     for (const id of SECTION_IDS) if (!seen.has(id)) list.push({ id, visible: true });
     out.sections = list;
+  }
+  return out;
+}
+
+const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+
+/** Keeps valid, unique categories in their saved order; built-ins missing from the save are appended switched off. */
+function mergeCategories(list: unknown[]): CategorySetting[] {
+  const seen = new Set<string>();
+  const out: CategorySetting[] = [];
+  for (const c of list) {
+    if (!isObj(c) || typeof c.slug !== "string" || !CATEGORY_SLUG.test(c.slug) || c.slug.length > 60 || seen.has(c.slug)) continue;
+    if (out.length >= MAX_CATEGORIES) break;
+    seen.add(c.slug);
+    out.push({
+      slug: c.slug,
+      enabled: c.enabled === true,
+      title: str(c.title, 80),
+      kicker: str(c.kicker, 120),
+      summary: str(c.summary, 400),
+      image: str(c.image, 500),
+    });
+  }
+  for (const slug of BUILTIN_CATEGORY_SLUGS) {
+    if (!seen.has(slug)) out.push({ slug, enabled: false, title: "", kicker: "", summary: "", image: "" });
   }
   return out;
 }

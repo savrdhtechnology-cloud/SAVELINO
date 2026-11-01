@@ -3,14 +3,11 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { Logo } from "@/components/ui/Logo";
-import { collections } from "@/lib/collections";
 import { helpNav, legalNav } from "@/lib/site";
 
-const columns = [
-  {
-    title: "Collections",
-    links: collections.map((c) => ({ label: c.title, href: `/collections/${c.slug}` })),
-  },
+type FooterLink = { label: string; href: string };
+
+const fixedColumns = [
   {
     title: "The House",
     links: [
@@ -35,7 +32,9 @@ const columns = [
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export function Footer() {
+/** `categories` comes from CRM → Categories via SiteFooter (only switched-on ones). */
+export function Footer({ categories }: { categories: FooterLink[] }) {
+  const columns = [{ title: "Collections", links: categories }, ...fixedColumns];
   const reduce = useReducedMotion();
   return (
     <footer className="grain relative overflow-hidden border-t border-gold/15 bg-noir pt-20 md:pt-28">

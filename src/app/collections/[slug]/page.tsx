@@ -1,39 +1,47 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
-import { collections, getCollection } from "@/lib/collections";
+import { CategoryImage } from "@/components/ui/CategoryImage";
+import { categoryImageUrl, enabledCategories, findCategory } from "@/lib/catalogue";
+import { getCategoryProducts } from "@/lib/products-server";
+import { getSiteSettings } from "@/lib/settings-server";
+import { BUILTIN_CATEGORY_SLUGS } from "@/lib/settings";
 import { TRYON_DISCLAIMER, isTryOnCategory } from "@/lib/tryon/config";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export const dynamicParams = false;
-
+/** Built-in categories are pre-rendered; custom ones from CRM → Categories render on demand. */
 export function generateStaticParams() {
-  return collections.map((c) => ({ slug: c.slug }));
+  return BUILTIN_CATEGORY_SLUGS.map((slug) => ({ slug }));
 }
+
+const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const c = getCollection(slug);
+  const c = findCategory((await getSiteSettings()).catalogue, slug);
   if (!c) return {};
   return {
     title: c.title,
     description: c.summary,
     alternates: { canonical: `/collections/${c.slug}` },
-    openGraph: { title: `${c.title} · SAVLINO`, description: c.summary, images: [{ url: c.image.src }] },
+    openGraph: { title: `${c.title} · SAVLINO`, description: c.summary, images: [{ url: categoryImageUrl(c) }] },
   };
 }
 
 export default async function CollectionPage({ params }: Params) {
   const { slug } = await params;
-  const c = getCollection(slug);
+  const { catalogue } = await getSiteSettings();
+  const c = findCategory(catalogue, slug);
   if (!c) notFound();
-  const others = collections.filter((o) => o.slug !== c.slug).slice(0, 4);
+  const others = enabledCategories(catalogue)
+    .filter((o) => o.slug !== c.slug)
+    .slice(0, 4);
+  const products = await getCategoryProducts(c.slug);
 
   return (
     <PageShell>
@@ -45,7 +53,7 @@ export default async function CollectionPage({ params }: Params) {
                 Home
               </Link>
               <span className="mx-3 text-gold/50">/</span>
-              <Link href="/#collections" className="hover:text-gold">
+              <Link href="/collections" className="hover:text-gold">
                 Collections
               </Link>
             </nav>
@@ -77,6 +85,7 @@ export default async function CollectionPage({ params }: Params) {
                 <Button href={`/virtual-try-on?product=${c.slug}`}>Try Virtually</Button>
               </Reveal>
             )}
+            {products.length === 0 && (
             <Reveal delay={0.3} className="mt-10 border border-gold/20 bg-noir-soft p-6">
               <p className="eyebrow">Shopping opens soon</p>
               <p className="mt-3 text-sm leading-relaxed text-ivory/65">
@@ -92,23 +101,55 @@ export default async function CollectionPage({ params }: Params) {
                 )}
               </div>
             </Reveal>
+            )}
+            {products.length > 0 && (
+              <Reveal delay={0.3} className="mt-10">
+                <a href="#pieces" className="inline-flex items-center gap-4 text-[0.68rem] uppercase tracking-[0.32em] text-gold">
+                  <span className="h-px w-10 bg-gold" />
+                  See {products.length} {products.length === 1 ? "piece" : "pieces"}
+                </a>
+              </Reveal>
+            )}
           </div>
           <div className="order-1 mx-auto w-full max-w-[460px] lg:order-2">
             <ImageReveal className="aspect-[3/4] border border-gold/25">
-              <Image
-                src={c.image}
-                alt={c.title}
-                fill
-                priority
-                sizes="(min-width: 1024px) 460px, 90vw"
-                placeholder="blur"
-                className="object-cover object-top"
-              />
+              <CategoryImage src={c.image} alt={c.title} priority sizes="(min-width: 1024px) 460px, 90vw" className="object-cover object-top" />
             </ImageReveal>
           </div>
         </div>
       </section>
 
+      {products.length > 0 && (
+        <section id="pieces" aria-label={`${c.title} pieces`} className="scroll-mt-28 border-t border-gold/10 py-16 md:py-24">
+          <div className="mx-auto max-w-[1440px] px-5 md:px-10">
+            <p className="eyebrow">The pieces</p>
+            <h2 className="mt-3 font-display text-4xl text-ivory md:text-5xl">{c.title}</h2>
+            <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
+              {products.map((p) => (
+                <li key={p.id} className="group">
+                  <div className="relative aspect-[3/4] overflow-hidden border border-gold/20 bg-noir-soft">
+                    {p.image_url ? (
+                      <CategoryImage
+                        src={p.image_url}
+                        alt={p.name}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 48vw"
+                        className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"
+                      />
+                    ) : (
+                      <span className="absolute inset-0 flex items-center justify-center font-display text-5xl italic text-gold/30">S</span>
+                    )}
+                  </div>
+                  <p className="mt-4 font-display text-xl leading-tight text-ivory">{p.name}</p>
+                  {p.description && <p className="mt-1 line-clamp-2 text-sm text-ivory/55">{p.description}</p>}
+                  <p className="mt-2 text-[0.72rem] uppercase tracking-[0.22em] text-gold">{inr.format(p.price)}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {others.length > 0 && (
       <section aria-label="More collections" className="border-t border-gold/10 py-16 md:py-24">
         <div className="mx-auto max-w-[1440px] px-5 md:px-10">
           <p className="eyebrow">Continue exploring</p>
@@ -117,12 +158,10 @@ export default async function CollectionPage({ params }: Params) {
               <li key={o.slug}>
                 <Link href={`/collections/${o.slug}`} className="group block">
                   <div className="relative aspect-[3/4] overflow-hidden border border-gold/20">
-                    <Image
+                    <CategoryImage
                       src={o.image}
                       alt={o.title}
-                      fill
                       sizes="(min-width: 768px) 25vw, 48vw"
-                      placeholder="blur"
                       className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"
                     />
                   </div>
@@ -133,6 +172,7 @@ export default async function CollectionPage({ params }: Params) {
           </ul>
         </div>
       </section>
+      )}
     </PageShell>
   );
 }

@@ -226,3 +226,165 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ───────── Background motion & mouse effects (Studio → Motion) ───────── */
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fx-blob {
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.22;
+  will-change: transform;
+}
+.fx-blob-1 {
+  left: -15vmax;
+  top: -20vmax;
+  background: var(--color-gold);
+  animation: fx-drift-1 26s ease-in-out infinite alternate;
+}
+.fx-blob-2 {
+  right: -20vmax;
+  top: 10vmax;
+  background: var(--color-burgundy);
+  opacity: 0.35;
+  animation: fx-drift-2 32s ease-in-out infinite alternate;
+}
+.fx-blob-3 {
+  left: 20vmax;
+  bottom: -30vmax;
+  background: var(--color-gold-deep);
+  opacity: 0.18;
+  animation: fx-drift-3 38s ease-in-out infinite alternate;
+}
+@keyframes fx-drift-1 {
+  to {
+    transform: translate3d(30vw, 25vh, 0) scale(1.15);
+  }
+}
+@keyframes fx-drift-2 {
+  to {
+    transform: translate3d(-35vw, 30vh, 0) scale(0.9);
+  }
+}
+@keyframes fx-drift-3 {
+  to {
+    transform: translate3d(25vw, -35vh, 0) scale(1.2);
+  }
+}
+.fx-silk {
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    color-mix(in srgb, var(--color-gold-light) 14%, transparent) 45%,
+    color-mix(in srgb, var(--color-gold) 22%, transparent) 50%,
+    color-mix(in srgb, var(--color-gold-light) 14%, transparent) 55%,
+    transparent 65%
+  );
+  animation: fx-silk 11s ease-in-out infinite;
+}
+@keyframes fx-silk {
+  0% {
+    transform: translate3d(-40%, 0, 0);
+  }
+  60%,
+  100% {
+    transform: translate3d(40%, 0, 0);
+  }
+}
+.fx-grain {
+  position: absolute;
+  inset: -100%;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: fx-grain 0.9s steps(6) infinite;
+}
+@keyframes fx-grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-4%, 3%);
+  }
+  40% {
+    transform: translate(3%, -5%);
+  }
+  60% {
+    transform: translate(-6%, -2%);
+  }
+  80% {
+    transform: translate(5%, 4%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.fx-spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    520px circle at var(--fx-x, 50%) var(--fx-y, 30%),
+    color-mix(in srgb, var(--color-gold) 16%, transparent),
+    transparent 65%
+  );
+}
+.fx-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 9999px;
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    width 0.3s,
+    height 0.3s;
+}
+.fx-cursor-ring {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-gold);
+}
+.fx-cursor-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--color-gold);
+}
+.fx-cursor-glow {
+  z-index: 2;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 26%, transparent), transparent 65%);
+}
+.fx-cursor-halo {
+  width: 22px;
+  height: 22px;
+  background: color-mix(in srgb, var(--color-gold) 22%, transparent);
+  box-shadow: 0 0 22px 6px color-mix(in srgb, var(--color-gold) 25%, transparent);
+}
+.fx-halo-pulse {
+  animation: fx-halo 0.6s ease-out;
+}
+@keyframes fx-halo {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 55%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 26px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-layer,
+  .fx-cursor {
+    display: none;
+  }
+}

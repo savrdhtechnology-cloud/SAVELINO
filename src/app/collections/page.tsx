@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { ImageReveal } from "@/components/ui/Reveal";
-import { collections } from "@/lib/collections";
+import { CategoryImage } from "@/components/ui/CategoryImage";
+import { enabledCategories } from "@/lib/catalogue";
+import { getSiteSettings } from "@/lib/settings-server";
 
 export const metadata: Metadata = {
   title: "All collections",
-  description: "Designer blouses, ready-made blouses, salwar suits, sarees, shapewear, lingerie and loungewear by SAVLINO.",
+  description: "Designer blouses, sarees and more from the house of SAVLINO.",
   alternates: { canonical: "/collections" },
 };
 
-export default function CollectionsIndexPage() {
+export default async function CollectionsIndexPage() {
+  const collections = enabledCategories((await getSiteSettings()).catalogue);
   return (
     <PageShell>
       <PageIntro
         eyebrow="The collections"
         title="For every shade of a woman"
-        intro="Seven collections, one standard of care — from heirloom occasionwear to the softest essentials."
+        intro="Every collection, one standard of care — from heirloom occasionwear to the softest essentials."
       />
       <section className="mx-auto max-w-[1440px] px-5 py-16 md:px-10 md:py-24">
         <ul className="grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
@@ -25,12 +27,10 @@ export default function CollectionsIndexPage() {
             <li key={c.slug}>
               <Link href={`/collections/${c.slug}`} className="group block">
                 <ImageReveal delay={(i % 3) * 0.1} className="aspect-[3/4] border border-gold/20">
-                  <Image
+                  <CategoryImage
                     src={c.image}
                     alt={c.title}
-                    fill
                     sizes="(min-width: 1024px) 30vw, (min-width: 640px) 46vw, 92vw"
-                    placeholder="blur"
                     className="object-cover object-top transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
                   />
                 </ImageReveal>

@@ -15,7 +15,9 @@ const tiles: Tile[] = [
   { img: images.lingerie, title: "Bordeaux Lace", note: "Lingerie", href: "/collections/lingerie" },
 ];
 
-export function SignatureGallery() {
+export function SignatureGallery({ enabled }: { enabled?: string[] }) {
+  const visible = enabled ? tiles.filter((t) => enabled.includes(t.href.replace("/collections/", ""))) : tiles;
+  if (visible.length === 0) return null;
   return (
     <section id="signature" aria-label="Signature collection gallery" className="relative bg-noir-soft py-24 md:py-36">
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
@@ -28,7 +30,7 @@ export function SignatureGallery() {
         </div>
 
         <div className="mt-14 columns-2 gap-3 md:mt-20 md:columns-3 md:gap-6">
-          {tiles.map((t, i) => (
+          {visible.map((t, i) => (
             <Link
               key={t.title}
               href={t.href}

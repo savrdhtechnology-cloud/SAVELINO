@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getSiteSettings } from "@/lib/settings-server";
 import type { SectionId } from "@/lib/settings";
-import { Footer } from "@/components/layout/Footer";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Hero } from "@/components/hero/Hero";
 import { DesignerBlouses } from "@/components/sections/DesignerBlouses";
 import { ProductShowcase } from "@/components/sections/ProductShowcase";
@@ -16,24 +16,31 @@ import { Collections } from "@/components/sections/Collections";
 import { PartnerProgram } from "@/components/sections/PartnerProgram";
 import { CustomerEntry } from "@/components/sections/CustomerEntry";
 import { site } from "@/lib/site";
-import { collections } from "@/lib/collections";
-
-const SECTIONS: Record<SectionId, ReactNode> = {
-  "designer-blouses": <DesignerBlouses />,
-  showcase: <ProductShowcase />,
-  signature: <SignatureGallery />,
-  "ready-made": <ReadyMade />,
-  "custom-stitching": <CustomStitching />,
-  heritage: <Heritage />,
-  craftsmanship: <Craftsmanship />,
-  lookbook: <Lookbook />,
-  collections: <Collections />,
-  partners: <PartnerProgram />,
-  account: <CustomerEntry />,
-};
+import { enabledCategories } from "@/lib/catalogue";
 
 export default async function Home() {
   const settings = await getSiteSettings();
+  const enabled = enabledCategories(settings.catalogue);
+  const enabledSlugs = enabled.map((c) => c.slug);
+  const visibleSections = new Set(settings.sections.filter((s) => s.visible).map((s) => s.id));
+  // Blouses have their own homepage sections; the collections section lists the rest (or everything if those are hidden).
+  const ownSection: Record<string, SectionId> = { "designer-blouses": "designer-blouses", "ready-made-blouses": "ready-made" };
+  const collectionItems = enabled.filter((c) => !(ownSection[c.slug] && visibleSections.has(ownSection[c.slug])));
+  const enabledSet = new Set(enabledSlugs);
+
+  const SECTIONS: Record<SectionId, ReactNode> = {
+    "designer-blouses": enabledSet.has("designer-blouses") ? <DesignerBlouses /> : null,
+    showcase: <ProductShowcase enabled={enabled} />,
+    signature: <SignatureGallery enabled={enabledSlugs} />,
+    "ready-made": enabledSet.has("ready-made-blouses") ? <ReadyMade /> : null,
+    "custom-stitching": <CustomStitching />,
+    heritage: <Heritage />,
+    craftsmanship: <Craftsmanship />,
+    lookbook: <Lookbook enabled={enabledSlugs} />,
+    collections: <Collections items={collectionItems} />,
+    partners: <PartnerProgram />,
+    account: <CustomerEntry />,
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ClothingStore",
@@ -45,7 +52,7 @@ export default async function Home() {
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: "SAVLINO Collections",
-      itemListElement: collections.map((c) => ({
+      itemListElement: enabled.map((c) => ({
         "@type": "OfferCatalog",
         name: c.title,
         url: `${site.url}/collections/${c.slug}`,
@@ -64,7 +71,7 @@ export default async function Home() {
             <Fragment key={sec.id}>{SECTIONS[sec.id]}</Fragment>
           ))}
       </main>
-      <Footer />
+      <SiteFooter />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );

@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
-import { collections } from "@/lib/collections";
+import { enabledCategories } from "@/lib/catalogue";
+import { getSiteSettings } from "@/lib/settings-server";
 import { site } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const collections = enabledCategories((await getSiteSettings()).catalogue);
   const now = new Date();
   const staticRoutes = [
     "",

@@ -1,19 +1,44 @@
 "use client";
 
 import { LayoutGroup, Reorder, motion, useDragControls } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSiteSettings } from "@/lib/admin/site-settings-client";
-import { DARK_PALETTE, DEFAULT_PALETTES, LIGHT_PALETTE, PORCELAIN_PALETTE, SECTION_LABELS, THEME_LABELS, THEME_MODES, type Palette, type SiteSettings, type ThemeMode } from "@/lib/settings";
-import { BODY_FONTS, HEADING_FONTS, type BodyFont, type HeadingFont } from "@/lib/fonts";
-import { FontPicker, TemplatePicker } from "./SettingsApp";
+import {
+  BG_EFFECTS,
+  BG_EFFECT_LABELS,
+  CURSOR_EFFECTS,
+  CURSOR_EFFECT_LABELS,
+  DARK_PALETTE,
+  DEFAULT_PALETTES,
+  EFFECT_INTENSITIES,
+  LIGHT_PALETTE,
+  PORCELAIN_PALETTE,
+  SECTION_LABELS,
+  THEME_LABELS,
+  THEME_MODES,
+  type BgEffect,
+  type CursorEffect,
+  type EffectIntensity,
+  type Palette,
+  type SiteSettings,
+  type ThemeMode,
+} from "@/lib/settings";
+import { BODY_FONTS, FONT_PRESETS, HEADING_FONTS, type BodyFont, type HeadingFont } from "@/lib/fonts";
+import { ACCENTS, WALLPAPERS, type AccentKey, type WallpaperKey } from "@/lib/admin/prefs";
+import { CRM_PREVIEW_EVENT } from "./AdminShell";
+import { FontPicker, Segmented, TemplatePicker } from "./SettingsApp";
 import { Card, ColorField, SaveBar, TextField, Toggle } from "./fields";
 import { EASE, Icon } from "./ui";
 
 const PANELS = [
   { id: "theme", label: "Theme" },
+  { id: "fonts", label: "Fonts" },
+  { id: "motion", label: "Motion" },
+  { id: "crm", label: "CRM" },
   { id: "hero", label: "Hero" },
   { id: "sections", label: "Sections" },
-  { id: "announcement", label: "Announcement" },
+  { id: "announcement", label: "Banner" },
 ] as const;
 
 const DEVICES = [
@@ -57,6 +82,7 @@ export function StudioApp({ live }: { live: boolean }) {
   const [frameKey, setFrameKey] = useState(0);
   const [editMode, setEditMode] = useState<ThemeMode>("dark");
   const frame = useRef<HTMLIFrameElement>(null);
+  const router = useRouter();
 
   const post = useCallback((msg: object) => {
     frame.current?.contentWindow?.postMessage(msg, window.location.origin);
@@ -81,6 +107,7 @@ export function StudioApp({ live }: { live: boolean }) {
         "--font-sans": BODY_FONTS[t.bodyFont].css,
       },
     });
+    post({ type: "savlino:studio:effects", effects: settings.effects });
     post({ type: "savlino:studio:text", key: "hero-eyebrow", value: settings.hero.eyebrow });
     post({ type: "savlino:studio:text", key: "hero-title", value: settings.hero.title });
     post({ type: "savlino:studio:text", key: "hero-subtitle", value: settings.hero.subtitle });
@@ -108,12 +135,25 @@ export function StudioApp({ live }: { live: boolean }) {
       else theme.porcelain = { ...s.theme.porcelain, ...patch };
       return { ...s, theme };
     });
+  const setEffects = (patch: Partial<SiteSettings["effects"]>) => setSettings((s) => ({ ...s, effects: { ...s.effects, ...patch } }));
+  const setCrm = (patch: Partial<SiteSettings["crm"]>) => setSettings((s) => ({ ...s, crm: { ...s.crm, ...patch } }));
+
+  // Shows unsaved CRM house defaults on this CRM right away; leaving Studio reverts to the saved ones.
+  useEffect(() => {
+    if (loading) return;
+    window.dispatchEvent(new CustomEvent(CRM_PREVIEW_EVENT, { detail: settings.crm }));
+  }, [settings.crm, loading]);
+  useEffect(() => () => void window.dispatchEvent(new CustomEvent(CRM_PREVIEW_EVENT, { detail: null })), []);
+
   const setHero = (patch: Partial<SiteSettings["hero"]>) => setSettings((s) => ({ ...s, hero: { ...s.hero, ...patch } }));
   const setAnn = (patch: Partial<SiteSettings["announcement"]>) => setSettings((s) => ({ ...s, announcement: { ...s.announcement, ...patch } }));
 
   async function publish() {
     const ok = await save();
-    if (ok) setFrameKey((k) => k + 1);
+    if (ok) {
+      setFrameKey((k) => k + 1);
+      router.refresh();
+    }
   }
 
   return (
@@ -127,7 +167,7 @@ export function StudioApp({ live }: { live: boolean }) {
         <div>
           <p className="text-[0.6rem] uppercase tracking-[0.4em] text-gold">SAVLINO OS</p>
           <h1 className="mt-2 font-display text-4xl text-ivory md:text-5xl">Studio</h1>
-          <p className="mt-2 font-serif text-lg text-ivory/60">Design the website — changes preview live, publish when ready.</p>
+          <p className="mt-2 font-serif text-lg text-ivory/60">Design the website and the CRM — changes preview live, publish when ready.</p>
         </div>
         <LayoutGroup id="studio-devices">
           <div className="flex self-start border border-gold/20 p-0.5 md:self-auto">
@@ -238,9 +278,105 @@ export function StudioApp({ live }: { live: boolean }) {
                       Reset {THEME_LABELS[editMode]}
                     </button>
                   </Card>
-                  <Card title="Typography" description="Applies to every page of the website.">
+                </>
+              )}
+
+              {panel === "fonts" && (
+                <>
+                  <Card title="Font presets" description="One click sets the heading and body fonts together.">
+                    <FontPresetGrid
+                      heading={settings.theme.displayFont}
+                      body={settings.theme.bodyFont}
+                      onPick={(heading, body) => setTheme({ displayFont: heading, bodyFont: body })}
+                    />
+                  </Card>
+                  <Card title="Fine-tune" description="Applies to every page of the website.">
                     <FontPicker label="Heading font" value={settings.theme.displayFont} fonts={HEADING_FONTS} onChange={(v) => setTheme({ displayFont: v as HeadingFont })} />
                     <FontPicker label="Body font" value={settings.theme.bodyFont} fonts={BODY_FONTS} onChange={(v) => setTheme({ bodyFont: v as BodyFont })} />
+                  </Card>
+                </>
+              )}
+
+              {panel === "motion" && (
+                <>
+                  <Card title="Background motion" description="A gentle moving layer over the website. Switches off for visitors who prefer reduced motion.">
+                    <EffectGrid
+                      options={BG_EFFECTS.map((k) => [k, BG_EFFECT_LABELS[k]] as const)}
+                      value={settings.effects.background}
+                      onChange={(v) => setEffects({ background: v as BgEffect })}
+                    />
+                    <Segmented
+                      label="Intensity"
+                      value={settings.effects.intensity}
+                      options={EFFECT_INTENSITIES.map((k) => [k, k[0].toUpperCase() + k.slice(1)] as [string, string])}
+                      onChange={(v) => setEffects({ intensity: v as EffectIntensity })}
+                    />
+                    <Toggle
+                      label="Show on phones"
+                      hint="Off keeps phones fast and battery-friendly."
+                      checked={settings.effects.mobile}
+                      onChange={(v) => setEffects({ mobile: v })}
+                    />
+                  </Card>
+                  <Card title="Mouse effect" description="Desktop and laptop only — touch screens keep the normal behaviour. Move your mouse over the preview.">
+                    <EffectGrid
+                      options={CURSOR_EFFECTS.map((k) => [k, CURSOR_EFFECT_LABELS[k]] as const)}
+                      value={settings.effects.cursor}
+                      onChange={(v) => setEffects({ cursor: v as CursorEffect })}
+                    />
+                  </Card>
+                </>
+              )}
+
+              {panel === "crm" && (
+                <>
+                  <p className="border border-gold/20 bg-gold/5 px-4 py-3 text-xs leading-relaxed text-ivory/65">
+                    House theme for the super-admin CRM — every admin sees it unless they picked their own look in Settings → My appearance.
+                    Changes show on this CRM right away; publish to keep them.
+                  </p>
+                  <Card title="CRM template">
+                    <TemplatePicker value={settings.crm.mode} onChange={(v) => setCrm({ mode: v as ThemeMode })} />
+                    <Segmented
+                      label="Accent"
+                      value={settings.crm.accent}
+                      options={(Object.keys(ACCENTS) as AccentKey[]).map((k) => [k, ACCENTS[k].label] as [string, string])}
+                      onChange={(v) => setCrm({ accent: v })}
+                    />
+                    <Segmented
+                      label="Wallpaper"
+                      value={settings.crm.wallpaper}
+                      options={(Object.keys(WALLPAPERS) as WallpaperKey[]).map((k) => [k, WALLPAPERS[k].label] as [string, string])}
+                      onChange={(v) => setCrm({ wallpaper: v })}
+                    />
+                    <Segmented
+                      label="Corners"
+                      value={settings.crm.radius}
+                      options={[
+                        ["sharp", "Sharp"],
+                        ["soft", "Rounded"],
+                      ]}
+                      onChange={(v) => setCrm({ radius: v as SiteSettings["crm"]["radius"] })}
+                    />
+                  </Card>
+                  <Card title="CRM fonts">
+                    <FontPresetGrid
+                      heading={settings.crm.headingFont}
+                      body={settings.crm.bodyFont}
+                      onPick={(heading, body) => setCrm({ headingFont: heading, bodyFont: body })}
+                    />
+                  </Card>
+                  <Card title="CRM motion" description="Kept subtle so it never gets in the way of work.">
+                    <EffectGrid
+                      options={BG_EFFECTS.map((k) => [k, BG_EFFECT_LABELS[k]] as const)}
+                      value={settings.crm.background}
+                      onChange={(v) => setCrm({ background: v as BgEffect })}
+                    />
+                    <p className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">Mouse effect</p>
+                    <EffectGrid
+                      options={CURSOR_EFFECTS.map((k) => [k, CURSOR_EFFECT_LABELS[k]] as const)}
+                      value={settings.crm.cursor}
+                      onChange={(v) => setCrm({ cursor: v as CursorEffect })}
+                    />
                   </Card>
                 </>
               )}
@@ -317,6 +453,57 @@ export function StudioApp({ live }: { live: boolean }) {
       </div>
 
       <SaveBar dirty={dirty} saving={saving} live={live} onSave={() => void publish()} onReset={reset} />
+    </div>
+  );
+}
+
+function FontPresetGrid({ heading, body, onPick }: { heading: string; body: string; onPick: (h: HeadingFont, b: BodyFont) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {FONT_PRESETS.map((p) => {
+        const active = p.heading === heading && p.body === body;
+        return (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => onPick(p.heading, p.body)}
+            className={`border p-3 text-left transition-colors ${active ? "border-gold bg-gold/10" : "border-gold/15 hover:border-gold/45"}`}
+          >
+            <span className="block truncate text-xl leading-tight text-ivory" style={{ fontFamily: HEADING_FONTS[p.heading].css }}>
+              {p.label}
+            </span>
+            <span className="mt-1 block text-[0.7rem] leading-snug text-ivory/55" style={{ fontFamily: BODY_FONTS[p.body].css }}>
+              {p.note}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function EffectGrid({
+  options,
+  value,
+  onChange,
+}: {
+  options: readonly (readonly [string, { label: string; note: string }])[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {options.map(([k, o]) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => onChange(k)}
+          className={`border px-3 py-2.5 text-left transition-colors ${value === k ? "border-gold bg-gold/10" : "border-gold/15 hover:border-gold/45"}`}
+        >
+          <span className={`block text-sm ${value === k ? "text-gold" : "text-ivory"}`}>{o.label}</span>
+          <span className="mt-0.5 block text-[0.68rem] leading-snug text-ivory/45">{o.note}</span>
+        </button>
+      ))}
     </div>
   );
 }

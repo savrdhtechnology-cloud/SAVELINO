@@ -3,21 +3,9 @@ import { site } from "@/lib/site";
 import { themeCss } from "@/lib/settings";
 import { getSiteSettings } from "@/lib/settings-server";
 import { StudioBridge } from "@/components/site/StudioBridge";
+import { SiteEffects } from "@/components/site/SiteEffects";
+import { googleFontsHref } from "@/lib/fonts";
 import "./globals.css";
-
-// Typefaces load from Google Fonts at runtime (not next/font/google), so the build never
-// depends on fetching and parsing Google's CSS. CSS variables are defined in globals.css.
-const GOOGLE_FONTS_HREF =
-  "https://fonts.googleapis.com/css2" +
-  "?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900" +
-  "&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600" +
-  "&family=Manrope:wght@200..800" +
-  "&family=Playfair+Display:ital,wght@0,400..900;1,400..900" +
-  "&family=DM+Serif+Display:ital@0;1" +
-  "&family=Inter:wght@100..900" +
-  "&family=Poppins:wght@300;400;500;600" +
-  "&family=Lora:ital,wght@0,400..700;1,400..700" +
-  "&display=swap";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -64,6 +52,9 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const settings = await getSiteSettings();
+  // Typefaces load from Google Fonts at runtime (not next/font/google) so the build never depends on
+  // Google's CSS; only the house faces plus the Studio choices are requested. Variables live in globals.css.
+  const fontsHref = googleFontsHref(["bodoni", "cormorant", "manrope", settings.theme.displayFont, settings.theme.bodyFont]);
   const css = `${themeCss(settings.theme)}${settings.announcement.enabled && settings.announcement.text ? ":root{--announce-h:32px}" : ""}`;
   return (
     <html
@@ -75,7 +66,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
+        <link rel="stylesheet" href={fontsHref} />
         {settings.theme.allowToggle && (
           // Applies a visitor's saved light/dark choice before paint (no flash).
           <script
@@ -88,6 +79,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
         <StudioBridge />
+        <SiteEffects {...settings.effects} />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-gold focus:px-4 focus:py-2 focus:text-noir"
