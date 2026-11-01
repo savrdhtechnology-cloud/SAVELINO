@@ -204,18 +204,16 @@ export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm
           </button>
 
           <div className="flex items-center gap-2">
-            {!live && (
-              <span
-                className="hidden items-center gap-1.5 border border-gold/40 bg-gold/10 px-2 py-1 text-[0.55rem] uppercase tracking-[0.25em] text-gold sm:inline-flex"
-                title="Supabase not connected — figures are sample data"
-              >
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold" />
-                </span>
-                Demo
+            <span
+              className="hidden items-center gap-1.5 border border-gold/40 bg-gold/10 px-2 py-1 text-[0.55rem] uppercase tracking-[0.25em] text-gold sm:inline-flex"
+              title="Products and orders are stored in the Neon database"
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold" />
               </span>
-            )}
+              Live shop
+            </span>
             <button
               type="button"
               onClick={() => setPrefs({ mode: theme.mode === "dark" ? "porcelain" : theme.mode === "porcelain" ? "light" : "dark" })}
@@ -268,7 +266,7 @@ export function AdminShell({ children, live, email, house = DEFAULT_SETTINGS.crm
                     </button>
                   </>
                 ) : (
-                  <p className="text-[0.62rem] leading-relaxed text-ivory/40">Preview mode — connect Supabase for live data.</p>
+                  <p className="text-[0.62rem] leading-relaxed text-ivory/40">Shop: products &amp; orders live on Neon.</p>
                 )}
               </div>
             )}

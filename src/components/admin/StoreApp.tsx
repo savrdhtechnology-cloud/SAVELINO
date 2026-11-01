@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "@/lib/admin/store";
 import { COLOR_PRESETS, ORDER_STATUSES, SIZE_OPTIONS, imageUrl, inr, type OrderStatus, type StoreColor, type StoreOrder, type StoreProduct } from "@/lib/store/types";
@@ -19,9 +19,16 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return data;
 }
 
-export function StoreApp({ categories }: { categories: Category[] }) {
+export type StoreView = "overview" | "products" | "orders";
+
+const VIEW_COPY: Record<StoreView, { title: string; intro: string }> = {
+  overview: { title: "Dashboard", intro: "Your shop at a glance — what’s live, what’s new and what needs attention." },
+  products: { title: "Products", intro: "Add products with photos, colours and sizes. Publish to show them on the website." },
+  orders: { title: "Orders", intro: "Every order placed on the website. Call or WhatsApp the customer, then update the status." },
+};
+
+export function StoreApp({ view, categories }: { view: StoreView; categories: Category[] }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [tab, setTab] = useState<"products" | "orders">("products");
 
   const refreshSession = useCallback(() => {
     api<Session>("/api/store/admin/session")
@@ -34,22 +41,15 @@ export function StoreApp({ categories }: { categories: Category[] }) {
     <div className="pb-24">
       <motion.header initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }} className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-[0.6rem] uppercase tracking-[0.4em] text-gold">Website · Neon</p>
-          <h1 className="mt-2 font-display text-4xl text-ivory md:text-5xl">Store</h1>
-          <p className="mt-2 font-serif text-lg text-ivory/60">List products with photos, colours and sizes — and handle the orders customers place.</p>
+          <p className="text-[0.6rem] uppercase tracking-[0.4em] text-gold">SAVLINO shop</p>
+          <h1 className="mt-2 font-display text-4xl text-ivory md:text-5xl">{VIEW_COPY[view].title}</h1>
+          <p className="mt-2 font-serif text-lg text-ivory/60">{VIEW_COPY[view].intro}</p>
         </div>
         {session?.admin && (
-          <div className="flex items-center gap-3">
-            <LayoutGroup id="store-tabs">
-              <div className="flex border border-gold/20 p-0.5">
-                {(["products", "orders"] as const).map((t) => (
-                  <button key={t} type="button" onClick={() => setTab(t)} className={`relative px-4 py-2 text-[0.6rem] uppercase tracking-[0.22em] ${tab === t ? "text-noir" : "text-ivory/55 hover:text-gold"}`}>
-                    {tab === t && <motion.span layoutId="store-tab" className="absolute inset-0 bg-gold" />}
-                    <span className="relative">{t}</span>
-                  </button>
-                ))}
-              </div>
-            </LayoutGroup>
+          <div className="flex items-center gap-4">
+            <a href="/shop" target="_blank" rel="noreferrer" className="text-[0.58rem] uppercase tracking-[0.22em] text-gold hover:underline">
+              View shop ↗
+            </a>
             <button
               type="button"
               onClick={() => api("/api/store/admin/session", { method: "DELETE" }).then(refreshSession)}
@@ -68,7 +68,9 @@ export function StoreApp({ categories }: { categories: Category[] }) {
           <Notice title="Store database not connected">The Neon database isn’t linked to this deployment yet.</Notice>
         ) : !session.admin ? (
           <Login passwordSet={session.passwordSet} onDone={refreshSession} />
-        ) : tab === "products" ? (
+        ) : view === "overview" ? (
+          <Overview />
+        ) : view === "products" ? (
           <Products categories={categories} />
         ) : (
           <Orders />
@@ -90,31 +92,135 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
 
 function Login({ passwordSet, onDone }: { passwordSet: boolean; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
   if (!passwordSet) return <Notice title="Store password not set">Add STORE_ADMIN_PASSWORD (8+ characters) in Vercel → Settings → Environment Variables, then redeploy.</Notice>;
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
+    setError("");
     try {
-      await api("/api/store/admin/session", { method: "POST", body: JSON.stringify({ password: new FormData(e.currentTarget).get("password") }) });
+      const password = String(new FormData(e.currentTarget).get("password") ?? "").trim();
+      await api("/api/store/admin/session", { method: "POST", body: JSON.stringify({ password }) });
       onDone();
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Could not sign in", "danger");
+      setError(err instanceof Error ? err.message : "Could not sign in");
     } finally {
       setBusy(false);
     }
   }
   return (
     <form onSubmit={submit} className="max-w-md">
-      <Card title="Store admin" description="Enter the store password to manage products and orders.">
+      <Card title="Shop admin" description="Enter the shop password to manage products and orders.">
         <label className="block">
           <span className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/50">Password</span>
-          <input name="password" type="password" autoComplete="current-password" required className="mt-1.5 w-full border border-gold/20 bg-noir/60 px-3 py-2.5 text-sm text-ivory outline-none focus:border-gold" />
+          <span className="relative mt-1.5 block">
+            <input
+              name="password"
+              type={show ? "text" : "password"}
+              autoComplete="current-password"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              required
+              className="w-full border border-gold/20 bg-noir/60 px-3 py-2.5 pr-16 text-sm text-ivory outline-none focus:border-gold"
+            />
+            <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 px-2 text-[0.58rem] uppercase tracking-[0.2em] text-gold">
+              {show ? "Hide" : "Show"}
+            </button>
+          </span>
         </label>
+        {error && (
+          <p role="alert" className="text-sm text-red-400">
+            {error}
+          </p>
+        )}
         <button type="submit" disabled={busy} className="w-full bg-gold py-3 text-[0.62rem] font-medium uppercase tracking-[0.25em] text-noir hover:bg-gold-light disabled:opacity-60">
           {busy ? "Checking…" : "Sign in"}
         </button>
       </Card>
     </form>
+  );
+}
+
+/* ───────────────────────── Overview ───────────────────────── */
+
+function Overview() {
+  const [data, setData] = useState<{ products: StoreProduct[]; orders: StoreOrder[] } | null>(null);
+  useEffect(() => {
+    Promise.all([api<{ products: StoreProduct[] }>("/api/store/admin/products"), api<{ orders: StoreOrder[] }>("/api/store/admin/orders")])
+      .then(([p, o]) => setData({ products: p.products, orders: o.orders }))
+      .catch((e) => toast(e instanceof Error ? e.message : "Could not load", "danger"));
+  }, []);
+  if (!data) return <div className="h-60 animate-pulse border border-gold/10 bg-noir-soft/40" />;
+
+  const live = data.products.filter((p) => p.is_active).length;
+  const drafts = data.products.length - live;
+  const fresh = data.orders.filter((o) => o.status === "new");
+  const counted = data.orders.filter((o) => o.status !== "cancelled");
+  const revenue = counted.reduce((s, o) => s + o.total, 0);
+  const fmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
+
+  const stats = [
+    { label: "Live products", value: String(live), href: "/admin/products" },
+    { label: "Drafts", value: String(drafts), href: "/admin/products" },
+    { label: "New orders", value: String(fresh.length), href: "/admin/orders" },
+    { label: "Sales (all time)", value: inr(revenue), href: "/admin/orders" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <ul className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((s, i) => (
+          <motion.li key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.5, ease: EASE }}>
+            <a href={s.href} className="block border border-gold/15 bg-noir-soft/50 p-5 transition-colors hover:border-gold/50">
+              <span className="text-[0.58rem] uppercase tracking-[0.28em] text-ivory/50">{s.label}</span>
+              <span className="mt-3 block font-display text-4xl text-ivory">{s.value}</span>
+            </a>
+          </motion.li>
+        ))}
+      </ul>
+
+      {drafts > 0 && (
+        <a href="/admin/products" className="block border border-gold/40 bg-gold/10 px-5 py-4 text-sm text-ivory/80 hover:border-gold">
+          {drafts} {drafts === 1 ? "product is" : "products are"} still in drafts — add a price and publish to show {drafts === 1 ? "it" : "them"} on the website →
+        </a>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Card title="Latest orders">
+          {data.orders.length === 0 ? (
+            <p className="text-sm text-ivory/50">No orders yet. They appear here the moment a customer checks out.</p>
+          ) : (
+            <ul className="divide-y divide-gold/10">
+              {data.orders.slice(0, 6).map((o) => (
+                <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5 text-sm">
+                  <span className="font-mono text-gold">{o.order_no}</span>
+                  <span className="text-ivory">{o.customer_name}</span>
+                  <span className="text-xs text-ivory/40">{fmt.format(new Date(o.created_at))}</span>
+                  <span className="ml-auto text-ivory">{inr(o.total)}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[0.55rem] uppercase tracking-[0.18em] ${STATUS_STYLE[o.status]}`}>{o.status}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <a href="/admin/orders" className="text-[0.6rem] uppercase tracking-[0.22em] text-gold hover:underline">
+            All orders →
+          </a>
+        </Card>
+        <Card title="Quick actions">
+          <a href="/admin/products?new=1" className="block bg-gold px-4 py-3 text-center text-[0.62rem] font-medium uppercase tracking-[0.22em] text-noir hover:bg-gold-light">
+            + Add a product
+          </a>
+          <a href="/admin/categories" className="block border border-gold/30 px-4 py-3 text-center text-[0.62rem] uppercase tracking-[0.22em] text-gold hover:border-gold">
+            Choose categories on the website
+          </a>
+          <a href="/admin/studio" className="block border border-gold/30 px-4 py-3 text-center text-[0.62rem] uppercase tracking-[0.22em] text-gold hover:border-gold">
+            Website look (Studio)
+          </a>
+        </Card>
+      </div>
+    </div>
   );
 }
 
@@ -185,6 +291,14 @@ function Products({ categories }: { categories: Category[] }) {
     sort_order: 0,
     images: [],
   });
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+      setEditing(blank());
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -398,7 +512,14 @@ function Editor({
         </div>
 
         <div className="mt-6 space-y-5">
-          <Card title="Photos" description={d.id ? "The first photo is the cover. Upload several angles — front, back, sleeves, details." : "Save the product first, then add photos."}>
+          <Card
+            title="Photos"
+            description={
+              d.id
+                ? "Upload plain photos — the website arranges them into the SAVLINO creative. Best: 1 main (back view), 2 side angles (front, side), up to 4 close-up details."
+                : "Save the product first, then add photos."
+            }
+          >
             {d.id && (
               <>
                 <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -406,11 +527,13 @@ function Editor({
                     <li key={im.id} className="group relative aspect-square overflow-hidden border border-gold/20">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={imageUrl(im.id)} alt="" className="h-full w-full object-cover" />
-                      {i === 0 && <span className="absolute left-1 top-1 bg-gold px-1.5 py-0.5 text-[0.5rem] uppercase tracking-[0.15em] text-noir">Cover</span>}
+                      <span className={`absolute left-1 top-1 px-1.5 py-0.5 text-[0.5rem] uppercase tracking-[0.15em] ${i === 0 ? "bg-gold text-noir" : "bg-black/70 text-ivory"}`}>
+                        {i === 0 ? "Main" : i < 3 ? "Side" : i < 7 ? "Detail" : "Extra"}
+                      </span>
                       <span className="absolute inset-x-0 bottom-0 flex justify-between bg-black/70 px-1.5 py-1 text-[0.55rem] uppercase tracking-[0.12em] opacity-0 transition-opacity group-hover:opacity-100">
                         {i > 0 ? (
                           <button type="button" onClick={() => void makeCover(im.id)} className="text-gold">
-                            Make cover
+                            Make main
                           </button>
                         ) : (
                           <span />

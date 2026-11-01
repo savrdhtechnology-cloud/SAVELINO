@@ -602,43 +602,29 @@ export const adminModuleConfigs: ModuleConfig[] = [
 export type NavItem = { slug: string; title: string; icon: string };
 export type NavGroup = { title: string; items: NavItem[] };
 
+/**
+ * The CRM shows only what the business uses today: the Neon shop (products, orders) and the website
+ * controls. Every other module still exists and can be brought back by adding it to a group here.
+ */
 export const navGroups: NavGroup[] = [
+  { title: "Overview", items: [{ slug: "", title: "Dashboard", icon: ICONS.dashboard }] },
   {
-    title: "Overview",
+    title: "Shop",
     items: [
-      { slug: "", title: "Dashboard", icon: ICONS.dashboard },
-      { slug: "analytics", title: "Analytics", icon: ICONS.analytics },
-      { slug: "apps", title: "All apps", icon: ICONS.apps },
+      { slug: "products", title: "Products", icon: ICONS.products },
+      { slug: "orders", title: "Orders", icon: ICONS.orders },
     ],
   },
-  { title: "Sales", items: ["orders", "payments", "shipping", "customers", "leads", "coupons"].map((s) => moduleNav(s)) },
   {
-    title: "Atelier",
+    title: "Website",
     items: [
-      { slug: "photo-to-template", title: "Photo to Template", icon: ICONS.photo },
-      { slug: "design-studio", title: "Design Studio", icon: ICONS.design },
-      { slug: "pattern-library", title: "Pattern Library", icon: ICONS.pattern },
-      { slug: "size-charts", title: "Size Charts", icon: ICONS.sizes },
-      { slug: "fabric-calculator", title: "Fabric Calculator", icon: ICONS.fabric },
-      { slug: "bill-of-materials", title: "Bill of Materials", icon: ICONS.bom },
-      { slug: "production-batches", title: "Production Batches", icon: ICONS.production },
-      { slug: "worker-tasks", title: "Worker Tasks", icon: ICONS.workers },
-      { slug: "quality-control", title: "Quality Control", icon: ICONS.qc },
-      ...["stitching", "tasks", "team"].map((s) => moduleNav(s)),
+      { slug: "categories", title: "Categories", icon: ICONS.collections },
+      { slug: "studio", title: "Studio", icon: ICONS.studio },
     ],
   },
-  { title: "Catalogue", items: ["products", "collections", "inventory", "materials", "suppliers"].map((s) => moduleNav(s)) },
-  { title: "Partners", items: ["partners", "commissions"].map((s) => moduleNav(s)) },
-  { title: "Finance", items: ["expenses"].map((s) => moduleNav(s)) },
-  { title: "Website", items: [{ slug: "store", title: "Store", icon: ICONS.products }, { slug: "studio", title: "Studio", icon: ICONS.studio }, { slug: "categories", title: "Categories", icon: ICONS.collections }, { slug: "virtual-try-ons", title: "Virtual Try-Ons", icon: ICONS.tryon }, ...["content", "reviews", "messages"].map((s) => moduleNav(s))] },
   { title: "System", items: [{ slug: "settings", title: "Settings", icon: ICONS.settings }] },
 ];
 
-function moduleNav(slug: string) {
-  const m = adminModuleConfigs.find((c) => c.slug === slug);
-  if (!m) throw new Error(`Unknown admin module ${slug}`);
-  return { slug, title: m.title, icon: m.icon };
-}
 
 export function getModule(slug: string) {
   return adminModuleConfigs.find((m) => m.slug === slug);

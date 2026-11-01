@@ -1,6 +1,5 @@
-import { Dashboard } from "@/components/admin/Dashboard";
-import { isBackendConfigured } from "@/lib/supabase/env";
+import { StoreApp } from "@/components/admin/StoreApp";
 
 export default function AdminDashboardPage() {
-  return <Dashboard live={isBackendConfigured()} />;
+  return <StoreApp view="overview" categories={[]} />;
 }

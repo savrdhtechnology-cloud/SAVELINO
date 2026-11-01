@@ -9,11 +9,9 @@ import { EASE, Icon } from "./ui";
 type Command = { id: string; label: string; hint: string; icon: string; href: string };
 
 const quickActions: Command[] = [
-  { id: "new-stitching", label: "New stitching order", hint: "Action", icon: ICONS.stitching, href: "/admin/stitching?new=1" },
-  { id: "new-lead", label: "Add a lead", hint: "Action", icon: ICONS.leads, href: "/admin/leads?new=1" },
-  { id: "new-expense", label: "Log an expense", hint: "Action", icon: ICONS.expenses, href: "/admin/expenses?new=1" },
   { id: "new-product", label: "Add a product", hint: "Action", icon: ICONS.products, href: "/admin/products?new=1" },
-  { id: "new-task", label: "Add a task", hint: "Action", icon: ICONS.tasks, href: "/admin/tasks?new=1" },
+  { id: "orders", label: "See new orders", hint: "Action", icon: ICONS.orders, href: "/admin/orders" },
+  { id: "shop", label: "Open the shop", hint: "Website", icon: ICONS.content, href: "/shop" },
   { id: "site", label: "Open the website", hint: "Website", icon: ICONS.content, href: "/" },
 ];
 

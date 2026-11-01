@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
 import { ProductCard } from "@/components/store/ProductCard";
 import { BuyBox, FeatureBadges, ProductGallery } from "@/components/store/ProductDetail";
+import { ProductCreative } from "@/components/store/ProductCreative";
 import { findCategory } from "@/lib/catalogue";
 import { getSiteSettings } from "@/lib/settings-server";
 import { getLiveProduct, getLiveProducts } from "@/lib/store/products-server";
@@ -59,7 +60,12 @@ export default async function ProductPage({ params }: Props) {
             </>
           )}
         </nav>
-        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
+        {product.images.length >= 2 && (
+          <div className="mb-12 md:mb-16">
+            <ProductCreative product={product} categoryTitle={category?.title ?? "Designer Blouses"} />
+          </div>
+        )}
+        <div id="buy" className="grid scroll-mt-28 gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
           <ProductGallery product={product} />
           <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:self-start">
             <p className="eyebrow">{category?.title ?? "SAVLINO"}</p>
