@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Color, CreativeSettings, Framing } from "@/lib/data/types";
-import { DEFAULT_FRAMING, FEATURE_PRESETS, ICON_PATHS, iconFor, loadBitmap, loadCreativeFonts, renderAll, type Source } from "./creative";
+import type { Color, CreativeLayout, CreativeSettings, Framing } from "@/lib/data/types";
+import { DEFAULT_FRAMING, DEFAULT_LAYOUT, FEATURE_PRESETS, ICON_PATHS, iconFor, loadBitmap, loadCreativeFonts, renderAll, type Source } from "./creative";
 import { findFaceBottom } from "./faces";
 import { EASE, Field, ICONS, Icon, Toggle, toast } from "./ui";
 
@@ -193,6 +193,8 @@ export function CreativeDesign({ settings, onChange }: { settings: CreativeSetti
         </div>
       </div>
 
+      <LayoutControls settings={settings} onChange={onChange} />
+
       <div className="crm-panel-soft space-y-3 p-3.5">
         <Toggle checked={settings.showColors} onChange={(v) => set({ showColors: v })} label="Show colours" />
         <Toggle checked={settings.showSizes} onChange={(v) => set({ showSizes: v })} label="Show sizes" />
@@ -217,6 +219,52 @@ export function CreativeDesign({ settings, onChange }: { settings: CreativeSetti
               <Range label="Glow strength" value={settings.backgroundOpacity ?? 0.36} min={0} max={1} step={0.05} show={(v) => `${Math.round(v * 100)}%`} onChange={(v) => set({ backgroundOpacity: v })} />
               <Range label="Glow size" value={settings.backgroundSize ?? 1} min={0.4} max={2.5} step={0.1} show={(v) => `${v.toFixed(1)}×`} onChange={(v) => set({ backgroundSize: v })} />
               <Toggle checked={settings.showRaw} onChange={(v) => set({ showRaw: v })} label="Also show raw photos on the website" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** Move and resize the SAVLINO logo and the feature icons on every creative. */
+function LayoutControls({ settings, onChange }: { settings: CreativeSettings; onChange: (s: CreativeSettings) => void }) {
+  const [open, setOpen] = useState(true);
+  const L: CreativeLayout = { ...DEFAULT_LAYOUT, ...(settings.layout ?? {}) };
+  const set = (p: Partial<CreativeLayout>) => onChange({ ...settings, layout: { ...L, ...p } });
+  const px = (v: number) => `${v > 0 ? "+" : ""}${Math.round(v)}`;
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  return (
+    <div className="crm-panel-soft p-3.5">
+      <button type="button" onClick={() => setOpen((x) => !x)} className="flex w-full items-center justify-between text-sm">
+        <span className="crm-accent">Logo & icons — size and position</span>
+        <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
+            <div className="mt-3 space-y-3">
+              <Toggle checked={L.showLogo} onChange={(v) => set({ showLogo: v })} label="Show SAVLINO logo" />
+              {L.showLogo && (
+                <>
+                  <Range label="Logo size" value={L.logoScale} min={0.5} max={1.6} step={0.05} show={pct} onChange={(v) => set({ logoScale: v })} />
+                  <Range label="Logo left ↔ right" value={L.logoX} min={-150} max={300} step={2} show={px} onChange={(v) => set({ logoX: v })} />
+                  <Range label="Logo up ↔ down" value={L.logoY} min={-40} max={300} step={2} show={px} onChange={(v) => set({ logoY: v })} />
+                </>
+              )}
+              <div className="h-px" style={{ background: "var(--crm-border-soft)" }} />
+              <Toggle checked={L.showIcons} onChange={(v) => set({ showIcons: v })} label="Show feature icons" />
+              {L.showIcons && (
+                <>
+                  <Range label="Icon size" value={L.iconScale} min={0.5} max={1.6} step={0.05} show={pct} onChange={(v) => set({ iconScale: v })} />
+                  <Range label="Space between icons" value={L.iconGap} min={0.6} max={1.6} step={0.05} show={pct} onChange={(v) => set({ iconGap: v })} />
+                  <Range label="Icons left ↔ right" value={L.iconsX} min={-80} max={300} step={2} show={px} onChange={(v) => set({ iconsX: v })} />
+                  <Range label="Icons up ↔ down" value={L.iconsY} min={-250} max={250} step={2} show={px} onChange={(v) => set({ iconsY: v })} />
+                </>
+              )}
+              <button type="button" className="crm-btn w-full justify-center" onClick={() => onChange({ ...settings, layout: { ...DEFAULT_LAYOUT } })}>
+                Reset logo & icons
+              </button>
             </div>
           </motion.div>
         )}

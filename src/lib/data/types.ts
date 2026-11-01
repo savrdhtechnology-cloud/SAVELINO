@@ -32,6 +32,19 @@ export type ProductImage = {
 /** How a raw photo sits inside a creative frame (fractions of the photo). */
 export type Framing = { top: number; zoom: number; x: number; y: number };
 
+/** Position and size of the logo and feature icons on a creative (offsets in design pixels). */
+export type CreativeLayout = {
+  showLogo: boolean;
+  logoScale: number;
+  logoX: number;
+  logoY: number;
+  showIcons: boolean;
+  iconScale: number;
+  iconGap: number;
+  iconsX: number;
+  iconsY: number;
+};
+
 /** Product Studio creative settings, saved on the product (products.creative). */
 export type CreativeSettings = {
   brandLine: string;
@@ -55,6 +68,8 @@ export type CreativeSettings = {
   backgroundColor: string;
   backgroundOpacity: number;
   backgroundSize: number;
+  /** Logo & icon placement (optional — older products use the defaults). */
+  layout?: Partial<CreativeLayout>;
   /** Framing per raw photo id. */
   framing: Record<string, Framing>;
 };

@@ -10,9 +10,34 @@
  *
  * Everything is drawn on <canvas>; nothing leaves the browser until the admin publishes.
  */
-import type { Color, CreativeSettings, Framing } from "@/lib/data/types";
+import type { Color, CreativeLayout, CreativeSettings, Framing } from "@/lib/data/types";
 
 export const DEFAULT_FRAMING: Framing = { top: 0, zoom: 1, x: 0.5, y: 0 };
+
+export const DEFAULT_LAYOUT: CreativeLayout = { showLogo: true, logoScale: 1, logoX: 0, logoY: 0, showIcons: true, iconScale: 1, iconGap: 1, iconsX: 0, iconsY: 0 };
+const layoutOf = (s: CreativeSettings): CreativeLayout => {
+  const l = { ...DEFAULT_LAYOUT, ...(s.layout ?? {}) };
+  const clamp = (v: number, a: number, b: number, d: number) => (Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d);
+  return {
+    showLogo: l.showLogo !== false,
+    logoScale: clamp(l.logoScale, 0.5, 1.6, 1),
+    logoX: clamp(l.logoX, -300, 300, 0),
+    logoY: clamp(l.logoY, -100, 400, 0),
+    showIcons: l.showIcons !== false,
+    iconScale: clamp(l.iconScale, 0.5, 1.6, 1),
+    iconGap: clamp(l.iconGap, 0.6, 1.6, 1),
+    iconsX: clamp(l.iconsX, -100, 300, 0),
+    iconsY: clamp(l.iconsY, -300, 300, 0),
+  };
+};
+
+/** A column of feature icons centred where the default layout centres it, then moved/scaled by the layout. */
+function iconColumn(ctx: Ctx, feats: string[], L: CreativeLayout, x: number, center: number, step0: number, r: number, label: number) {
+  if (!L.showIcons || !feats.length) return;
+  const step = step0 * L.iconGap * Math.max(0.75, L.iconScale);
+  const top = center - ((feats.length - 1) * step) / 2 + L.iconsY;
+  feats.forEach((f, i) => featureIcon(ctx, f, x + L.iconsX, top + i * step, r * L.iconScale, label * L.iconScale));
+}
 
 export type Source = { key: string; bitmap: ImageBitmap; framing: Framing; face: number | null | undefined };
 export type RenderInput = { sources: Source[]; settings: CreativeSettings; colors: Color[]; sizes: string[] };
@@ -159,6 +184,7 @@ export function defaultSettings(categorySlug = "designer-blouses", categoryName 
     backgroundColor: "#A66F7C",
     backgroundOpacity: 0.36,
     backgroundSize: 1,
+    layout: { ...DEFAULT_LAYOUT },
     framing: {},
   };
 }
@@ -651,11 +677,13 @@ export function renderCombo(input: RenderInput, scale = 1): HTMLCanvasElement {
   details.forEach((d, i) => framed(ctx, d.src, hide, 828 + i * (dw + 12), 680, dw, 238, 18, d.override));
 
   // Logo + feature icons.
-  logo(ctx, 192, 30, 52, s.brandLine);
-  const feats = s.features.slice(0, 4);
-  const step = feats.length > 3 ? 136 : 160;
-  const top = 285 + (4 - feats.length) * 30;
-  feats.forEach((f, i) => featureIcon(ctx, f, 92, top + i * step, 33, 15.5));
+  const L = layoutOf(s);
+  if (L.showLogo) logo(ctx, 192 + L.logoX, 30 + L.logoY, 52 * L.logoScale, s.brandLine);
+  {
+    const feats = s.features.slice(0, 4);
+    const step = feats.length > 3 ? 136 : 160;
+    iconColumn(ctx, feats, L, 92, 285 + (4 - feats.length) * 30 + ((feats.length - 1) * step) / 2, step, 33, 15.5);
+  }
 
   // Flowers, wine band and the script title.
   flowers(ctx, [
@@ -697,11 +725,12 @@ export function renderSingle(input: RenderInput, index: number, scale = 1): HTML
   background(ctx, W, H, 11 + index, input.settings, input.sources[index]);
 
   if (style === "classic") {
-    logo(ctx, W / 2, 36, 66, s.brandLine);
+    const L = layoutOf(s);
+    if (L.showLogo) logo(ctx, W / 2 + L.logoX, 36 + L.logoY, 66 * L.logoScale, s.brandLine);
     framed(ctx, src, hide, 268, 262, 772, 900, 30);
     const feats = s.features.slice(0, 4);
     const step = feats.length > 3 ? 196 : 230;
-    feats.forEach((f, i) => featureIcon(ctx, f, 134, 360 + i * step, 48, 21));
+    iconColumn(ctx, feats, L, 134, 360 + ((feats.length - 1) * step) / 2, step, 48, 21);
     flowers(ctx, [
       { x: 60, y: 1140, r: 62, blur: 5 },
       { x: 150, y: 1215, r: 40, blur: 2 },
@@ -759,7 +788,8 @@ export function renderSingle(input: RenderInput, index: number, scale = 1): HTML
       { x: 70, y: 470, r: 58, blur: 9 },
       { x: 170, y: 420, r: 34, blur: 7 },
     ]);
-    logo(ctx, 262, 64, 62, s.brandLine);
+    const L = layoutOf(s);
+    if (L.showLogo) logo(ctx, 262 + L.logoX, 64 + L.logoY, 62 * L.logoScale, s.brandLine);
     title(ctx, s.titleTop, s.titleBottom, 72, 640, 118, 52, 470);
     ctx.fillStyle = C.ivory;
     ctx.font = `400 31px ${FONTS.sans}`;
@@ -769,7 +799,7 @@ export function renderSingle(input: RenderInput, index: number, scale = 1): HTML
     ctx.fillStyle = C.gold;
     ctx.fillRect(78, 975, 100, 2.5);
     const feats = s.features.slice(0, 3);
-    feats.forEach((f, i) => featureIcon(ctx, f, 128 + i * 140, 1080, 50, 23));
+    if (L.showIcons) feats.forEach((f, i) => featureIcon(ctx, f, 128 + L.iconsX + i * 140 * L.iconGap * Math.max(0.75, L.iconScale), 1080 + L.iconsY, 50 * L.iconScale, 23 * L.iconScale));
     if (s.showColors && colors.length) {
       colors.slice(0, 6).forEach((c, i) => {
         ctx.beginPath();
