@@ -25,10 +25,6 @@ import {
   SITE_THEME_LABELS,
   type SiteThemeId,
   SECTION_LABELS,
-  SHOWCASE_EFFECTS,
-  SHOWCASE_EFFECT_PRESETS,
-  type ShowcaseEffectId,
-  type SignatureTileLink,
   THEME_LABELS,
   THEME_MODES,
   type BgEffect,
@@ -38,14 +34,12 @@ import {
   type SiteSettings,
   type ThemeMode,
 } from "@/lib/settings";
-import type { Category, Product } from "@/lib/data/types";
+import type { Category } from "@/lib/data/types";
 import { CRM_PREVIEW_EVENT } from "./CrmShell";
 import { CinemaSlides } from "./CinemaSlides";
-import { SignatureGalleryStudio } from "./SignatureGalleryStudio";
-import { ShowcaseImageStudio } from "./ShowcaseImageStudio";
-import { db, fetchCategories, fetchProducts, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
+import { db, fetchCategories, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
 import { CRM_SWATCH } from "./theme";
-import { EASE, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
+import { EASE, Field, ICONS, Icon, PageHeader, Panel, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
 
 const PALETTE_PRESETS: Record<ThemeMode, { name: string; palette: Palette }[]> = {
   dark: [
@@ -92,8 +86,8 @@ const PAGES = [
 
 export function Website() {
   const { data, loading } = useLoad(async () => {
-    const [settings, categories, products] = await Promise.all([fetchSettings(), fetchCategories(), fetchProducts()]);
-    return { settings, categories, products };
+    const [settings, categories] = await Promise.all([fetchSettings(), fetchCategories()]);
+    return { settings, categories };
   });
   if (loading || !data) {
     return (
@@ -103,10 +97,10 @@ export function Website() {
       </div>
     );
   }
-  return <Editor initial={data.settings} initialCategories={data.categories} products={data.products} />;
+  return <Editor initial={data.settings} initialCategories={data.categories} />;
 }
 
-function Editor({ initial, initialCategories, products }: { initial: SiteSettings; initialCategories: Category[]; products: Product[] }) {
+function Editor({ initial, initialCategories }: { initial: SiteSettings; initialCategories: Category[] }) {
   const [s, setS] = useState<SiteSettings>(initial);
   const [saved, setSaved] = useState<SiteSettings>(initial);
   const [cats, setCats] = useState(initialCategories);
@@ -121,12 +115,6 @@ function Editor({ initial, initialCategories, products }: { initial: SiteSetting
   const dirty = JSON.stringify(s) !== JSON.stringify(saved);
 
   const patch = <K extends keyof SiteSettings>(k: K, v: Partial<SiteSettings[K]>) => setS((x) => ({ ...x, [k]: { ...(x[k] as object), ...v } }) as SiteSettings);
-  const setShowcaseEffect = (id: ShowcaseEffectId) => setS((x) => ({ ...x, showcaseEffect: id }));
-  const setSignatureLink = (index: number, patchLink: Partial<SignatureTileLink>) =>
-    setS((x) => ({
-      ...x,
-      signatureLinks: x.signatureLinks.map((link, i) => (i === index ? { ...link, ...patchLink } : link)),
-    }));
   const setPalette = (mode: ThemeMode, p: Partial<Palette>) =>
     setS((x) => {
       const theme = { ...x.theme };
@@ -182,24 +170,6 @@ function Editor({ initial, initialCategories, products }: { initial: SiteSetting
     window.dispatchEvent(new CustomEvent(CRM_PREVIEW_EVENT, { detail: s.crm }));
   }, [s.crm]);
   useEffect(() => () => void window.dispatchEvent(new CustomEvent(CRM_PREVIEW_EVENT, { detail: null })), []);
-
-  // Gallery uploads are published immediately so the public 3D salon never gets stuck showing old images.
-  async function publishGalleryImages(key: "showcaseImages" | "signatureImages", urls: string[]) {
-    const next = { ...s, [key]: urls };
-    setS(next);
-    setBusy(true);
-    try {
-      await saveSettings(next);
-      setSaved(next);
-      setSavedAt(new Date().toISOString());
-      setFrameKey((k) => k + 1);
-      toast("Gallery images published to the website");
-    } catch (error) {
-      toast(error instanceof Error ? error.message : "Could not publish gallery images", "error");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function publish() {
     setBusy(true);
@@ -273,64 +243,13 @@ function Editor({ initial, initialCategories, products }: { initial: SiteSetting
 
   const home = (
     <>
-      <ShowcaseImageStudio images={s.showcaseImages} onChange={(showcaseImages) => void publishGalleryImages("showcaseImages", showcaseImages)} />
-      <Panel title="Showcase effect" icon={ICONS.sparkle} subtitle="Rotation & motion style for the 3D salon showcase">
-        <p className="mb-2 text-xs crm-muted">Controls how the “Every piece, in the round” showcase turns — speed, direction, ring width, float and sparkle. Publish to apply.</p>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {SHOWCASE_EFFECTS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setShowcaseEffect(id)}
-              className="crm-panel-soft rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5"
-              style={{ borderColor: s.showcaseEffect === id ? "var(--crm-accent)" : "var(--crm-border-soft)", boxShadow: s.showcaseEffect === id ? "0 0 0 1px var(--crm-accent)" : undefined }}
-            >
-              <span className="flex items-center justify-between">
-                <span className="text-sm font-medium">{SHOWCASE_EFFECT_PRESETS[id].label}</span>
-                {s.showcaseEffect === id && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "var(--crm-accent)" }}>
-                    <Icon d={ICONS.check} className="h-3 w-3 text-black" />
-                  </span>
-                )}
-              </span>
-              <span className="mt-1 block text-[0.72rem] crm-muted">{SHOWCASE_EFFECT_PRESETS[id].note}</span>
-            </button>
-          ))}
-        </div>
-      </Panel>
-      <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => void publishGalleryImages("signatureImages", signatureImages)} />
-      <Panel title="Memories — product links" icon={ICONS.products} subtitle="Link each Memories card to a real product so it shows live price, and “Shop this piece” goes straight to checkout">
-        <p className="mb-3 text-xs crm-muted">
-          Pick a product for a card to turn it into a live spotlight — its catalogue photo, name, price and link take over automatically (unless you type your own title/caption below). Leave “No product” to keep the card as a plain collection photo.
+      <Panel title="Products & photos per section" icon={ICONS.image} subtitle="Showcase ring, Memories gallery, Designer Blouses and Ready-Made now live in their own module">
+        <p className="text-xs crm-muted">
+          Which product each homepage section features, its photos, and the 3D showcase's rotation style have moved to <strong className="text-ivory">Website Sections</strong> (left sidebar) — one place to manage every section across the site.
         </p>
-        <div className="space-y-4">
-          {s.signatureLinks.map((link, i) => {
-            const product = products.find((p) => p.id === link.productId);
-            return (
-              <div key={i} className="crm-panel-soft rounded-xl border p-3" style={{ borderColor: "var(--crm-border-soft)" }}>
-                <span className="text-xs font-medium crm-muted">Card {i + 1}</span>
-                <Select label="Product" value={link.productId} onChange={(e) => setSignatureLink(i, { productId: e.target.value })} className="mt-2">
-                  <option value="">— No product (static collection photo) —</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                      {p.status !== "live" ? ` (${p.status})` : ""}
-                    </option>
-                  ))}
-                </Select>
-                {link.productId && (
-                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <Field label="Title (optional)" placeholder={product?.name ?? ""} value={link.title} onChange={(e) => setSignatureLink(i, { title: e.target.value })} />
-                    <Field label="Caption (optional)" placeholder={product?.subtitle || "From the catalogue"} value={link.note} onChange={(e) => setSignatureLink(i, { note: e.target.value })} />
-                  </div>
-                )}
-                {link.productId && product?.status !== "live" && (
-                  <p className="mt-2 text-[0.7rem] text-burgundy">This product isn’t live yet — the card will fall back to its static photo until you publish it.</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <Link href="/admin/sections" className="crm-btn crm-btn-gold mt-3 inline-flex">
+          Open Website Sections <Icon d={ICONS.arrow} />
+        </Link>
       </Panel>
       <Panel title="Announcement bar" icon={ICONS.bell}>
         <div className="space-y-3">

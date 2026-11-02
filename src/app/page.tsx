@@ -67,6 +67,10 @@ export default async function Home({ searchParams }: Props) {
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
   const designerBlousesId = enabled.find((c) => c.slug === "designer-blouses")?.id;
   const readyMadeId = enabled.find((c) => c.slug === "ready-made-blouses")?.id;
+  // "Website Sections" (CRM) can pin a specific product to these homepage stories; otherwise fall
+  // back to the first live product in the category, as before.
+  const designerBlousesProduct = liveProducts.find((p) => p.id === settings.designerBlousesProductId) ?? showcaseProduct(liveProducts, designerBlousesId);
+  const readyMadeProduct = liveProducts.find((p) => p.id === settings.readyMadeProductId) ?? showcaseProduct(liveProducts, readyMadeId);
   // Pearl theme hero: a photo slider of the curated editorial lookbook photography (not raw product
   // shots — those read as catalogue photos, not the magazine-style hero the reference mockups want).
   const heroSlides: HeroSlide[] = [...enabled]
@@ -76,14 +80,10 @@ export default async function Home({ searchParams }: Props) {
 
   const SECTIONS: Record<SectionId, ReactNode> = {
     shop: <ShopSection products={liveProducts} />,
-    "designer-blouses": enabledSet.has("designer-blouses") ? (
-      <DesignerBlouses product={showcaseProduct(liveProducts, designerBlousesId)} />
-    ) : null,
+    "designer-blouses": enabledSet.has("designer-blouses") ? <DesignerBlouses product={designerBlousesProduct} /> : null,
     showcase: <ProductShowcase enabled={enabled} images={settings.showcaseImages} effect={settings.showcaseEffect} />,
     signature: <SignatureGallery enabled={enabledSlugs} images={settings.signatureImages} products={liveProducts} links={settings.signatureLinks} />,
-    "ready-made": enabledSet.has("ready-made-blouses") ? (
-      <ReadyMade product={showcaseProduct(liveProducts, readyMadeId)} />
-    ) : null,
+    "ready-made": enabledSet.has("ready-made-blouses") ? <ReadyMade product={readyMadeProduct} /> : null,
     "custom-stitching": <CustomStitching />,
     heritage: <Heritage />,
     craftsmanship: <Craftsmanship />,

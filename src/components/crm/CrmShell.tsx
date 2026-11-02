@@ -47,6 +47,7 @@ const NAV: NavItem[] = [
   { href: "/admin/orders", label: "Orders", icon: ICONS.orders },
   { href: "/admin/payments", label: "Payments", icon: ICONS.payments },
   { href: "/admin/website", label: "Appearance Studio", icon: ICONS.website },
+  { href: "/admin/sections", label: "Website Sections", icon: ICONS.image },
   { href: "/admin/settings", label: "Settings", icon: ICONS.settings },
 ];
 
