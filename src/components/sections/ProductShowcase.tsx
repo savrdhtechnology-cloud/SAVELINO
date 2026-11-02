@@ -98,7 +98,6 @@ export function ProductShowcase({ enabled, images = [] }: { enabled: Category[];
                       src={images[showcase.indexOf(c)] || c.image}
                       alt={c.title}
                       sizes="210px"
-                      placeholder="blur"
                       className="aspect-[3/4] w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>
