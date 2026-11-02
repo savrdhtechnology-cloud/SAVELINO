@@ -480,7 +480,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
                 <Icon d={ICONS.external} className="h-3 w-3" /> Open
               </a>
             </div>
-            <ScaledFrame key={`${frameKey}-${page}`} ref={frame} src={page} deviceWidth={DEVICES.find((d) => d.id === device)?.width ?? 1440} onLoad={push} />
+            <ScaledFrame key={`${frameKey}-${page}`} ref={frame} src={page === "/" && s.layout.theme !== saved.layout.theme ? `/?theme=${s.layout.theme}` : page} deviceWidth={DEVICES.find((d) => d.id === device)?.width ?? 1440} onLoad={push} />
           </Panel>
         </div>
       </div>
