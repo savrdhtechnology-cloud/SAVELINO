@@ -21,8 +21,13 @@ export function ProductColorProvider({ initial, children }: { initial: string; c
 
 /** Photos for the chosen colour; if none are tagged with it, every picture of the product. */
 function pickImages(all: ProductImage[], color: string) {
-  const tagged = color ? all.filter((i) => i.color === color) : [];
-  return tagged.length ? tagged : all;
+  if (!color) return all;
+  const tagged = all.filter((image) => image.color === color);
+  // Photos without an assigned colour apply to every variant. Do not hide
+  // untagged front/back/detail images when a customer selects a colour.
+  return tagged.length
+    ? all.filter((image) => !image.color || image.color === color)
+    : all;
 }
 
 export function ProductGallery({ product }: { product: Product }) {
