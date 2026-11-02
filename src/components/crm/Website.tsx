@@ -25,6 +25,9 @@ import {
   SITE_THEME_LABELS,
   type SiteThemeId,
   SECTION_LABELS,
+  SHOWCASE_EFFECTS,
+  SHOWCASE_EFFECT_PRESETS,
+  type ShowcaseEffectId,
   THEME_LABELS,
   THEME_MODES,
   type BgEffect,
@@ -117,6 +120,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
   const dirty = JSON.stringify(s) !== JSON.stringify(saved);
 
   const patch = <K extends keyof SiteSettings>(k: K, v: Partial<SiteSettings[K]>) => setS((x) => ({ ...x, [k]: { ...(x[k] as object), ...v } }) as SiteSettings);
+  const setShowcaseEffect = (id: ShowcaseEffectId) => setS((x) => ({ ...x, showcaseEffect: id }));
   const setPalette = (mode: ThemeMode, p: Partial<Palette>) =>
     setS((x) => {
       const theme = { ...x.theme };
@@ -264,6 +268,30 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
   const home = (
     <>
       <ShowcaseImageStudio images={s.showcaseImages} onChange={(showcaseImages) => void publishGalleryImages("showcaseImages", showcaseImages)} />
+      <Panel title="Showcase effect" icon={ICONS.sparkle} subtitle="Rotation & motion style for the 3D salon showcase">
+        <p className="mb-2 text-xs crm-muted">Controls how the “Every piece, in the round” showcase turns — speed, direction, ring width, float and sparkle. Publish to apply.</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {SHOWCASE_EFFECTS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setShowcaseEffect(id)}
+              className="crm-panel-soft rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5"
+              style={{ borderColor: s.showcaseEffect === id ? "var(--crm-accent)" : "var(--crm-border-soft)", boxShadow: s.showcaseEffect === id ? "0 0 0 1px var(--crm-accent)" : undefined }}
+            >
+              <span className="flex items-center justify-between">
+                <span className="text-sm font-medium">{SHOWCASE_EFFECT_PRESETS[id].label}</span>
+                {s.showcaseEffect === id && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "var(--crm-accent)" }}>
+                    <Icon d={ICONS.check} className="h-3 w-3 text-black" />
+                  </span>
+                )}
+              </span>
+              <span className="mt-1 block text-[0.72rem] crm-muted">{SHOWCASE_EFFECT_PRESETS[id].note}</span>
+            </button>
+          ))}
+        </div>
+      </Panel>
       <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => void publishGalleryImages("signatureImages", signatureImages)} />
       <Panel title="Announcement bar" icon={ICONS.bell}>
         <div className="space-y-3">

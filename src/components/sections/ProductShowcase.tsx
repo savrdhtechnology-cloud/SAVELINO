@@ -9,11 +9,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { collections } from "@/lib/collections";
 import type { Category } from "@/lib/catalogue";
+import { SHOWCASE_EFFECT_PRESETS, type ShowcaseEffectId } from "@/lib/settings";
 
 const ProductCarousel = dynamic(() => import("@/components/three/ProductCarousel"), { ssr: false });
 
 /** The 3D showcase uses the bundled photography, so it shows the built-in categories that are switched on. */
-export function ProductShowcase({ enabled, images = [] }: { enabled: Category[]; images?: string[] }) {
+export function ProductShowcase({ enabled, images = [], effect = "gentle" }: { enabled: Category[]; images?: string[]; effect?: ShowcaseEffectId }) {
   const titles = new Map(enabled.map((c) => [c.slug, c.title]));
   const showcase = collections
     .filter((c) => c.slug !== "ready-made-blouses" && titles.has(c.slug))
@@ -87,6 +88,7 @@ export function ProductShowcase({ enabled, images = [] }: { enabled: Category[];
             mobile={mobile}
             onFocusChange={setFocus}
             onSelect={(slug) => router.push(`/collections/${slug}`)}
+            effect={SHOWCASE_EFFECT_PRESETS[effect]}
           />
         ) : (
           <ul className="no-scrollbar flex h-full snap-x snap-mandatory items-center gap-5 overflow-x-auto px-5 md:justify-center md:px-10">
