@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
 import { ProductCard } from "@/components/store/ProductCard";
-import { BuyBox, FeatureBadges, ProductGallery } from "@/components/store/ProductDetail";
+import { BuyBox, FeatureBadges, ProductColorProvider, ProductGallery } from "@/components/store/ProductDetail";
 import { ProductCreative } from "@/components/store/ProductCreative";
 import { resolveCategories } from "@/lib/catalogue";
 import { getSiteSettings } from "@/lib/settings-server";
@@ -35,16 +34,13 @@ export default async function ProductPage({ params }: Props) {
   const category = resolveCategories(await getVisibleCategories()).find((c) => c.id === product.category_id);
   const related = product.category_id ? (await getLiveProducts(product.category_id)).filter((p) => p.id !== product.id).slice(0, 4) : [];
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
-  // Generated creatives: the wide combined creative leads the page, the rest go in the gallery.
-  const combo = product.generated ? product.images.find((i) => i.width && i.height && i.width > i.height) : undefined;
-  const galleryImages = combo && product.images.length > 1 ? product.images.filter((i) => i.id !== combo.id) : product.images;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description || product.subtitle,
-    image: product.images.map((i) => (i.url.startsWith("http") ? i.url : `${site.url}${i.url}`)),
+    image: (product.gallery ?? product.images).map((i) => (i.url.startsWith("http") ? i.url : `${site.url}${i.url}`)),
     brand: { "@type": "Brand", name: site.name },
     offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: upcoming ? "https://schema.org/PreOrder" : "https://schema.org/InStock", url: `${site.url}/shop/${product.slug}` },
   };
@@ -65,8 +61,9 @@ export default async function ProductPage({ params }: Props) {
             </>
           )}
         </nav>
+        <ProductColorProvider initial={product.colors.length === 1 ? product.colors[0].name : ""}>
         <div id="buy" className="grid scroll-mt-28 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-12">
-          <ProductGallery product={{ ...product, images: galleryImages }} />
+          <ProductGallery product={product} />
           <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:self-start">
             <p className="eyebrow">{upcoming ? "Coming soon · Pre-order" : (category?.title ?? "SAVLINO")}</p>
             <h1 className="mt-2 font-display text-[clamp(1.8rem,3.2vw,2.7rem)] leading-[1.05] text-ivory">{product.name}</h1>
@@ -86,19 +83,11 @@ export default async function ProductPage({ params }: Props) {
             {product.description && <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-ivory/65">{product.description}</p>}
           </div>
         </div>
-        {combo ? (
-          <div className="mx-auto mt-14 max-w-[980px] overflow-hidden rounded-2xl border border-gold/30" style={{ aspectRatio: `${combo.width} / ${combo.height}` }}>
-            <div className="relative h-full w-full">
-              <Image src={combo.url} alt={`${product.name} — SAVLINO`} fill sizes="(min-width: 1280px) 1200px, 100vw" className="object-cover" />
-            </div>
+        </ProductColorProvider>
+        {!product.generated && product.images.length >= 2 && (
+          <div className="mx-auto mt-14 max-w-[980px]">
+            <ProductCreative product={product} categoryTitle={category?.title ?? "Designer Blouses"} />
           </div>
-        ) : (
-          !product.generated &&
-          product.images.length >= 2 && (
-            <div className="mx-auto mt-14 max-w-[980px]">
-              <ProductCreative product={product} categoryTitle={category?.title ?? "Designer Blouses"} />
-            </div>
-          )
         )}
       </section>
 
