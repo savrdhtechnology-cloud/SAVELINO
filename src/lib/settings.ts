@@ -336,7 +336,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   effects: { background: "none", intensity: "subtle", cursor: "default", mobile: false, motion: "cinematic" },
   seo: {
     title: "SAVLINO — Designer Blouses | A Legacy of Elegance",
-    description: "Designer blouses and sarees, finished by hand. Choose your colour and size — delivered across India.",
+    description: "Designer blouses, finished by hand. Choose your colour and size — delivered across India.",
   },
 
   hero: {
@@ -345,7 +345,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     spotlight: 70,
     eyebrow: "Timeless women’s luxury",
     title: "A Legacy of Elegance",
-    subtitle: "Designer blouses, heirloom sarees and intimate essentials — tradition in style, always.",
+    subtitle: "Designer blouses and custom stitching — tradition in style, always.",
     primaryLabel: "Shop now",
     primaryHref: "/shop",
     secondaryLabel: "Custom stitching",

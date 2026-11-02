@@ -30,10 +30,22 @@ const sortImages = (p: Product): Product => {
   const photos = all
     .filter((image) => image.kind !== "creative")
     .map((image) => (tags[image.id] ? { ...image, color: tags[image.id] } : image));
-  const gallery = [...photos, ...creatives];
-  // Product cards should be recognisable as the selected product, even when a
-  // generated poster or collage has also been uploaded for this product.
-  const images = photos.length ? photos : creatives;
+  // Rank for the storefront: sharp portrait photos first, then the framed portrait creatives,
+  // then softer or landscape shots. Thumbnails too small to show sharply are dropped.
+  const dims = (i: { width?: number | null; height?: number | null }) => ({ w: i.width ?? 0, h: i.height ?? 0 });
+  const usable = [...photos, ...creatives].filter((i) => { const { w, h } = dims(i); return !w || !h || Math.max(w, h) >= 500; });
+  const rank = (i: (typeof usable)[number]) => {
+    const { w, h } = dims(i);
+    const portrait = !w || !h || h >= w;
+    const sharp = !w || !h || Math.min(w, h) >= 900;
+    if (i.kind !== "creative" && portrait && sharp) return 0;
+    if (i.kind === "creative" && portrait) return 1;
+    if (portrait) return 2;
+    return i.kind === "creative" ? 4 : 3;
+  };
+  const ranked = usable.map((img, idx) => ({ img, idx })).sort((x, y) => rank(x.img) - rank(y.img) || x.idx - y.idx).map((x) => x.img);
+  const gallery = ranked;
+  const images = ranked;
   return { ...p, images, gallery, generated: creatives.length > 0 };
 };
 
@@ -50,7 +62,7 @@ export const getVisibleCategories = unstable_cache(
     // Sarees are not on the website for now — they stay in the CRM and come back when this list is emptied.
     return ((data as Category[] | null) ?? []).filter((c) => !HIDDEN_CATEGORY_SLUGS.includes(c.slug));
   },
-  ["visible-categories-v2"],
+  ["visible-categories-v3"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -65,7 +77,7 @@ export const getLiveProducts = unstable_cache(
     if (error) console.error("[catalog] products", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["live-products-v2"],
+  ["live-products-v3"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -77,7 +89,7 @@ export const getLiveProduct = unstable_cache(
     if (error) console.error("[catalog] product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["live-product-v2"],
+  ["live-product-v3"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -90,7 +102,7 @@ export const getUpcomingProducts = unstable_cache(
     if (error) console.error("[catalog] upcoming", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["upcoming-products-v1"],
+  ["upcoming-products-v2"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -102,6 +114,6 @@ export const getUpcomingProduct = unstable_cache(
     if (error) console.error("[catalog] upcoming product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["upcoming-product-v1"],
+  ["upcoming-product-v2"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
