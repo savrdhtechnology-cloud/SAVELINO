@@ -3,22 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useBag } from "@/lib/store/cart";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { inr } from "@/lib/data/types";
+import { INDIAN_STATES as STATES } from "@/lib/states";
+import type { CustomerAddress, CustomerProfile } from "@/lib/account";
 
-const STATES = [
-  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh",
-  "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir",
-  "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
-  "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
-  "Uttar Pradesh", "Uttarakhand", "West Bengal",
-];
 
 const input = "mt-1.5 w-full rounded-xl border border-gold/25 bg-noir-soft px-4 py-3 text-sm text-ivory outline-none transition-colors placeholder:text-ivory/30 focus:border-gold";
 
 type Props = { shippingFee: number; freeShippingAbove: number; whatsapp: string; codEnabled: boolean; upiId: string; upiName: string };
+type Prefill = { name?: string; phone?: string; email?: string; address?: string; city?: string; state?: string; pincode?: string };
 type Done = { orderNo: string; total: number; phone: string; method: "cod" | "upi" };
 
 export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnabled, upiId, upiName }: Props) {
@@ -28,6 +24,44 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<Done | null>(null);
+  const [acct, setAcct] = useState<{ profile: CustomerProfile | null; addresses: CustomerAddress[] } | null>(null);
+  const [prefill, setPrefill] = useState<Prefill>({});
+  const [formKey, setFormKey] = useState(0);
+  const [pickedId, setPickedId] = useState("");
+  const [saveAddr, setSaveAddr] = useState(true);
+
+  // Signed-in customers: fill contact + default address, offer their saved addresses.
+  useEffect(() => {
+    const db = createSupabaseBrowserClient();
+    if (!db) return;
+    let alive = true;
+    (async () => {
+      const { data: u } = await db.auth.getUser();
+      if (!u.user || !alive) return;
+      const [p, a] = await Promise.all([
+        db.from("customer_profiles").select("id, full_name, phone, email").eq("id", u.user.id).maybeSingle(),
+        db.from("customer_addresses").select("*").eq("user_id", u.user.id).order("is_default", { ascending: false }).order("created_at"),
+      ]);
+      if (!alive) return;
+      const profile = (p.data as CustomerProfile | null) ?? null;
+      const addresses = (a.data as CustomerAddress[] | null) ?? [];
+      setAcct({ profile, addresses });
+      const def = addresses[0];
+      setPrefill(def ? { name: def.name, phone: def.phone, email: profile?.email, address: def.address, city: def.city, state: def.state, pincode: def.pincode } : { name: profile?.full_name, phone: profile?.phone, email: profile?.email });
+      if (def) setPickedId(def.id);
+      setFormKey((k) => k + 1);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  function pick(a: CustomerAddress) {
+    setPickedId(a.id);
+    setPrefill({ name: a.name, phone: a.phone, email: acct?.profile?.email, address: a.address, city: a.city, state: a.state, pincode: a.pincode });
+    setFormKey((k) => k + 1);
+  }
+
   const shipping = freeShippingAbove > 0 && subtotal >= freeShippingAbove ? 0 : shippingFee;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -60,6 +94,15 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
       if (err) throw new Error(err.message);
       const res = data as { orderNo: string; total: number };
       setDone({ orderNo: res.orderNo, total: res.total, phone: get("phone"), method: payment });
+      if (acct && saveAddr && !acct.addresses.some((x) => x.address === get("address") && x.pincode === get("pincode"))) {
+        const { data: u } = await db.auth.getUser();
+        if (u.user) {
+          await db.from("customer_addresses").insert({
+            user_id: u.user.id, label: "Home", name: get("name"), phone: get("phone").replace(/[^\d+]/g, ""), address: get("address"),
+            city: get("city"), state: get("state"), pincode: get("pincode"), is_default: acct.addresses.length === 0,
+          });
+        }
+      }
       clear();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -85,21 +128,41 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
   return (
     <form onSubmit={submit} className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px]">
       <div className="space-y-8">
-        <Section title="Contact">
+        {acct ? (
+          acct.addresses.length > 0 && (
+            <Section title="Deliver to">
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {acct.addresses.map((a) => (
+                  <li key={a.id}>
+                    <button type="button" onClick={() => pick(a)} aria-pressed={pickedId === a.id} className={`h-full w-full rounded-xl border p-4 text-left text-sm transition-colors ${pickedId === a.id ? "border-gold bg-gold/10" : "border-gold/20 hover:border-gold/50"}`}>
+                      <span className="block text-ivory">{a.label}{a.is_default ? " · Default" : ""}</span>
+                      <span className="mt-1 block text-ivory/70">{a.name}, {a.address}, {a.city} {a.pincode}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )
+        ) : (
+          <p className="rounded-xl border border-gold/20 bg-noir-soft px-5 py-4 text-sm text-ivory/75">
+            Have an account? <Link href="/account?next=/checkout" className="text-gold underline-offset-2 hover:underline">Sign in</Link> to fill your details and track this order — or continue as a guest below.
+          </p>
+        )}
+        <Section key={`c${formKey}`} title="Contact">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name" name="name" required autoComplete="name" />
-            <Field label="Mobile number" name="phone" required type="tel" inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" />
-            <Field label="Email (optional)" name="email" type="email" autoComplete="email" className="sm:col-span-2" />
+            <Field label="Full name" name="name" required autoComplete="name" defaultValue={prefill.name} />
+            <Field label="Mobile number" name="phone" required type="tel" inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" defaultValue={prefill.phone} />
+            <Field label="Email (optional)" name="email" type="email" autoComplete="email" className="sm:col-span-2" defaultValue={prefill.email} />
           </div>
         </Section>
-        <Section title="Delivery address">
+        <Section key={`a${formKey}`} title="Delivery address">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="House, street, area" name="address" required autoComplete="street-address" className="sm:col-span-2" />
-            <Field label="City" name="city" required autoComplete="address-level2" />
-            <Field label="PIN code" name="pincode" required inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="postal-code" />
+            <Field label="House, street, area" name="address" required autoComplete="street-address" className="sm:col-span-2" defaultValue={prefill.address} />
+            <Field label="City" name="city" required autoComplete="address-level2" defaultValue={prefill.city} />
+            <Field label="PIN code" name="pincode" required inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="postal-code" defaultValue={prefill.pincode} />
             <label className="block sm:col-span-2">
               <span className="text-[0.72rem] uppercase tracking-[0.25em] text-ivory/72">State</span>
-              <select name="state" required defaultValue="" className={input}>
+              <select name="state" required defaultValue={prefill.state ?? ""} className={input}>
                 <option value="" disabled>
                   Choose your state
                 </option>
@@ -112,6 +175,12 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
               <span className="text-[0.72rem] uppercase tracking-[0.25em] text-ivory/72">Note for us (optional)</span>
               <textarea name="notes" rows={2} className={input} placeholder="Landmark, preferred delivery time…" />
             </label>
+            {acct && (
+              <label className="flex items-center gap-3 text-sm text-ivory/80 sm:col-span-2">
+                <input type="checkbox" checked={saveAddr} onChange={(e) => setSaveAddr(e.target.checked)} className="h-4 w-4 accent-[#d4af37]" />
+                Save this address to my account
+              </label>
+            )}
             <input name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
           </div>
         </Section>
@@ -271,6 +340,9 @@ function OrderPlaced({ done, whatsapp, upiId, upiName }: { done: Done; whatsapp:
             Message us on WhatsApp
           </a>
         )}
+        <Link href="/account" className="rounded-full border border-gold/50 px-6 py-3.5 text-[0.65rem] uppercase tracking-[0.25em] text-gold">
+          Track in my account
+        </Link>
         <Link href="/shop" className="rounded-full border border-gold/50 px-6 py-3.5 text-[0.65rem] uppercase tracking-[0.25em] text-gold">
           Continue shopping
         </Link>
