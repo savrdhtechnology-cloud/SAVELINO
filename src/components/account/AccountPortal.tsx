@@ -1,14 +1,29 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { safeNext, statusLabel, type CustomerAddress, type CustomerProfile, type MyOrder } from "@/lib/account";
+import {
+  safeNext,
+  statusLabel,
+  type CustomerAddress,
+  type CustomerProfile,
+  type Measurement,
+  type MyOrder,
+  type RecommendedProduct,
+  type ReturnRequest,
+} from "@/lib/account";
 import { inr } from "@/lib/data/types";
 import { INDIAN_STATES } from "@/lib/states";
+import { images } from "@/lib/collections";
 import { OrderTimeline } from "./OrderTimeline";
+import { Overview } from "./Overview";
+import { Wishlist } from "./Wishlist";
+import { Measurements } from "./Measurements";
+import { Returns } from "./Returns";
 
 const input = "mt-1.5 w-full rounded-xl border border-gold/25 bg-noir-soft px-4 py-3 text-[0.95rem] text-ivory outline-none transition-colors placeholder:text-ivory/35 focus:border-gold";
 const label = "text-[0.74rem] uppercase tracking-[0.22em] text-ivory/72";
@@ -40,7 +55,14 @@ export function AccountPortal() {
   return userId ? <Dashboard db={db} userId={userId} /> : <AuthForms db={db} />;
 }
 
-/* ───────────────────────────── Sign in / create account ───────────────────────────── */
+/* ───────────────────────────── Sign in / create account — split screen ───────────────────────────── */
+
+const PERKS: [string, string][] = [
+  ["Track orders", "Get real-time updates on your purchases."],
+  ["Returns & exchanges", "Hassle-free returns and size exchanges."],
+  ["Custom stitching status", "Follow your custom blouse request from design to delivery."],
+  ["Recommended for you", "Handpicked styles based on your taste and past orders."],
+];
 
 function AuthForms({ db }: { db: Client }) {
   const router = useRouter();
@@ -88,117 +110,185 @@ function AuthForms({ db }: { db: Client }) {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1000px] gap-8 px-5 py-10 md:grid-cols-[1fr_1.1fr] md:px-10 md:py-14">
-      <div>
-        <p className="eyebrow">Your SAVLINO account</p>
-        <h1 className="mt-3 font-display text-3xl text-ivory md:text-4xl">Order faster, track every blouse</h1>
-        <ul className="mt-6 space-y-3 text-[0.95rem] text-ivory/75">
-          {["See all your orders and their status in one place", "Save your delivery address once — it fills in at checkout", "Place new orders straight from your account"].map((t) => (
-            <li key={t} className="flex gap-3">
-              <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" />
-              {t}
-            </li>
-          ))}
-        </ul>
+    <div className="grid min-h-[80vh] md:grid-cols-2">
+      <div className="relative hidden min-h-[320px] overflow-hidden md:block">
+        <Image src={images.heritage} alt="" fill sizes="50vw" className="object-cover" priority />
+        <div className="absolute inset-0 bg-gradient-to-t from-noir via-noir/10 to-transparent" />
       </div>
-      <form onSubmit={submit} className="rounded-2xl border border-gold/25 bg-noir-soft p-6 md:p-8">
-        <div className="mb-5 flex gap-2 text-[0.72rem] uppercase tracking-[0.22em]">
-          {(["in", "up"] as const).map((m) => (
-            <button key={m} type="button" onClick={() => { setMode(m); setError(""); setInfo(""); }} className={`flex-1 rounded-full border px-3 py-2.5 transition-colors ${mode === m || (mode === "reset" && m === "in") ? "border-gold bg-gold text-noir" : "border-gold/30 text-ivory/75 hover:border-gold"}`}>
-              {m === "in" ? "Sign in" : "Create account"}
+      <div className="flex flex-col justify-center gap-10 px-5 py-14 md:px-12 lg:px-16">
+        <div className="mx-auto w-full max-w-md text-center">
+          <p className="eyebrow">Customer portal</p>
+          <h1 className="mt-3 font-display text-3xl text-ivory md:text-[2.4rem]">{mode === "up" ? "Create your account" : "Sign in to SAVLINO"}</h1>
+          <p className="mt-2 text-sm text-ivory/65">Track your orders, manage custom blouse requests, and keep everything at your fingertips.</p>
+        </div>
+
+        <form onSubmit={submit} className="mx-auto w-full max-w-md rounded-2xl border border-gold/25 bg-noir-soft p-6 md:p-8">
+          <div className="mb-5 flex gap-2 text-[0.72rem] uppercase tracking-[0.22em]">
+            {(["in", "up"] as const).map((m) => (
+              <button key={m} type="button" onClick={() => { setMode(m); setError(""); setInfo(""); }} className={`flex-1 rounded-full border px-3 py-2.5 transition-colors ${mode === m || (mode === "reset" && m === "in") ? "border-gold bg-gold text-noir" : "border-gold/30 text-ivory/75 hover:border-gold"}`}>
+                {m === "in" ? "Sign in" : "Create account"}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-4">
+            {mode === "up" && (
+              <>
+                <label className="block"><span className={label}>Full name</span><input name="name" required autoComplete="name" className={input} /></label>
+                <label className="block"><span className={label}>Mobile number</span><input name="phone" type="tel" inputMode="tel" required autoComplete="tel" placeholder="10-digit mobile" className={input} /></label>
+              </>
+            )}
+            <label className="block"><span className={label}>Email or mobile number</span><input name="email" type="email" required autoComplete="email" placeholder="Enter your email or mobile number" className={input} /></label>
+            {mode !== "reset" && (
+              <label className="block"><span className={label}>Password</span><input name="password" type="password" required minLength={8} autoComplete={mode === "up" ? "new-password" : "current-password"} placeholder="Enter your password" className={input} /></label>
+            )}
+            {mode === "up" && (
+              <label className="block"><span className={label}>Confirm password</span><input name="password2" type="password" required minLength={8} autoComplete="new-password" className={input} /></label>
+            )}
+          </div>
+          {error && <p role="alert" className="mt-4 rounded-lg border border-burgundy bg-burgundy/30 px-4 py-3 text-sm text-ivory">{error}</p>}
+          {info && <p role="status" className="mt-4 rounded-lg border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold-light">{info}</p>}
+          <button type="submit" disabled={busy} className={`${btn} mt-6 w-full`}>{busy ? "Please wait…" : mode === "up" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}</button>
+          {mode !== "up" && (
+            <button type="button" onClick={() => { setMode(mode === "reset" ? "in" : "reset"); setError(""); setInfo(""); }} className="mt-4 w-full text-center text-[0.85rem] text-ivory/70 underline-offset-2 hover:text-gold hover:underline">
+              {mode === "reset" ? "Back to sign in" : "Forgot your password?"}
             </button>
+          )}
+        </form>
+
+        <div className="mx-auto grid w-full max-w-md gap-4 rounded-2xl border border-gold/20 bg-[linear-gradient(160deg,rgba(101,13,32,0.3),rgba(10,7,9,0.5))] p-6">
+          <p className="font-display text-lg text-ivory">Your SAVLINO benefits</p>
+          {PERKS.map(([t, d]) => (
+            <div key={t} className="flex gap-3">
+              <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" />
+              <span>
+                <span className="block text-sm font-medium text-ivory">{t}</span>
+                <span className="block text-[0.82rem] text-ivory/65">{d}</span>
+              </span>
+            </div>
           ))}
         </div>
-        <div className="space-y-4">
-          {mode === "up" && (
-            <>
-              <label className="block"><span className={label}>Full name</span><input name="name" required autoComplete="name" className={input} /></label>
-              <label className="block"><span className={label}>Mobile number</span><input name="phone" type="tel" inputMode="tel" required autoComplete="tel" placeholder="10-digit mobile" className={input} /></label>
-            </>
-          )}
-          <label className="block"><span className={label}>Email</span><input name="email" type="email" required autoComplete="email" className={input} /></label>
-          {mode !== "reset" && (
-            <label className="block"><span className={label}>Password</span><input name="password" type="password" required minLength={8} autoComplete={mode === "up" ? "new-password" : "current-password"} className={input} /></label>
-          )}
-          {mode === "up" && (
-            <label className="block"><span className={label}>Confirm password</span><input name="password2" type="password" required minLength={8} autoComplete="new-password" className={input} /></label>
-          )}
-        </div>
-        {error && <p role="alert" className="mt-4 rounded-lg border border-burgundy bg-burgundy/30 px-4 py-3 text-sm text-ivory">{error}</p>}
-        {info && <p role="status" className="mt-4 rounded-lg border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold-light">{info}</p>}
-        <button type="submit" disabled={busy} className={`${btn} mt-6 w-full`}>{busy ? "Please wait…" : mode === "up" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}</button>
-        {mode !== "up" && (
-          <button type="button" onClick={() => { setMode(mode === "reset" ? "in" : "reset"); setError(""); setInfo(""); }} className="mt-4 w-full text-center text-[0.85rem] text-ivory/70 underline-offset-2 hover:text-gold hover:underline">
-            {mode === "reset" ? "Back to sign in" : "Forgot your password?"}
-          </button>
-        )}
-      </form>
+      </div>
     </div>
   );
 }
 
-/* ───────────────────────────── Dashboard ───────────────────────────── */
+/* ───────────────────────────── Dashboard — sidebar layout ───────────────────────────── */
 
-type Tab = "orders" | "addresses" | "profile";
+type Tab = "overview" | "orders" | "returns" | "wishlist" | "measurements" | "addresses" | "profile";
+const TABS: [Tab, string][] = [
+  ["overview", "Dashboard"],
+  ["orders", "My Orders"],
+  ["returns", "Returns"],
+  ["wishlist", "Wishlist"],
+  ["measurements", "Measurements"],
+  ["addresses", "Addresses"],
+  ["profile", "Profile"],
+];
 
 function Dashboard({ db, userId }: { db: Client; userId: string }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("orders");
+  const params = useSearchParams();
+  const tabParam = params.get("tab");
+  const [tab, setTab] = useState<Tab>(TABS.some(([k]) => k === tabParam) ? (tabParam as Tab) : "overview");
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [orders, setOrders] = useState<MyOrder[] | null>(null);
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [recommended, setRecommended] = useState<RecommendedProduct[]>([]);
   const [loadError, setLoadError] = useState("");
 
   const load = useCallback(async () => {
-    const [p, a, o] = await Promise.all([
+    const [p, a, o, r, m, w, rec] = await Promise.all([
       db.from("customer_profiles").select("id, full_name, phone, email").eq("id", userId).maybeSingle(),
       db.from("customer_addresses").select("*").eq("user_id", userId).order("is_default", { ascending: false }).order("created_at"),
       db.rpc("my_orders"),
+      db.rpc("my_returns"),
+      db.from("customer_measurements").select("*").eq("user_id", userId).order("created_at"),
+      db.from("customer_wishlist").select("product_id").eq("user_id", userId),
+      db.from("products").select("id, slug, name, subtitle, price, product_images(url, position)").eq("status", "live").order("sort_order").limit(8),
     ]);
     if (p.error || a.error || o.error) setLoadError("We could not load your account details. Please refresh the page.");
     setProfile((p.data as CustomerProfile | null) ?? null);
     setAddresses((a.data as CustomerAddress[] | null) ?? []);
     setOrders((o.data as MyOrder[] | null) ?? []);
+    setReturns((r.data as ReturnRequest[] | null) ?? []);
+    setMeasurements((m.data as Measurement[] | null) ?? []);
+    setWishlistIds(new Set(((w.data ?? []) as { product_id: string }[]).map((x) => x.product_id)));
+    type RecRow = { id: string; slug: string; name: string; subtitle: string; price: number; product_images: { url: string; position: number }[] };
+    setRecommended(
+      ((rec.data ?? []) as RecRow[]).map((row) => ({
+        id: row.id,
+        slug: row.slug,
+        name: row.name,
+        subtitle: row.subtitle,
+        price: row.price,
+        image_url: [...(row.product_images ?? [])].sort((x, y) => x.position - y.position)[0]?.url ?? null,
+      })),
+    );
   }, [db, userId]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  function goTab(t: Tab) {
+    setTab(t);
+    router.replace(`/account?tab=${t}`, { scroll: false });
+  }
+
   async function signOut() {
     await db.auth.signOut();
     router.refresh();
   }
 
-  const tabs: [Tab, string][] = [["orders", "My orders"], ["addresses", "Addresses"], ["profile", "Profile"]];
   return (
-    <div className="mx-auto max-w-[1000px] px-5 py-8 md:px-10 md:py-12">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="eyebrow">My account</p>
-          <h1 className="mt-2 font-display text-3xl text-ivory md:text-4xl">Hello{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}</h1>
+    <div className="mx-auto grid max-w-[1320px] gap-8 px-5 py-8 md:grid-cols-[220px_1fr] md:px-10 md:py-12">
+      <aside className="md:sticky md:top-24 md:self-start">
+        <div className="mb-6 hidden md:block">
+          <p className="eyebrow">My Account</p>
         </div>
-        <div className="flex gap-3">
+        <nav role="tablist" aria-label="Account sections" className="flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
+          {TABS.map(([k, t]) => (
+            <button
+              key={k}
+              role="tab"
+              aria-selected={tab === k}
+              onClick={() => goTab(k)}
+              className={`shrink-0 rounded-full px-4 py-2.5 text-left text-[0.78rem] uppercase tracking-[0.16em] transition-colors md:rounded-xl ${tab === k ? "bg-gold text-noir" : "text-ivory/70 hover:bg-gold/10 hover:text-ivory"}`}
+            >
+              {t}
+              {k === "orders" && orders ? ` (${orders.length})` : ""}
+            </button>
+          ))}
+        </nav>
+        <button type="button" onClick={signOut} className={`${ghost} mt-4 w-full md:mt-6`}>Sign out</button>
+      </aside>
+
+      <div>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">{TABS.find(([k]) => k === tab)?.[1]}</p>
+            <h1 className="mt-2 font-display text-3xl text-ivory md:text-4xl">Hello{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}</h1>
+          </div>
           <Link href="/shop" className={btn}>Shop &amp; order</Link>
-          <button type="button" onClick={signOut} className={ghost}>Sign out</button>
         </div>
+        {loadError && <p role="alert" className="mt-6 rounded-lg border border-burgundy bg-burgundy/30 px-4 py-3 text-sm text-ivory">{loadError}</p>}
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="mt-7">
+            {tab === "overview" && (
+              <Overview db={db} userId={userId} orders={orders} returns={returns} measurements={measurements} recommended={recommended} wishlistIds={wishlistIds} onTab={goTab} reload={load} />
+            )}
+            {tab === "orders" && <Orders orders={orders} />}
+            {tab === "returns" && <Returns db={db} orders={orders} returns={returns} reload={load} />}
+            {tab === "wishlist" && <Wishlist db={db} userId={userId} items={recommended.filter((p) => wishlistIds.has(p.id))} reload={load} />}
+            {tab === "measurements" && <Measurements db={db} userId={userId} rows={measurements} reload={load} />}
+            {tab === "addresses" && <Addresses db={db} userId={userId} profile={profile} addresses={addresses} reload={load} />}
+            {tab === "profile" && <Profile db={db} profile={profile} reload={load} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
-      <div role="tablist" className="mt-7 flex gap-2 overflow-x-auto border-b border-gold/15 pb-px">
-        {tabs.map(([k, t]) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`-mb-px shrink-0 border-b-2 px-4 py-3 text-[0.78rem] uppercase tracking-[0.2em] transition-colors ${tab === k ? "border-gold text-gold" : "border-transparent text-ivory/65 hover:text-ivory"}`}>
-            {t}
-            {k === "orders" && orders ? ` (${orders.length})` : ""}
-          </button>
-        ))}
-      </div>
-      {loadError && <p role="alert" className="mt-6 rounded-lg border border-burgundy bg-burgundy/30 px-4 py-3 text-sm text-ivory">{loadError}</p>}
-      <AnimatePresence mode="wait">
-        <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="mt-7">
-          {tab === "orders" && <Orders orders={orders} />}
-          {tab === "addresses" && <Addresses db={db} userId={userId} profile={profile} addresses={addresses} reload={load} />}
-          {tab === "profile" && <Profile db={db} profile={profile} reload={load} />}
-        </motion.div>
-      </AnimatePresence>
     </div>
   );
 }

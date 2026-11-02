@@ -64,6 +64,53 @@ export function statusLabel(o: Pick<MyOrder, "status" | "payment_method" | "preo
   return ORDER_STEPS[orderStage(o.status)] ?? o.status;
 }
 
+export type Measurement = {
+  id: string;
+  label: string;
+  bust: string;
+  waist: string;
+  hip: string;
+  shoulder: string;
+  blouse_length: string;
+  sleeve_length: string;
+  notes: string;
+};
+
+export type ReturnRequest = {
+  id: string;
+  order_no: string;
+  reason: string;
+  preference: "refund" | "replacement";
+  status: "requested" | "approved" | "pickup_scheduled" | "in_transit" | "quality_check" | "refunded" | "replaced" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
+
+export const RETURN_STEPS = ["Requested", "Approved", "Pickup scheduled", "In transit", "Quality check", "Refunded / Replaced"] as const;
+
+/** Which stage a return request is at (index into RETURN_STEPS), or -1 when rejected. */
+export function returnStage(status: ReturnRequest["status"]): number {
+  switch (status) {
+    case "requested":
+      return 0;
+    case "approved":
+      return 1;
+    case "pickup_scheduled":
+      return 2;
+    case "in_transit":
+      return 3;
+    case "quality_check":
+      return 4;
+    case "refunded":
+    case "replaced":
+      return 5;
+    default:
+      return -1;
+  }
+}
+
+export type RecommendedProduct = { id: string; slug: string; name: string; subtitle: string; price: number; image_url: string | null };
+
 /** Only a path on this site may be used as a post-login destination. */
 export function safeNext(value: string | null | undefined): string {
   return value && value.startsWith("/") && !value.startsWith("//") ? value : "/account";
