@@ -17,7 +17,7 @@ export function ProductGallery({ product }: { product: Product }) {
   const ratio = img?.width && img?.height ? img.width / img.height : 4 / 5;
   return (
     <div>
-      <div className="relative overflow-hidden rounded-2xl border border-gold/30 bg-noir-soft p-1.5">
+      <div className="relative mx-auto overflow-hidden rounded-2xl border border-gold/30 bg-noir-soft p-1.5" style={{ width: `min(100%, calc(76svh * ${ratio}))` }}>
         <div className="relative overflow-hidden rounded-xl bg-noir" style={{ aspectRatio: String(ratio) }}>
           <AnimatePresence mode="wait">
             {img ? (
@@ -31,14 +31,14 @@ export function ProductGallery({ product }: { product: Product }) {
         </div>
       </div>
       {product.images.length > 1 && (
-        <ul className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <ul className="mt-2 flex justify-center gap-2 overflow-x-auto pb-1">
           {product.images.map((im, i) => (
             <li key={im.id} className="shrink-0">
               <button
                 type="button"
                 onClick={() => setActive(i)}
                 aria-label={`Photo ${i + 1}`}
-                className={`relative block h-20 w-20 overflow-hidden rounded-lg border transition-colors md:h-24 md:w-24 ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}
+                className={`relative block h-14 w-14 overflow-hidden rounded-lg border transition-colors md:h-16 md:w-16 ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}
               >
                 <Image src={im.url} alt="" fill sizes="96px" className="object-cover" />
               </button>
@@ -115,7 +115,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
   const enquiry = `Hi SAVLINO, I'm interested in "${product.name}"${color ? ` in ${color}` : ""}${size ? `, size ${size}` : ""}.`;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-5">
       {product.colors.length > 0 && (
         <fieldset>
           <legend className="text-[0.62rem] uppercase tracking-[0.28em] text-ivory/55">
