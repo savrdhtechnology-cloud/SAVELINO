@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Fragment, type CSSProperties } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, getSessionContext, isStaffRole } from "@/lib/supabase/server";
-import { MEASURE_FIELDS } from "@/components/designlab/data";
+import { MEASURE_FIELDS } from "@/lib/designlab/fields";
 import { PrintButton } from "../PrintButton";
 
 export const dynamic = "force-dynamic";
