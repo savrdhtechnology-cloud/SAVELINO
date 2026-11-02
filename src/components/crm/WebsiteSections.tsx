@@ -1,11 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { SHOWCASE_EFFECTS, SHOWCASE_EFFECT_PRESETS, type ShowcaseEffectId, type SignatureTileLink, type SiteSettings } from "@/lib/settings";
 import type { Category, Product } from "@/lib/data/types";
 import { ShowcaseImageStudio } from "./ShowcaseImageStudio";
 import { SignatureGalleryStudio } from "./SignatureGalleryStudio";
-import { fetchCategories, fetchProducts, fetchSettings, saveSettings, useLoad } from "./data";
+import { fetchCategories, fetchProducts, fetchSettings, saveSettings, uploadMedia, useLoad } from "./data";
 import { Field, Icon, ICONS, PageHeader, Panel, Select, Skeleton, toast } from "./ui";
 
 /** One management page for every homepage section that shows a product or photo: which product, which
@@ -56,6 +57,25 @@ function Editor({ initial, categories, products }: { initial: SiteSettings; cate
 
   const setSignatureLink = (index: number, patch: Partial<SignatureTileLink>) =>
     setS((x) => ({ ...x, signatureLinks: x.signatureLinks.map((link, i) => (i === index ? { ...link, ...patch } : link)) }));
+
+  const [uploadingExtra, setUploadingExtra] = useState<string | null>(null);
+  async function uploadExtraImage(cardIndex: number, slot: number, file: File) {
+    if (!file.type.startsWith("image/")) { toast("Choose an image file", "error"); return; }
+    if (file.size > 15 * 1024 * 1024) { toast("Maximum file size is 15 MB", "error"); return; }
+    const key = `${cardIndex}-${slot}`;
+    setUploadingExtra(key);
+    try {
+      const result = await uploadMedia("signature-gallery", file);
+      const current = s.signatureLinks[cardIndex].images ?? [];
+      const next = [...current];
+      next[slot] = result.url;
+      setSignatureLink(cardIndex, { images: next });
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Image upload failed", "error");
+    } finally {
+      setUploadingExtra(null);
+    }
+  }
 
   return (
     <div className="space-y-6 pb-24">
@@ -134,10 +154,58 @@ function Editor({ initial, categories, products }: { initial: SiteSettings; cate
                   ))}
                 </Select>
                 {link.productId && (
-                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <Field label="Title (optional)" placeholder={product?.name ?? ""} value={link.title} onChange={(e) => setSignatureLink(i, { title: e.target.value })} />
-                    <Field label="Caption (optional)" placeholder={product?.subtitle || "From the catalogue"} value={link.note} onChange={(e) => setSignatureLink(i, { note: e.target.value })} />
-                  </div>
+                  <>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <Field label="Title (optional)" placeholder={product?.name ?? ""} value={link.title} onChange={(e) => setSignatureLink(i, { title: e.target.value })} />
+                      <Field label="Caption (optional)" placeholder={product?.subtitle || "From the catalogue"} value={link.note} onChange={(e) => setSignatureLink(i, { note: e.target.value })} />
+                    </div>
+                    <div className="mt-3">
+                      <span className="text-[0.7rem] crm-muted">Up to 3 photos — add 2 or more and the card gently cross-fades between them on the website</span>
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        {Array.from({ length: 3 }, (_, slot) => (link.images ?? [])[slot] || "").map((url, slot) => {
+                          const key = `${i}-${slot}`;
+                          return (
+                            <div key={slot} className="rounded-lg border p-1.5" style={{ borderColor: "var(--crm-border-soft)" }}>
+                              <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-black/20">
+                                {url ? (
+                                  <Image src={url} alt={`Photo ${slot + 1}`} fill sizes="150px" unoptimized className="object-cover" />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-center text-[0.6rem] opacity-60">Empty</div>
+                                )}
+                              </div>
+                              <label className="crm-chip mt-1.5 block cursor-pointer text-center text-[0.65rem]">
+                                {uploadingExtra === key ? "Uploading…" : url ? "Replace" : "Add"}
+                                <input
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/webp"
+                                  className="sr-only"
+                                  disabled={uploadingExtra !== null}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    e.target.value = "";
+                                    if (file) void uploadExtraImage(i, slot, file);
+                                  }}
+                                />
+                              </label>
+                              {url && (
+                                <button
+                                  type="button"
+                                  className="crm-chip mt-1 block w-full text-center text-[0.65rem]"
+                                  onClick={() => {
+                                    const next = [...(link.images ?? [])];
+                                    next[slot] = "";
+                                    setSignatureLink(i, { images: next });
+                                  }}
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             );

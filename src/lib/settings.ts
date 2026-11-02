@@ -158,8 +158,10 @@ export type SignatureTileLink = {
   title: string;
   /** Overrides the product subtitle / static tile note when set. */
   note: string;
+  /** Up to 3 extra photos for this product — when there are 2 or more, the card gently cross-fades between them. */
+  images: string[];
 };
-export const DEFAULT_SIGNATURE_LINKS: SignatureTileLink[] = Array.from({ length: 6 }, () => ({ productId: "", title: "", note: "" }));
+export const DEFAULT_SIGNATURE_LINKS: SignatureTileLink[] = Array.from({ length: 6 }, () => ({ productId: "", title: "", note: "", images: [] }));
 
 export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -419,11 +421,13 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (Array.isArray(storedSignatureLinks)) {
     out.signatureLinks = Array.from({ length: 6 }, (_, i) => {
       const raw = storedSignatureLinks[i];
-      if (!isObj(raw)) return { productId: "", title: "", note: "" };
+      if (!isObj(raw)) return { productId: "", title: "", note: "", images: [] };
+      const rawImages = raw.images;
       return {
         productId: typeof raw.productId === "string" ? raw.productId : "",
         title: typeof raw.title === "string" ? raw.title : "",
         note: typeof raw.note === "string" ? raw.note : "",
+        images: Array.isArray(rawImages) ? rawImages.filter((u): u is string => typeof u === "string" && /^https:\/\//.test(u)).slice(0, 3) : [],
       };
     });
   }

@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageReveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { MotionCard } from "@/components/site/Motion";
@@ -22,7 +22,7 @@ const tiles: Tile[] = [
   { img: images.lingerie, title: "Bordeaux Lace", note: "Lingerie", href: "/collections/lingerie" },
 ];
 
-type ResolvedTile = Tile & { price?: number; isProduct: boolean };
+type ResolvedTile = Tile & { imgs: (StaticImageData | string)[]; price?: number; isProduct: boolean };
 
 export function SignatureGallery({
   enabled,
@@ -43,9 +43,12 @@ export function SignatureGallery({
     const product = link?.productId ? byId.get(link.productId) : undefined;
     if (product) {
       const { cover } = productCover(product.images);
+      const extra = (link.images ?? []).filter(Boolean);
+      const mainImg = images[index] || cover?.url || tile.img;
       return {
         ...tile,
-        img: images[index] || cover?.url || tile.img,
+        img: mainImg,
+        imgs: extra.length >= 2 ? extra : [mainImg],
         title: link.title || product.name,
         note: link.note || product.subtitle || "From the catalogue",
         href: `/shop/${product.slug}`,
@@ -53,7 +56,8 @@ export function SignatureGallery({
         isProduct: true,
       };
     }
-    return { ...tile, img: images[index] || tile.img, isProduct: false };
+    const soloImg = images[index] || tile.img;
+    return { ...tile, img: soloImg, imgs: [soloImg], isProduct: false };
   });
   const visible = enabled ? customized.filter((t) => t.isProduct || enabled.includes(t.href.replace("/collections/", ""))) : customized;
   if (visible.length === 0) return null;
@@ -77,13 +81,7 @@ export function SignatureGallery({
                 </Link>
                 <div className="pointer-events-none">
                   <ImageReveal delay={(i % 3) * 0.12} className={t.tall ? "aspect-[3/4.4]" : "aspect-[3/3.6]"}>
-                    <Image
-                      src={t.img}
-                      alt={`${t.title} — ${t.note}`}
-                      fill
-                      sizes="(min-width: 768px) 30vw, 48vw"
-                      className={`object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.07] ${t.pos ?? "object-top"}`}
-                    />
+                    <CyclingImage images={t.imgs} alt={`${t.title} — ${t.note}`} className={`object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.07] ${t.pos ?? "object-top"}`} />
                   </ImageReveal>
                   <div className="absolute inset-0 bg-gradient-to-t from-noir/85 via-noir/10 to-transparent opacity-80 transition-opacity duration-700 group-hover:opacity-100" />
                   <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 transition-transform duration-700 group-hover:translate-y-0 md:p-6">
@@ -107,6 +105,30 @@ export function SignatureGallery({
         </div>
       </div>
     </section>
+  );
+}
+
+/** A single photo, or — when a card has 2–3 photos — a slow cross-fade between them. */
+function CyclingImage({ images: imgs, alt, className }: { images: (StaticImageData | string)[]; alt: string; className: string }) {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    if (imgs.length < 2) return;
+    const id = setInterval(() => setActive((n) => (n + 1) % imgs.length), 3200);
+    return () => clearInterval(id);
+  }, [imgs.length]);
+  return (
+    <>
+      {imgs.map((src, i) => (
+        <Image
+          key={typeof src === "string" ? src : i}
+          src={src}
+          alt={alt}
+          fill
+          sizes="(min-width: 768px) 30vw, 48vw"
+          className={`${className} transition-opacity duration-[1100ms] ${i === active ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
+    </>
   );
 }
 
