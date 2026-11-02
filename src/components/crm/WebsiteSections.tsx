@@ -133,6 +133,30 @@ function Editor({ initial, categories, products }: { initial: SiteSettings; cate
         </div>
       </Panel>
 
+      <Panel title="Featured Products — Homepage Listing" icon={ICONS.products} subtitle="Choose products to show in the separate Featured Products section. Move them up or down to control the order.">
+        <p className="mb-3 text-xs crm-muted">Only selected live or Coming soon products appear here. Signature Gallery stays independent.</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {products.filter((p) => p.status === "live" || p.status === "upcoming").map((p) => {
+            const at = s.featuredProductIds.indexOf(p.id);
+            const selected = at >= 0;
+            return <div key={p.id} className="crm-panel-soft flex items-center justify-between gap-2 rounded-lg p-2">
+              <label className="flex min-w-0 items-center gap-2 text-sm">
+                <input type="checkbox" checked={selected} onChange={() => {
+                  setS((x) => ({ ...x, featuredProductIds: selected ? x.featuredProductIds.filter((id) => id !== p.id) : [...x.featuredProductIds, p.id].slice(0, 12) }));
+                }} />
+                <span className="truncate">{p.name}</span>
+              </label>
+              {selected && <div className="flex shrink-0 gap-1">
+                <button type="button" className="crm-chip" disabled={at === 0} aria-label={`Move ${p.name} up`} onClick={() => setS((x) => { const a = [...x.featuredProductIds]; const i = a.indexOf(p.id); if (i > 0) [a[i-1], a[i]] = [a[i], a[i-1]]; return { ...x, featuredProductIds: a }; })}>↑</button>
+                <button type="button" className="crm-chip" disabled={at === s.featuredProductIds.length - 1} aria-label={`Move ${p.name} down`} onClick={() => setS((x) => { const a = [...x.featuredProductIds]; const i = a.indexOf(p.id); if (i >= 0 && i < a.length - 1) [a[i+1], a[i]] = [a[i], a[i+1]]; return { ...x, featuredProductIds: a }; })}>↓</button>
+              </div>}
+            </div>;
+          })}
+        </div>
+        <p className="mt-3 text-xs crm-muted">Selected: {s.featuredProductIds.length}/12</p>
+        <button type="button" disabled={busy || !dirty} onClick={() => void publish(s)} className="crm-btn crm-btn-gold mt-3">{busy ? "Publishing…" : "Publish Featured Products"}</button>
+      </Panel>
+
       <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => void publish({ ...s, signatureImages })} />
 
       <Panel title="Memories — product links" icon={ICONS.products} subtitle="Link each Memories card to a real product so it shows live price, and “Shop this piece” goes straight to checkout">
