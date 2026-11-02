@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { MotionCard } from "@/components/site/Motion";
 import { images } from "@/lib/collections";
 
-type Tile = { img: StaticImageData; title: string; note: string; href: string; tall?: boolean; pos?: string };
+type Tile = { img: StaticImageData | string; title: string; note: string; href: string; tall?: boolean; pos?: string };
 
 const tiles: Tile[] = [
   { img: images.heritage, title: "Noir & Gold", note: "Signature drape", href: "/collections/sarees", tall: true, pos: "object-left" },
@@ -16,8 +16,9 @@ const tiles: Tile[] = [
   { img: images.lingerie, title: "Bordeaux Lace", note: "Lingerie", href: "/collections/lingerie" },
 ];
 
-export function SignatureGallery({ enabled }: { enabled?: string[] }) {
-  const visible = enabled ? tiles.filter((t) => enabled.includes(t.href.replace("/collections/", ""))) : tiles;
+export function SignatureGallery({ enabled, images = [] }: { enabled?: string[]; images?: string[] }) {
+  const customized = tiles.map((tile, index) => ({ ...tile, img: images[index] || tile.img }));
+  const visible = enabled ? customized.filter((t) => enabled.includes(t.href.replace("/collections/", ""))) : customized;
   if (visible.length === 0) return null;
   return (
     <section id="signature" aria-label="Signature collection gallery" className="relative bg-noir-soft py-24 md:py-36">
@@ -43,8 +44,7 @@ export function SignatureGallery({ enabled }: { enabled?: string[] }) {
                     alt={`${t.title} — ${t.note}`}
                     fill
                     sizes="(min-width: 768px) 30vw, 48vw"
-                    placeholder="blur"
-                    className={`object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.07] ${t.pos ?? "object-top"}`}
+                                        className={`object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.07] ${t.pos ?? "object-top"}`}
                   />
                 </ImageReveal>
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-noir/85 via-noir/10 to-transparent opacity-80 transition-opacity duration-700 group-hover:opacity-100" />
