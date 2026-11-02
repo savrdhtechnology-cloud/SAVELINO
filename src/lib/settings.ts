@@ -371,9 +371,10 @@ export function mergeSettings(stored: unknown): SiteSettings {
     }
     if (list.length) out.hero.slides = list;
   }
-  if (Array.isArray(src.showcaseImages)) {
+  const storedShowcaseImages = src.showcaseImages;
+  if (Array.isArray(storedShowcaseImages)) {
     out.showcaseImages = Array.from({ length: 6 }, (_, i) => {
-      const url = src.showcaseImages[i];
+      const url: unknown = storedShowcaseImages[i];
       return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
     });
   }
