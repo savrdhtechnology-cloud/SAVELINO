@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { inr, type Product } from "@/lib/data/types";
+import { MotionCard } from "@/components/site/Motion";
 
 /** Product tile styled after the SAVLINO product creatives: framed photo, colour dots, size chips and a Shop Now pill. */
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
@@ -10,6 +11,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
   const fit = product.generated ? "50% 50%" : "28% 50%";
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
   return (
+    <MotionCard>
     <Link href={`/shop/${product.slug}`} className="group block">
       <div className="relative overflow-hidden rounded-2xl border border-gold/30 bg-noir-soft p-1.5 transition-colors duration-500 group-hover:border-gold/70">
         <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-noir">
@@ -67,6 +69,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         </div>
       </div>
     </Link>
+    </MotionCard>
   );
 }
 

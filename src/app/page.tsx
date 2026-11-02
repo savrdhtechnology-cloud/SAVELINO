@@ -17,6 +17,7 @@ import { site } from "@/lib/site";
 import { resolveCategories } from "@/lib/catalogue";
 import { ShopSection } from "@/components/sections/ShopSection";
 import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { MotionStyleProvider } from "@/components/site/Motion";
 
 export default async function Home() {
   const settings = await getSiteSettings();
@@ -64,14 +65,16 @@ export default async function Home() {
   return (
     <>
       <SiteHeader />
-      <main id="main">
-        <Hero content={settings.hero} />
-        {settings.sections
-          .filter((sec) => sec.visible)
-          .map((sec) => (
-            <Fragment key={sec.id}>{SECTIONS[sec.id]}</Fragment>
-          ))}
-      </main>
+      <MotionStyleProvider style={settings.effects.motion}>
+        <main id="main">
+          <Hero content={settings.hero} />
+          {settings.sections
+            .filter((sec) => sec.visible)
+            .map((sec) => (
+              <Fragment key={sec.id}>{SECTIONS[sec.id]}</Fragment>
+            ))}
+        </main>
+      </MotionStyleProvider>
       <SiteFooter />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>

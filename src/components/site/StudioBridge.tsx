@@ -4,12 +4,14 @@ import { useEffect } from "react";
 import { ALL_FONT_KEYS, googleFontsHref } from "@/lib/fonts";
 import type { EffectsConfig } from "./Effects";
 import { EFFECTS_PREVIEW_EVENT } from "./SiteEffects";
+import { MOTION_PREVIEW_EVENT, MOTION_STYLES, type MotionStyle } from "./Motion";
 
 type Msg =
   | { type: "savlino:studio:vars"; vars: Record<string, string> }
   | { type: "savlino:studio:text"; key: string; value: string }
   | { type: "savlino:studio:mode"; mode: "dark" | "light" | "porcelain" }
   | { type: "savlino:studio:effects"; effects: EffectsConfig }
+  | { type: "savlino:studio:motion"; motion: MotionStyle }
   | { type: "savlino:studio:hero"; hero: Record<string, unknown> };
 
 /** Unsaved hero look (preset, height, light) sent from the CRM Appearance Studio. */
@@ -43,6 +45,8 @@ export function StudioBridge() {
         if (["dark", "light", "porcelain"].includes(e.data.mode)) document.documentElement.setAttribute("data-theme", e.data.mode);
       } else if (e.data.type === "savlino:studio:effects") {
         window.dispatchEvent(new CustomEvent(EFFECTS_PREVIEW_EVENT, { detail: e.data.effects }));
+      } else if (e.data.type === "savlino:studio:motion") {
+        if (MOTION_STYLES.includes(e.data.motion)) window.dispatchEvent(new CustomEvent(MOTION_PREVIEW_EVENT, { detail: e.data.motion }));
       } else if (e.data.type === "savlino:studio:hero") {
         window.dispatchEvent(new CustomEvent(HERO_PREVIEW_EVENT, { detail: e.data.hero }));
       } else if (e.data.type === "savlino:studio:text") {

@@ -18,6 +18,9 @@ import {
   CURSOR_EFFECT_LABELS,
   DEFAULT_PALETTES,
   EFFECT_INTENSITIES,
+  MOTION_STYLES,
+  MOTION_STYLE_LABELS,
+  type MotionStyle,
   SECTION_LABELS,
   THEME_LABELS,
   THEME_MODES,
@@ -137,6 +140,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
       },
     });
     post({ type: "savlino:studio:effects", effects: s.effects });
+    post({ type: "savlino:studio:motion", motion: s.effects.motion });
     post({ type: "savlino:studio:hero", hero: { preset: s.hero.preset, height: s.hero.height, spotlight: s.hero.spotlight } });
     post({ type: "savlino:studio:text", key: "hero-eyebrow", value: s.hero.eyebrow });
     post({ type: "savlino:studio:text", key: "hero-title", value: s.hero.title });
@@ -315,6 +319,30 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
       </Panel>
 
       <Panel title="Motion & mouse" icon={ICONS.sparkle} subtitle="Website background motion and pointer effect">
+        <p className="crm-label">Page animation theme</p>
+        <p className="mb-2 text-xs crm-muted">Controls the scroll text reveals and the card hover lift/tilt/glow across the whole site. Default for every visitor.</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {MOTION_STYLES.map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => patch("effects", { motion: k as MotionStyle })}
+              className="crm-panel-soft rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5"
+              style={{ borderColor: s.effects.motion === k ? "var(--crm-accent)" : "var(--crm-border-soft)", boxShadow: s.effects.motion === k ? "0 0 0 1px var(--crm-accent)" : undefined }}
+            >
+              <span className="flex items-center justify-between">
+                <span className="text-sm font-medium">{MOTION_STYLE_LABELS[k].split(" — ")[0]}</span>
+                {s.effects.motion === k && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "var(--crm-accent)" }}>
+                    <Icon d={ICONS.check} className="h-3 w-3 text-black" />
+                  </span>
+                )}
+              </span>
+              <span className="mt-1 block text-[0.72rem] crm-muted">{MOTION_STYLE_LABELS[k].split(" — ")[1] ?? ""}</span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-5 crm-label">Background &amp; pointer</p>
         <EffectGrid options={BG_EFFECTS.map((k) => [k, BG_EFFECT_LABELS[k]] as const)} value={s.effects.background} onChange={(v) => patch("effects", { background: v as BgEffect })} />
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-sm crm-muted">Intensity</span>

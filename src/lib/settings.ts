@@ -78,6 +78,15 @@ export const CURSOR_EFFECT_LABELS: Record<CursorEffect, { label: string; note: s
 export const EFFECT_INTENSITIES = ["subtle", "medium", "bold"] as const;
 export type EffectIntensity = (typeof EFFECT_INTENSITIES)[number];
 
+/** "still" = no animation. "reveal" = fade/rise text + sections on scroll. "cinematic" = reveal + card hover lift/tilt/glow. */
+export const MOTION_STYLES = ["still", "reveal", "cinematic"] as const;
+export type MotionStyle = (typeof MOTION_STYLES)[number];
+export const MOTION_STYLE_LABELS: Record<MotionStyle, string> = {
+  still: "Still — no animation",
+  reveal: "Reveal — text & sections fade in on scroll",
+  cinematic: "Cinematic — reveal + card hover lift, tilt & glow",
+};
+
 /** CRM looks: "luxe" = maroon silk & gold (signature), "royal" = black & gold, "ivory" = light ivory & gold. */
 export const CRM_THEMES = ["luxe", "royal", "ivory"] as const;
 export type CrmTheme = (typeof CRM_THEMES)[number];
@@ -152,6 +161,8 @@ export type SiteSettings = {
     cursor: CursorEffect;
     /** Also show background motion on phones. */
     mobile: boolean;
+    /** Scroll-reveal text animation + card hover effects across the website. */
+    motion: MotionStyle;
   };
   seo: { title: string; description: string };
   hero: {
@@ -203,7 +214,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     porcelain: { ...PORCELAIN_PALETTE },
   },
   crm: { theme: "luxe", headingFont: "cinzel", bodyFont: "manrope", background: "none", cursor: "default" },
-  effects: { background: "none", intensity: "subtle", cursor: "default", mobile: false },
+  effects: { background: "none", intensity: "subtle", cursor: "default", mobile: false, motion: "cinematic" },
   seo: {
     title: "SAVLINO — Designer Blouses | A Legacy of Elegance",
     description: "Designer blouses and sarees, finished by hand. Choose your colour and size — delivered across India.",
@@ -265,6 +276,7 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!BG_EFFECTS.includes(out.effects.background)) out.effects.background = "none";
   if (!CURSOR_EFFECTS.includes(out.effects.cursor)) out.effects.cursor = "default";
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
+  if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];
