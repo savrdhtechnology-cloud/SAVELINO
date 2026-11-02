@@ -245,7 +245,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
     <>
       <Panel title="Products & photos per section" icon={ICONS.image} subtitle="Showcase ring, Memories gallery, Designer Blouses and Ready-Made now live in their own module">
         <p className="text-xs crm-muted">
-          Which product each homepage section features, its photos, and the 3D showcase's rotation style have moved to <strong className="text-ivory">Website Sections</strong> (left sidebar) — one place to manage every section across the site.
+          Which product each homepage section features, its photos, and the 3D showcase’s rotation style have moved to <strong className="text-ivory">Website Sections</strong> (left sidebar) — one place to manage every section across the site.
         </p>
         <Link href="/admin/sections" className="crm-btn crm-btn-gold mt-3 inline-flex">
           Open Website Sections <Icon d={ICONS.arrow} />
