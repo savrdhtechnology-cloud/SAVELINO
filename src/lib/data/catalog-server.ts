@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
+import { mainImageFor } from "./main-images";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import type { Category, Product } from "./types";
 
@@ -44,8 +45,11 @@ const sortImages = (p: Product): Product => {
     return i.kind === "creative" ? 4 : 3;
   };
   const ranked = usable.map((img, idx) => ({ img, idx })).sort((x, y) => rank(x.img) - rank(y.img) || x.idx - y.idx).map((x) => x.img);
-  const gallery = ranked;
-  const images = ranked;
+  const main = mainImageFor(p.slug, p.id);
+  // A hand-picked main image replaces the auto-generated frames for that product.
+  const list = main ? [main, ...ranked.filter((i) => i.kind !== "creative")] : ranked;
+  const gallery = list;
+  const images = list;
   return { ...p, images, gallery, generated: creatives.length > 0 };
 };
 
@@ -62,7 +66,7 @@ export const getVisibleCategories = unstable_cache(
     // Sarees are not on the website for now — they stay in the CRM and come back when this list is emptied.
     return ((data as Category[] | null) ?? []).filter((c) => !HIDDEN_CATEGORY_SLUGS.includes(c.slug));
   },
-  ["visible-categories-v3"],
+  ["visible-categories-v4"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -77,7 +81,7 @@ export const getLiveProducts = unstable_cache(
     if (error) console.error("[catalog] products", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["live-products-v3"],
+  ["live-products-v4"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -89,7 +93,7 @@ export const getLiveProduct = unstable_cache(
     if (error) console.error("[catalog] product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["live-product-v3"],
+  ["live-product-v4"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -102,7 +106,7 @@ export const getUpcomingProducts = unstable_cache(
     if (error) console.error("[catalog] upcoming", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["upcoming-products-v2"],
+  ["upcoming-products-v3"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -114,6 +118,6 @@ export const getUpcomingProduct = unstable_cache(
     if (error) console.error("[catalog] upcoming product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["upcoming-product-v2"],
+  ["upcoming-product-v3"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
