@@ -22,20 +22,12 @@ import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server
 import { MotionStyleProvider } from "@/components/site/Motion";
 import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
 import { productCover, showcaseProduct } from "@/lib/product-image";
-import { CinematicHero, type HeroPhoto } from "@/components/cinema/CinematicHero";
+import { CinematicHero } from "@/components/cinema/CinematicHero";
 import { LuxuryCategoryCarousel } from "@/components/cinema/LuxuryCategoryCarousel";
 import { PerspectiveProductCarousel, type ShowcaseItem } from "@/components/cinema/PerspectiveProductCarousel";
 import { StitchingJourney } from "@/components/cinema/StitchingJourney";
 import { TrustFeatures } from "@/components/cinema/TrustFeatures";
 import type { Product } from "@/lib/data/types";
-
-/** Royal Cinema: the hero photo — the designer-blouse showcase piece, else the newest product with a photo. */
-function cinemaHeroPhoto(products: Product[], categoryId?: string): HeroPhoto | undefined {
-  const p = showcaseProduct(products, categoryId) ?? products.find((x) => x.images.length > 0);
-  if (!p) return undefined;
-  const { cover, fit } = productCover(p.images);
-  return cover ? { url: cover.url, alt: p.name, fit, href: `/shop/${p.slug}`, name: p.name } : undefined;
-}
 
 function showcaseItems(products: Product[]): ShowcaseItem[] {
   return products.slice(0, 9).map((p) => {
@@ -126,7 +118,7 @@ export default async function Home({ searchParams }: Props) {
         <main id="main" data-site-theme={siteTheme}>
           {cinema ? (
             <>
-              <CinematicHero content={settings.hero} photo={cinemaHeroPhoto(liveProducts, designerBlousesId)} />
+              <CinematicHero content={settings.hero} />
               <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
               {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}
               <TrustFeatures />

@@ -124,6 +124,35 @@ export const HERO_PRESET_PALETTES: Record<HeroPreset,{background:string;accent:s
   "emerald-court":{background:"#061D18",accent:"#C5B46E",shade:"#106F58"},
   "champagne-atelier":{background:"#473125",accent:"#F1D6A8",shade:"#986E54"}
 };
+/** Royal Cinema hero slider: each slide is its own photograph, copy and colour mood. */
+export const CINEMA_STYLES = ["palace", "noir", "festive", "ivory"] as const;
+export type CinemaStyle = (typeof CINEMA_STYLES)[number];
+export const CINEMA_STYLE_LABELS: Record<CinemaStyle, string> = {
+  palace: "Palace Royal — maroon & candlelight",
+  noir: "Noir Gold — black & spotlight",
+  festive: "Festive — red & marigold",
+  ivory: "Ivory Atelier — champagne & soft light",
+};
+export type CinemaSlide = {
+  /** Uploaded photo URL. Empty = the built-in placeholder photo for this position. */
+  image: string;
+  style: CinemaStyle;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  primaryLabel: string;
+  primaryHref: string;
+  secondaryLabel: string;
+  secondaryHref: string;
+};
+export const MAX_CINEMA_SLIDES = 6;
+export const DEFAULT_CINEMA_SLIDES: CinemaSlide[] = [
+  { image: "", style: "palace", eyebrow: "The SAVLINO Edit", title: "Designer Blouse Collection", subtitle: "Timeless elegance. Perfect fit. Premium craftsmanship.", primaryLabel: "Shop Collection", primaryHref: "/shop", secondaryLabel: "Custom Stitching", secondaryHref: "/custom-stitching" },
+  { image: "", style: "noir", eyebrow: "Evening Couture", title: "Midnight Gold Blouses", subtitle: "Black silk and gold embroidery, made for evenings that are remembered.", primaryLabel: "Shop Collection", primaryHref: "/shop", secondaryLabel: "View Collections", secondaryHref: "/collections" },
+  { image: "", style: "festive", eyebrow: "Festive Luxury", title: "Celebrate Every Tradition", subtitle: "Mirror work, tassels and zari in colours made for your festive wardrobe.", primaryLabel: "Shop Festive", primaryHref: "/shop", secondaryLabel: "Custom Stitching", secondaryHref: "/custom-stitching" },
+  { image: "", style: "ivory", eyebrow: "The Pearl Edit", title: "Soft Pearl Collection", subtitle: "Pearl-scallop sleeves and champagne silks, finished by hand.", primaryLabel: "Shop Collection", primaryHref: "/shop", secondaryLabel: "Our Story", secondaryHref: "/our-story" },
+];
+
 export type SiteSettings = {
   /** The whole-website look (Appearance Studio → Website themes). More looks are added over time. */
   layout: { theme: SiteThemeId };
@@ -191,6 +220,8 @@ export type SiteSettings = {
     primaryHref: string;
     secondaryLabel: string;
     secondaryHref: string;
+    /** Royal Cinema theme only: the hero photo slider. */
+    slides: CinemaSlide[];
   };
   announcement: { enabled: boolean; text: string; href: string };
   sections: { id: SectionId; visible: boolean }[];
@@ -247,6 +278,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     primaryHref: "/shop",
     secondaryLabel: "Custom stitching",
     secondaryHref: "/custom-stitching",
+    slides: DEFAULT_CINEMA_SLIDES,
   },
   announcement: { enabled: false, text: "", href: "" },
   sections: SECTION_IDS.map((id) => ({ id, visible: true })),
@@ -294,6 +326,26 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
   if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
   if (!SITE_THEMES.includes(out.layout.theme)) out.layout.theme = "signature";
+  const rawSlides = isObj(src.hero) && Array.isArray(src.hero.slides) ? src.hero.slides : null;
+  if (rawSlides) {
+    const str = (v: unknown, d: string) => (typeof v === "string" ? v : d);
+    const list = rawSlides.filter(isObj).slice(0, MAX_CINEMA_SLIDES).map((r, i) => {
+      const d = DEFAULT_CINEMA_SLIDES[i % DEFAULT_CINEMA_SLIDES.length];
+      const image = str(r.image, "");
+      return {
+        image: /^https:\/\//.test(image) ? image : "",
+        style: CINEMA_STYLES.includes(r.style as CinemaStyle) ? (r.style as CinemaStyle) : d.style,
+        eyebrow: str(r.eyebrow, d.eyebrow),
+        title: str(r.title, d.title),
+        subtitle: str(r.subtitle, d.subtitle),
+        primaryLabel: str(r.primaryLabel, d.primaryLabel),
+        primaryHref: str(r.primaryHref, d.primaryHref),
+        secondaryLabel: str(r.secondaryLabel, d.secondaryLabel),
+        secondaryHref: str(r.secondaryHref, d.secondaryHref),
+      };
+    });
+    if (list.length) out.hero.slides = list;
+  }
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];

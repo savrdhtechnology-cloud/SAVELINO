@@ -36,6 +36,7 @@ import {
 } from "@/lib/settings";
 import type { Category } from "@/lib/data/types";
 import { CRM_PREVIEW_EVENT } from "./CrmShell";
+import { CinemaSlides } from "./CinemaSlides";
 import { db, fetchCategories, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
 import { CRM_SWATCH } from "./theme";
 import { EASE, Field, ICONS, Icon, PageHeader, Panel, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
@@ -146,7 +147,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
     post({ type: "savlino:studio:effects", effects: s.effects });
     post({ type: "savlino:studio:motion", motion: s.effects.motion });
     post({ type: "savlino:studio:theme", theme: s.layout.theme });
-    post({ type: "savlino:studio:hero", hero: { preset: s.hero.preset, height: s.hero.height, spotlight: s.hero.spotlight } });
+    post({ type: "savlino:studio:hero", hero: { preset: s.hero.preset, height: s.hero.height, spotlight: s.hero.spotlight, slides: s.hero.slides } });
     post({ type: "savlino:studio:text", key: "hero-eyebrow", value: s.hero.eyebrow });
     post({ type: "savlino:studio:text", key: "hero-title", value: s.hero.title });
     post({ type: "savlino:studio:text", key: "hero-subtitle", value: s.hero.subtitle });
@@ -225,6 +226,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
           <Range label="Background light" value={s.hero.spotlight} min={0} max={100} unit="%" onChange={(v) => patch("hero", { spotlight: v })} />
         </div>
       </Panel>
+      <CinemaSlides slides={s.hero.slides} onChange={(slides) => patch("hero", { slides })} />
       <Panel title="Hero text & buttons" icon={ICONS.edit}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Small line" value={s.hero.eyebrow} onChange={(e) => patch("hero", { eyebrow: e.target.value })} />
