@@ -23,7 +23,13 @@ const sortImages = (p: Product): Product => {
   const creatives = all.filter((i) => i.kind === "creative");
   const photos = all.filter((i) => i.kind !== "creative");
   if (!creatives.length) return { ...p, images: photos, generated: false };
-  return { ...p, images: p.creative?.showRaw ? [...creatives, ...photos] : creatives, generated: true };
+  const base = p.creative?.showRaw ? [...creatives, ...photos] : creatives;
+  // A product with only the combined (3:2) creative and no per-photo (4:5) ones has nothing portrait
+  // to show as a grid cover — forcing that wide creative into a 4:5 card crops straight through its
+  // logo and title text. Keep one raw photo in reserve so the card always has a clean portrait cover.
+  const hasPortrait = creatives.some((i) => !i.width || !i.height || i.height >= i.width);
+  const images = hasPortrait || p.creative?.showRaw || !photos.length ? base : [...base, photos[0]];
+  return { ...p, images, generated: true };
 };
 
 /** Visible categories, in CRM order. */

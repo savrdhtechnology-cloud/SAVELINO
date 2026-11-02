@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/Button";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { images } from "@/lib/collections";
+import type { Product } from "@/lib/data/types";
+import { productCover } from "@/lib/product-image";
 
 const sizes = [
   { size: "32", label: "XS" },
@@ -16,7 +18,8 @@ const sizes = [
 
 const promises = ["Graded on standard Indian size patterns", "Seam allowances for easy alteration", "Fabric & care details on every piece"];
 
-export function ReadyMade() {
+export function ReadyMade({ product }: { product?: Product }) {
+  const { cover, fit } = product ? productCover(product.images) : { cover: undefined, fit: "28% 50%" };
   return (
     <section id="ready-made" aria-label="Ready-made standard-size blouses" className="relative overflow-hidden bg-ivory py-24 text-noir md:py-36">
       <div className="mx-auto grid max-w-[1440px] items-center gap-14 px-5 md:px-10 lg:grid-cols-[1fr_0.8fr] lg:gap-24">
@@ -64,19 +67,36 @@ export function ReadyMade() {
           </Reveal>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[460px]">
+        <div className="relative mx-auto w-full max-w-[460px] pb-20 lg:pb-0">
           <ImageReveal className="aspect-[4/5]">
-            <Image
-              src={images.readymade}
-              alt="Burgundy silk ready-made blouse with gold embroidered sweetheart neckline on a dress form"
-              fill
-              sizes="(min-width: 1024px) 460px, 90vw"
-              placeholder="blur"
-              className="object-cover object-top"
-            />
+            {cover ? (
+              <Image
+                src={cover.url}
+                alt={product?.name ?? "Ready-made blouse"}
+                fill
+                sizes="(min-width: 1024px) 460px, 90vw"
+                className="object-cover"
+                style={{ objectPosition: fit }}
+              />
+            ) : (
+              <Image
+                src={images.readymade}
+                alt="Burgundy silk ready-made blouse with gold embroidered sweetheart neckline on a dress form"
+                fill
+                sizes="(min-width: 1024px) 460px, 90vw"
+                placeholder="blur"
+                className="object-cover object-top"
+              />
+            )}
           </ImageReveal>
-          <div aria-hidden className="absolute -left-4 -top-4 h-24 w-24 border-l border-t border-gold" />
-          <div aria-hidden className="absolute -bottom-4 -right-4 h-24 w-24 border-b border-r border-gold" />
+          <div aria-hidden className="pointer-events-none absolute -left-4 -top-4 h-24 w-24 border-l border-t border-gold" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 border-b border-r border-gold" />
+          {product && (
+            <Reveal delay={0.25} className="absolute -bottom-2 left-4 bg-noir px-5 py-4 shadow-xl md:left-8">
+              <p className="eyebrow text-gold-light!">Bestseller</p>
+              <p className="mt-1 max-w-[220px] truncate font-display text-lg italic text-ivory">{product.name}</p>
+            </Reveal>
+          )}
         </div>
       </div>
     </section>

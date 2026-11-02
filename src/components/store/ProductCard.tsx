@@ -2,13 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { inr, type Product } from "@/lib/data/types";
 import { MotionCard } from "@/components/site/Motion";
+import { productCover } from "@/lib/product-image";
 
 /** Product tile styled after the SAVLINO product creatives: framed photo, colour dots, size chips and a Shop Now pill. */
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
-  // Portrait images fill the 4:5 tile best (the single creatives); the wide combined creative is for the product page.
-  const portrait = product.images.filter((i) => !i.width || !i.height || i.height >= i.width);
-  const [cover, second] = portrait.length ? portrait : product.images;
-  const fit = product.generated ? "50% 50%" : "28% 50%";
+  const { cover, second, fit } = productCover(product.images);
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
   return (
     <MotionCard>

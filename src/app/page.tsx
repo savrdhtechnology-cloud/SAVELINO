@@ -20,6 +20,7 @@ import { ShopSection } from "@/components/sections/ShopSection";
 import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { MotionStyleProvider } from "@/components/site/Motion";
 import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
+import { showcaseProduct } from "@/lib/product-image";
 
 type Props = { searchParams?: Promise<{ theme?: string }> };
 
@@ -37,13 +38,19 @@ export default async function Home({ searchParams }: Props) {
   const enabledSet = new Set(enabledSlugs);
   const visibleIds = new Set(enabled.map((c) => c.id));
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
+  const designerBlousesId = enabled.find((c) => c.slug === "designer-blouses")?.id;
+  const readyMadeId = enabled.find((c) => c.slug === "ready-made-blouses")?.id;
 
   const SECTIONS: Record<SectionId, ReactNode> = {
     shop: <ShopSection products={liveProducts} />,
-    "designer-blouses": enabledSet.has("designer-blouses") ? <DesignerBlouses /> : null,
+    "designer-blouses": enabledSet.has("designer-blouses") ? (
+      <DesignerBlouses product={showcaseProduct(liveProducts, designerBlousesId)} />
+    ) : null,
     showcase: <ProductShowcase enabled={enabled} />,
     signature: <SignatureGallery enabled={enabledSlugs} />,
-    "ready-made": enabledSet.has("ready-made-blouses") ? <ReadyMade /> : null,
+    "ready-made": enabledSet.has("ready-made-blouses") ? (
+      <ReadyMade product={showcaseProduct(liveProducts, readyMadeId)} />
+    ) : null,
     "custom-stitching": <CustomStitching />,
     heritage: <Heritage />,
     craftsmanship: <Craftsmanship />,
