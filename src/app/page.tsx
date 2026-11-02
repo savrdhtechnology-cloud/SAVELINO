@@ -18,6 +18,7 @@ import { StatsStrip } from "@/components/sections/StatsStrip";
 import { site } from "@/lib/site";
 import { resolveCategories } from "@/lib/catalogue";
 import { ShopSection } from "@/components/sections/ShopSection";
+import { FeaturedProducts } from "@/components/sections/FeaturedProducts";
 import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { UpcomingSection } from "@/components/sections/UpcomingSection";
 import { MotionStyleProvider } from "@/components/site/Motion";
@@ -65,6 +66,8 @@ export default async function Home({ searchParams }: Props) {
   const visibleIds = new Set(enabled.map((c) => c.id));
   const upcoming = await getUpcomingProducts();
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
+  const featuredPool = new Map([...liveProducts, ...upcoming].map((p) => [p.id, p]));
+  const featured = settings.featuredProductIds.map((id) => featuredPool.get(id)).filter((p): p is Product => Boolean(p));
   const designerBlousesId = enabled.find((c) => c.slug === "designer-blouses")?.id;
   const readyMadeId = enabled.find((c) => c.slug === "ready-made-blouses")?.id;
   // "Website Sections" (CRM) can pin a specific product to these homepage stories; otherwise fall
@@ -123,6 +126,7 @@ export default async function Home({ searchParams }: Props) {
               <CinematicHero content={settings.hero} />
               <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
               <UpcomingSection products={upcoming} />
+              <FeaturedProducts products={featured} />
               {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}
               <TrustFeatures />
               {visibleSections.has("custom-stitching") && <StitchingJourney />}

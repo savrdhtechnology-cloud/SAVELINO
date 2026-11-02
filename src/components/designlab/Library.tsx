@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageHeader, Panel, Skeleton, Empty, Field, Drawer, ICONS, Icon, toast, fmtDate } from "@/components/crm/ui";
-import { db, must, revalidateSite, useLoad } from "@/components/crm/data";
+import { db, must, revalidateSite, fetchSettings, saveSettings, useLoad } from "@/components/crm/data";
 import { BrandButton } from "@/components/crm/BrandButton";
 import { brandProducts } from "@/components/crm/brand";
 import { coverOf, errMsg, fetchDesigns, rpc, sortImages, type DesignStatus, type DlDesign } from "./data";
@@ -48,6 +48,21 @@ export function Library() {
     } catch (e) {
       toast(errMsg(e), "error");
     }
+  };
+
+  const sendToFeatured = async (d: DlDesign) => {
+    if (!d.product_id) return toast("Publish this design as a product first, then send it to Featured Products", "error");
+    try {
+      const rows = must(await db().from("products").select("id, status").eq("id", d.product_id).limit(1)) as { id: string; status: string }[];
+      if (!rows[0] || !["live", "upcoming"].includes(rows[0].status)) {
+        return toast("Only live or Coming soon products can appear in Featured Products", "error");
+      }
+      const settings = await fetchSettings();
+      if (settings.featuredProductIds.includes(d.product_id)) return toast("This product is already in Featured Products");
+      if (settings.featuredProductIds.length >= 12) return toast("Featured Products already has 12 items — remove one in Website Sections", "error");
+      await saveSettings({ ...settings, featuredProductIds: [...settings.featuredProductIds, d.product_id] });
+      toast(`${d.name} sent to Featured Products. Set its position in Website Sections.`);
+    } catch (e) { toast(errMsg(e), "error"); }
   };
 
   const toggle = (id: string) => setPicked((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -174,6 +189,7 @@ export function Library() {
                   {!d.archived && (
                     <button className="crm-btn col-span-2 justify-center" onClick={() => { setPicked(new Set([d.id])); window.scrollTo({ top: 0, behavior: "smooth" }); toast("Enter the price above, then press Publish to website"); }}>Publish to website (Coming soon)</button>
                   )}
+                  {!d.archived && <button className="crm-btn col-span-2 justify-center" onClick={() => void sendToFeatured(d)}>Send to Featured Products</button>}
                   <button className="crm-btn col-span-2 justify-center" onClick={() => archive(d, !d.archived)}>{d.archived ? "Restore" : "Archive"}</button>
                 </div>
               </div>

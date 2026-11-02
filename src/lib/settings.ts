@@ -289,6 +289,8 @@ export type SiteSettings = {
   signatureImages: string[];
   /** Links each Signature Gallery ("Memories") card to a real product — click goes straight to /shop/{slug}. */
   signatureLinks: SignatureTileLink[];
+  /** Curated homepage products, independent of the editorial Signature Gallery. */
+  featuredProductIds: string[];
   /** Pins the Designer Blouses homepage story to a specific product. Empty = the first live product in that category (auto). */
   designerBlousesProductId: string;
   /** Pins the Ready-Made Blouses homepage story to a specific product. Empty = the first live product in that category (auto). */
@@ -354,6 +356,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showcaseEffect: "gentle",
   signatureImages: ["", "", "", "", "", ""],
   signatureLinks: DEFAULT_SIGNATURE_LINKS,
+  featuredProductIds: [],
   designerBlousesProductId: "",
   readyMadeProductId: "",
   announcement: { enabled: false, text: "", href: "" },
@@ -431,6 +434,9 @@ export function mergeSettings(stored: unknown): SiteSettings {
       };
     });
   }
+  out.featuredProductIds = Array.isArray(src.featuredProductIds)
+    ? [...new Set(src.featuredProductIds.filter((v): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v)))].slice(0, 12)
+    : [];
   out.designerBlousesProductId = typeof src.designerBlousesProductId === "string" ? src.designerBlousesProductId : "";
   out.readyMadeProductId = typeof src.readyMadeProductId === "string" ? src.readyMadeProductId : "";
   const rawSlides = isObj(src.hero) && Array.isArray(src.hero.slides) ? src.hero.slides : null;
