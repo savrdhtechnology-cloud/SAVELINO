@@ -1,14 +1,13 @@
 import type { Product, ProductImage } from "@/lib/data/types";
 
 /**
- * Picks the best single cover photo for a product tile: a portrait image fills a 4:5/5:4 frame
- * cleanly, a generated creative is already centred (50/50 crop), a raw photo needs the usual
- * off-centre crop that favours the garment over empty background (28/50).
+ * Cover for a product tile — the first of the ranked images.
  */
 export function productCover(images: ProductImage[]) {
-  const portrait = images.filter((i) => !i.width || !i.height || i.height >= i.width);
-  const [cover, second] = portrait.length ? portrait : images;
-  const fit = cover?.kind === "creative" ? "50% 50%" : "28% 50%";
+  // Images arrive ranked by the catalogue loader (sharp portrait photo → framed creative → rest).
+  const [cover, second] = images;
+  const landscape = !!cover?.width && !!cover?.height && cover.width > cover.height;
+  const fit = cover?.kind === "creative" || landscape ? "50% 50%" : "50% 30%";
   return { cover, second, fit };
 }
 

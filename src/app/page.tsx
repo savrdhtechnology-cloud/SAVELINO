@@ -21,6 +21,7 @@ import { ShopSection } from "@/components/sections/ShopSection";
 import { FeaturedProducts } from "@/components/sections/FeaturedProducts";
 import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { UpcomingSection } from "@/components/sections/UpcomingSection";
+import { StyleTiles } from "@/components/sections/StyleTiles";
 import { MotionStyleProvider } from "@/components/site/Motion";
 import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
 import { productCover, showcaseProduct } from "@/lib/product-image";
@@ -64,7 +65,7 @@ export default async function Home({ searchParams }: Props) {
   const collectionItems = enabled.filter((c) => !(ownSection[c.slug] && visibleSections.has(ownSection[c.slug])));
   const enabledSet = new Set(enabledSlugs);
   const visibleIds = new Set(enabled.map((c) => c.id));
-  const upcoming = await getUpcomingProducts();
+  const upcoming = (await getUpcomingProducts()).filter((p) => !p.category_id || visibleIds.has(p.category_id));
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
   const featuredPool = new Map([...liveProducts, ...upcoming].map((p) => [p.id, p]));
   const featured = settings.featuredProductIds.map((id) => featuredPool.get(id)).filter((p): p is Product => Boolean(p));
@@ -125,6 +126,7 @@ export default async function Home({ searchParams }: Props) {
             <>
               <CinematicHero content={settings.hero} />
               <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
+              <StyleTiles products={liveProducts} eyebrow="Fresh designs, timeless appeal" title="New arrivals" intro="Tap a blouse to see all its photos, colours and sizes." />
               <UpcomingSection products={upcoming} />
               <FeaturedProducts products={featured} />
               {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}

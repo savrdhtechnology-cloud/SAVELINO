@@ -22,7 +22,6 @@ const baseMetadata: Metadata = {
     "custom blouse stitching",
     "ready-made blouses",
     "salwar suits",
-    "sarees",
     "shapewear",
     "lingerie",
     "loungewear",

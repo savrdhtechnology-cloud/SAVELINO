@@ -2,7 +2,7 @@ export const site = {
   name: "SAVLINO",
   tagline: "A Legacy of Elegance",
   description:
-    "SAVLINO — timeless women’s luxury. Designer blouses, custom stitching, salwar suits, sarees, shapewear, lingerie and loungewear, crafted with Indian heritage.",
+    "SAVLINO — timeless women’s luxury. Designer blouses and custom blouse stitching, crafted with Indian heritage.",
   url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:2736").replace(/\/$/, ""),
   logo: {
     lockup: "/branding/savlino-logo-lockup-alpha.png",
