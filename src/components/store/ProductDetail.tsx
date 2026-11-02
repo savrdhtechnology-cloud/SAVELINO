@@ -22,7 +22,7 @@ export function ProductGallery({ product }: { product: Product }) {
           <AnimatePresence mode="wait">
             {img ? (
               <motion.div key={img.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }} className="absolute inset-0">
-                <Image src={img.url} alt={product.name} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-contain" />
+                <Image quality={90} src={img.url} alt={product.name} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-contain" />
               </motion.div>
             ) : (
               <span className="absolute inset-0 flex items-center justify-center font-display text-7xl italic text-gold/25">S</span>
@@ -40,7 +40,7 @@ export function ProductGallery({ product }: { product: Product }) {
                 aria-label={`Photo ${i + 1}`}
                 className={`relative block h-14 w-14 overflow-hidden rounded-lg border transition-colors md:h-16 md:w-16 ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}
               >
-                <Image src={im.url} alt="" fill sizes="96px" className="object-cover" />
+                <Image quality={90} src={im.url} alt="" fill sizes="96px" className="object-cover" />
               </button>
             </li>
           ))}

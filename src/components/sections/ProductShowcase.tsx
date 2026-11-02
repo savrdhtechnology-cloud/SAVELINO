@@ -96,7 +96,7 @@ export function ProductShowcase({ enabled, images = [], effect = "gentle" }: { e
               <li key={c.slug} className="snap-center">
                 <Link href={`/collections/${c.slug}`} className="group block w-[200px] md:w-[210px]">
                   <div className="overflow-hidden border border-gold/40 p-1">
-                    <Image
+                    <Image quality={90}
                       src={images[showcase.indexOf(c)] || c.image}
                       alt={c.title}
                       sizes="210px"

@@ -28,7 +28,7 @@ function Photo({ img, alt, sizes, priority, className, framed }: { img: ProductI
       className={`relative overflow-hidden ${framed ? "rounded-2xl" : "rounded-xl"} ${className ?? ""}`}
       style={framed ? { boxShadow: `0 0 0 2px ${C.cream}, 0 0 0 3.5px ${C.gold}, 0 18px 40px -18px rgba(0,0,0,.6)` } : undefined}
     >
-      <Image src={img.url} alt={alt} fill priority={priority} sizes={sizes} unoptimized={img.url.startsWith("blob:")} className="object-cover" />
+      <Image quality={90} src={img.url} alt={alt} fill priority={priority} sizes={sizes} unoptimized={img.url.startsWith("blob:")} className="object-cover" />
     </div>
   );
 }
@@ -115,7 +115,7 @@ export function ProductCreative({ product, categoryTitle }: { product: Product; 
 
   const logo = (
     <div className="flex flex-col items-start">
-      <Image src={site.logo.lockup} alt={site.name} width={220} height={110} className="h-auto w-[150px] xl:w-[190px]" />
+      <Image quality={90} src={site.logo.lockup} alt={site.name} width={220} height={110} className="h-auto w-[150px] xl:w-[190px]" />
       <span className="mt-1 text-[0.55rem] font-medium uppercase tracking-[0.28em] xl:text-[0.62rem]" style={{ color: C.ivory }}>
         {kicker}
       </span>

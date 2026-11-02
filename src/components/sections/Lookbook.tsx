@@ -114,7 +114,7 @@ export function Lookbook({ enabled }: { enabled?: string[] }) {
           >
             <div className="relative aspect-[3/4] overflow-hidden border border-gold/20">
               <div data-drift className="absolute -inset-x-[8%] inset-y-0">
-                <Image
+                <Image quality={90}
                   src={look.img}
                   alt={`${look.title} — ${look.caption}`}
                   fill

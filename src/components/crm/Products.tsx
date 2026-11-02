@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { inr, slugify, type Category, type Product, type ProductStatus } from "@/lib/data/types";
 import { db, fetchCategories, fetchProducts, must, removeMedia, revalidateSite, useLoad } from "./data";
+import { BrandButton } from "./BrandButton";
 import { Badge, EASE, Empty, ICONS, Icon, Kpi, PageHeader, Panel, Select, Skeleton, Toggle, toast } from "./ui";
 
 const PAGE = 12;
@@ -150,7 +151,7 @@ export function Products({ initialQuery = "", initialStatus = "all" }: { initial
 
   return (
     <div className="space-y-6">
-      <PageHeader section="Products" subtitle="Manage your blouse catalogue and publishing across the shop" />
+      <PageHeader section="Products" subtitle="Manage your blouse catalogue and publishing across the shop" actions={<BrandButton />} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Kpi label="Live Products" value={count("live")} icon={ICONS.products} onClick={() => setStatus("live")} />

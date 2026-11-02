@@ -89,7 +89,7 @@ export default async function ProductPage({ params }: Props) {
         {combo ? (
           <div className="mx-auto mt-14 max-w-[980px] overflow-hidden rounded-2xl border border-gold/30" style={{ aspectRatio: `${combo.width} / ${combo.height}` }}>
             <div className="relative h-full w-full">
-              <Image src={combo.url} alt={`${product.name} — SAVLINO`} fill sizes="(min-width: 1280px) 1200px, 100vw" className="object-cover" />
+              <Image quality={90} src={combo.url} alt={`${product.name} — SAVLINO`} fill sizes="(min-width: 1280px) 1200px, 100vw" className="object-cover" />
             </div>
           </div>
         ) : (

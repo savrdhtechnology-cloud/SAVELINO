@@ -129,7 +129,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
           return (
             <div key={i} className="absolute inset-0 transition-opacity duration-[1400ms] ease-out" style={{ opacity: on ? 1 : 0 }}>
               <motion.div className="absolute inset-0" animate={still ? undefined : { scale: on ? 1.07 : 1 }} transition={{ duration: on ? 9 : 1.4, ease: "linear" }}>
-                <Image src={src} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" style={{ objectPosition: "72% 26%" }} />
+                <Image quality={90} src={src} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" style={{ objectPosition: "72% 26%" }} />
               </motion.div>
             </div>
           );

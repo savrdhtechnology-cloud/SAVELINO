@@ -41,7 +41,7 @@ export function DesignerBlouses({ product }: { product?: Product }) {
           <motion.div style={{ y }} className="relative">
             <ImageReveal className="aspect-[4/5] border border-gold/30 bg-noir-soft">
               {cover ? (
-                <Image
+                <Image quality={90}
                   src={cover.url}
                   alt={product?.name ?? "Designer blouse"}
                   fill
@@ -50,7 +50,7 @@ export function DesignerBlouses({ product }: { product?: Product }) {
                   style={{ objectPosition: fit }}
                 />
               ) : (
-                <Image
+                <Image quality={90}
                   src={images.blouses}
                   alt="Black designer blouse with gold zardozi embroidery and a sculpted back"
                   fill

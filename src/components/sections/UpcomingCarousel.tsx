@@ -37,7 +37,7 @@ export function UpcomingCarousel({ items }: { items: UpcomingItem[] }) {
             <Link href={`/shop/${p.slug}`} className="group block rounded-[1.6rem] border border-gold/25 bg-noir/60 p-2 transition-[transform,border-color] duration-500 hover:-translate-y-1 hover:border-gold/60">
               <div className="relative aspect-[4/5] overflow-hidden rounded-[1.2rem] bg-noir">
                 {p.image ? (
-                  <Image src={p.image.url} alt={p.name} fill sizes="320px" className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" style={{ objectPosition: p.image.fit }} />
+                  <Image quality={90} src={p.image.url} alt={p.name} fill sizes="320px" className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" style={{ objectPosition: p.image.fit }} />
                 ) : (
                   <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
                 )}
