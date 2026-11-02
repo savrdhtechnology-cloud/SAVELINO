@@ -409,7 +409,7 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (Array.isArray(storedShowcaseImages)) {
     out.showcaseImages = Array.from({ length: 6 }, (_, i) => {
       const url: unknown = storedShowcaseImages[i];
-      return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
+      return typeof url === "string" && /^(https:\/\/|\/)/.test(url) ? url : "";
     });
   }
   out.showcaseEffect = SHOWCASE_EFFECTS.includes(src.showcaseEffect as ShowcaseEffectId) ? (src.showcaseEffect as ShowcaseEffectId) : "gentle";
