@@ -1,72 +1,44 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { collections } from "@/lib/collections";
 import type { Category } from "@/lib/catalogue";
-import { SHOWCASE_EFFECT_PRESETS, type ShowcaseEffectId } from "@/lib/settings";
+import { CinemaIcon } from "@/components/cinema/icons";
 
-const ProductCarousel = dynamic(() => import("@/components/three/ProductCarousel"), { ssr: false });
+type ShowcaseCard = { slug: string; title: string; img: string | StaticImageData; aspect: number };
 
-/** The 3D showcase uses the bundled photography, so it shows the built-in categories that are switched on. */
-export function ProductShowcase({ enabled, images = [], effect = "gentle" }: { enabled: Category[]; images?: string[]; effect?: ShowcaseEffectId }) {
+/** "Featured Collections" style 3D stack — same look as the homepage cinema carousel, reused here for
+ * the collection photos. CSS-only (no WebGL), so it never depends on a browser's 3D support. */
+export function ProductShowcase({ enabled, images = [] }: { enabled: Category[]; images?: string[] }) {
   const titles = new Map(enabled.map((c) => [c.slug, c.title]));
-  const showcase = collections
+  const showcase: ShowcaseCard[] = collections
     .filter((c) => c.slug !== "ready-made-blouses" && titles.has(c.slug))
-    .map((c) => ({ ...c, title: titles.get(c.slug) ?? c.title }));
-  const key = showcase.map((c, i) => `${c.slug}:${c.title}:${images[i] ?? ""}`).join("|");
-  const reduce = useReducedMotion();
-  const router = useRouter();
-  const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
-  const [visible, setVisible] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const [webgl, setWebgl] = useState(true);
-  const [focus, setFocus] = useState(0);
+    .map((c, i) => ({
+      slug: c.slug,
+      title: titles.get(c.slug) ?? c.title,
+      img: images[i] || c.image,
+      aspect: images[i] ? 0.8 : c.image.width / c.image.height,
+    }));
+
+  const count = showcase.length;
+  const [active, setActive] = useState(0);
+  const [hold, setHold] = useState(false);
+  const startX = useRef<number | null>(null);
 
   useEffect(() => {
-    setMobile(window.matchMedia("(max-width: 767px)").matches);
-    try {
-      const c = document.createElement("canvas");
-      setWebgl(Boolean(c.getContext("webgl2") || c.getContext("webgl")));
-    } catch {
-      setWebgl(false);
-    }
-    const el = ref.current;
-    if (!el) return;
-    const nearIo = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: "400px 0px" });
-    const visIo = new IntersectionObserver(([e]) => setVisible(e.isIntersecting));
-    nearIo.observe(el);
-    visIo.observe(el);
-    return () => {
-      nearIo.disconnect();
-      visIo.disconnect();
-    };
-  }, []);
+    if (hold || count < 2) return;
+    const t = window.setInterval(() => setActive((a) => (a + 1) % count), 3600);
+    return () => window.clearInterval(t);
+  }, [hold, count]);
 
-  const items = useMemo(
-    () =>
-      showcase.map((c, i) => ({
-        slug: c.slug,
-        title: c.title,
-        src: images[i] || c.image.src,
-        aspect: images[i] ? 0.75 : c.image.width / c.image.height,
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [key],
-  );
-
-  const use3D = near && webgl && reduce === false;
-  const current = showcase[focus] ?? showcase[0];
-  if (!current) return null;
+  if (count === 0) return null;
+  const go = (n: number) => setActive((a) => (a + n + count) % count);
 
   return (
-    <section id="showcase" aria-labelledby="showcase-title" className="relative overflow-hidden bg-noir py-24 md:py-36">
+    <section id="showcase" aria-labelledby="showcase-title" className="cin-band-deep relative overflow-hidden py-24 md:py-36">
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
         <SectionHeading
           align="center"
@@ -76,62 +48,95 @@ export function ProductShowcase({ enabled, images = [], effect = "gentle" }: { e
         />
       </div>
 
-      <div ref={ref} className="relative mx-auto mt-12 h-[460px] max-w-[1440px] md:mt-16 md:h-[600px]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.16),transparent_65%)] blur-3xl"
-        />
-        {use3D ? (
-          <ProductCarousel
-            items={items}
-            active={visible}
-            mobile={mobile}
-            onFocusChange={setFocus}
-            onSelect={(slug) => router.push(`/collections/${slug}`)}
-            effect={SHOWCASE_EFFECT_PRESETS[effect]}
-          />
-        ) : (
-          <ul className="no-scrollbar flex h-full snap-x snap-mandatory items-center gap-5 overflow-x-auto px-5 md:justify-center md:px-10">
-            {showcase.map((c) => (
-              <li key={c.slug} className="snap-center">
-                <Link href={`/collections/${c.slug}`} className="group block w-[200px] md:w-[210px]">
-                  <div className="overflow-hidden border border-gold/40 p-1">
-                    <Image quality={90}
-                      src={images[showcase.indexOf(c)] || c.image}
-                      alt={c.title}
-                      sizes="210px"
-                      className="aspect-[3/4] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <p className="mt-3 text-center text-[0.65rem] uppercase tracking-[0.3em] text-gold">{c.title}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Collection showcase"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") go(-1);
+          if (e.key === "ArrowRight") go(1);
+        }}
+        onMouseEnter={() => setHold(true)}
+        onMouseLeave={() => setHold(false)}
+        onFocus={() => setHold(true)}
+        onBlur={() => setHold(false)}
+        onPointerDown={(e) => {
+          startX.current = e.clientX;
+        }}
+        onPointerUp={(e) => {
+          if (startX.current === null) return;
+          const dx = e.clientX - startX.current;
+          startX.current = null;
+          if (Math.abs(dx) > 45) go(dx < 0 ? 1 : -1);
+        }}
+        className="relative mx-auto mt-14 h-[560px] max-w-[1400px] touch-pan-y select-none outline-none sm:h-[600px]"
+        style={{ perspective: 1600 }}
+      >
+        <div aria-hidden className="cin-reflection absolute bottom-6 left-1/2 h-16 w-[min(80vw,420px)] -translate-x-1/2 rounded-[50%]" />
+        {showcase.map((item, i) => {
+          const d = i - active;
+          const ad = Math.abs(d);
+          if (ad > 2) return null;
+          const centre = d === 0;
+          return (
+            <div
+              key={item.slug}
+              className="cin-pcard absolute left-1/2 top-0 w-[min(76vw,340px)]"
+              style={{
+                transform: `translateX(calc(-50% + ${d * 72}%)) translateZ(${-ad * 170}px) rotateY(${d * -26}deg) scale(${centre ? 1.04 : 1})`,
+                zIndex: 10 - ad,
+                opacity: ad === 2 ? 0.35 : ad === 1 ? 0.8 : 1,
+                filter: centre ? "none" : `brightness(${ad === 1 ? 0.62 : 0.4})`,
+                transition: "transform 0.9s cubic-bezier(0.22,1,0.36,1), opacity 0.9s, filter 0.9s",
+              }}
+              aria-hidden={!centre}
+            >
+              <CollectionCardCinema item={item} centre={centre} />
+              {!centre && <button type="button" tabIndex={-1} aria-label={`Show ${item.title}`} onClick={() => setActive(i)} className="absolute inset-0 cursor-pointer" />}
+            </div>
+          );
+        })}
+        <button type="button" onClick={() => go(-1)} aria-label="Previous collection" className="cin-arrow absolute left-3 top-[40%] z-20 md:left-10">
+          <CinemaIcon name="arrowL" className="h-4 w-4" strokeWidth={1.6} />
+        </button>
+        <button type="button" onClick={() => go(1)} aria-label="Next collection" className="cin-arrow absolute right-3 top-[40%] z-20 md:right-10">
+          <CinemaIcon name="arrowR" className="h-4 w-4" strokeWidth={1.6} />
+        </button>
       </div>
 
-      {use3D && (
-        <div className="mt-4 flex h-24 flex-col items-center text-center" aria-live="polite">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current.slug}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5 }}
-            >
-              <p className="font-display text-3xl italic text-ivory">{current.title}</p>
-              <Link
-                href={`/collections/${current.slug}`}
-                className="mt-2 inline-block text-[0.65rem] uppercase tracking-[0.32em] text-gold underline-offset-8 hover:underline"
-              >
-                Discover the collection
-              </Link>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      )}
+      <div className="mt-2 flex justify-center gap-2" aria-hidden>
+        {showcase.map((item, i) => (
+          <span key={item.slug} className={`h-1 rounded-full transition-all duration-500 ${i === active ? "w-8 bg-gold" : "w-2 bg-gold/30"}`} />
+        ))}
+      </div>
     </section>
+  );
+}
+
+function CollectionCardCinema({ item, centre }: { item: ShowcaseCard; centre: boolean }) {
+  return (
+    <article className={`cin-card rounded-[1.6rem] p-2 ${centre ? "cin-card-on" : ""}`}>
+      <Link href={`/collections/${item.slug}`} tabIndex={centre ? 0 : -1} className="group relative block aspect-[3/4] overflow-hidden rounded-[1.2rem] bg-noir">
+        <Image
+          quality={90}
+          src={item.img}
+          alt={item.title}
+          fill
+          sizes="340px"
+          className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+        />
+      </Link>
+      <div className="px-3 pb-3 pt-4 text-center">
+        <h3 className="font-display text-xl text-ivory">{item.title}</h3>
+        <Link
+          href={`/collections/${item.slug}`}
+          tabIndex={centre ? 0 : -1}
+          className="mt-3 inline-block text-[0.65rem] uppercase tracking-[0.3em] text-gold underline-offset-8 hover:underline"
+        >
+          Discover the collection
+        </Link>
+      </div>
+    </article>
   );
 }

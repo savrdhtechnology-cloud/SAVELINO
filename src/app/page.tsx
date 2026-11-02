@@ -85,7 +85,7 @@ export default async function Home({ searchParams }: Props) {
   const SECTIONS: Record<SectionId, ReactNode> = {
     shop: <ShopSection products={liveProducts} />,
     "designer-blouses": enabledSet.has("designer-blouses") ? <DesignerBlouses product={designerBlousesProduct} /> : null,
-    showcase: <ProductShowcase enabled={enabled} images={settings.showcaseImages} effect={settings.showcaseEffect} />,
+    showcase: <ProductShowcase enabled={enabled} images={settings.showcaseImages} />,
     signature: <SignatureGallery enabled={enabledSlugs} images={settings.signatureImages} products={liveProducts} links={settings.signatureLinks} upcoming={upcoming} />,
     "ready-made": enabledSet.has("ready-made-blouses") ? <ReadyMade product={readyMadeProduct} /> : null,
     "custom-stitching": <CustomStitching />,

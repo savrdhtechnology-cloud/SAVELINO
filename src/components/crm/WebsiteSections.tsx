@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { SHOWCASE_EFFECTS, SHOWCASE_EFFECT_PRESETS, type ShowcaseEffectId, type SignatureTileLink, type SiteSettings } from "@/lib/settings";
+import type { SignatureTileLink, SiteSettings } from "@/lib/settings";
 import type { Category, Product } from "@/lib/data/types";
 import { ShowcaseImageStudio } from "./ShowcaseImageStudio";
 import { SignatureGalleryStudio } from "./SignatureGalleryStudio";
@@ -108,30 +108,6 @@ function Editor({ initial, categories, products }: { initial: SiteSettings; cate
       </Panel>
 
       <ShowcaseImageStudio images={s.showcaseImages} onChange={(showcaseImages) => void publish({ ...s, showcaseImages })} />
-
-      <Panel title="3D showcase — rotation style" icon={ICONS.sparkle} subtitle="Speed, direction, ring width, float and sparkle for “Every piece, in the round”">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {SHOWCASE_EFFECTS.map((id: ShowcaseEffectId) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => void publish({ ...s, showcaseEffect: id })}
-              className="crm-panel-soft rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5"
-              style={{ borderColor: s.showcaseEffect === id ? "var(--crm-accent)" : "var(--crm-border-soft)", boxShadow: s.showcaseEffect === id ? "0 0 0 1px var(--crm-accent)" : undefined }}
-            >
-              <span className="flex items-center justify-between">
-                <span className="text-sm font-medium">{SHOWCASE_EFFECT_PRESETS[id].label}</span>
-                {s.showcaseEffect === id && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "var(--crm-accent)" }}>
-                    <Icon d={ICONS.check} className="h-3 w-3 text-black" />
-                  </span>
-                )}
-              </span>
-              <span className="mt-1 block text-[0.72rem] crm-muted">{SHOWCASE_EFFECT_PRESETS[id].note}</span>
-            </button>
-          ))}
-        </div>
-      </Panel>
 
       <Panel title="Featured Products — Homepage Listing" icon={ICONS.products} subtitle="Choose products to show in the separate Featured Products section. Move them up or down to control the order.">
         <p className="mb-3 text-xs crm-muted">Only selected live or Coming soon products appear here. Signature Gallery stays independent.</p>
