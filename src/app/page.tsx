@@ -4,6 +4,7 @@ import { getSiteSettings } from "@/lib/settings-server";
 import type { SectionId } from "@/lib/settings";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Hero } from "@/components/hero/Hero";
+import { HeroSlider, type HeroSlide } from "@/components/hero/HeroSlider";
 import { DesignerBlouses } from "@/components/sections/DesignerBlouses";
 import { ProductShowcase } from "@/components/sections/ProductShowcase";
 import { SignatureGallery } from "@/components/sections/SignatureGallery";
@@ -40,6 +41,11 @@ export default async function Home({ searchParams }: Props) {
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
   const designerBlousesId = enabled.find((c) => c.slug === "designer-blouses")?.id;
   const readyMadeId = enabled.find((c) => c.slug === "ready-made-blouses")?.id;
+  // Pearl theme hero: a photo slider built from real collection/category photography — featured first.
+  const heroSlides: HeroSlide[] = [...enabled]
+    .sort((a, b) => Number(b.featured) - Number(a.featured))
+    .slice(0, 5)
+    .map((c) => ({ kicker: c.kicker, title: c.title, summary: c.summary, image: c.image, href: `/collections/${c.slug}` }));
 
   const SECTIONS: Record<SectionId, ReactNode> = {
     shop: <ShopSection products={liveProducts} />,
@@ -81,7 +87,7 @@ export default async function Home({ searchParams }: Props) {
       <SiteHeader />
       <MotionStyleProvider style={settings.effects.motion}>
         <main id="main" data-site-theme={siteTheme}>
-          <Hero content={settings.hero} />
+          {siteTheme === "pearl" && heroSlides.length ? <HeroSlider slides={heroSlides} /> : <Hero content={settings.hero} />}
           {siteTheme === "pearl" && <StatsStrip />}
           {settings.sections
             .filter((sec) => sec.visible)
