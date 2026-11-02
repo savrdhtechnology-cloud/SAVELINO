@@ -9,16 +9,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { collections } from "@/lib/collections";
 import type { Category } from "@/lib/catalogue";
+import { SHOWCASE_EFFECT_PRESETS, type SiteSettings } from "@/lib/settings";
 
 const ProductCarousel = dynamic(() => import("@/components/three/ProductCarousel"), { ssr: false });
 
-/** The 3D showcase uses the bundled photography, so it shows the built-in categories that are switched on. */
-export function ProductShowcase({ enabled }: { enabled: Category[] }) {
+/**
+ * The 3D showcase shows the built-in categories that are switched on. Each of the first six can be
+ * given a custom photo from CRM → Appearance Studio → Homepage → Image Studio; the rest keep the
+ * bundled editorial photography.
+ */
+export function ProductShowcase({ enabled, settings }: { enabled: Category[]; settings?: SiteSettings["showcase"] }) {
   const titles = new Map(enabled.map((c) => [c.slug, c.title]));
   const showcase = collections
     .filter((c) => c.slug !== "ready-made-blouses" && titles.has(c.slug))
     .map((c) => ({ ...c, title: titles.get(c.slug) ?? c.title }));
-  const key = showcase.map((c) => `${c.slug}:${c.title}`).join("|");
+  const photos = settings?.photos ?? [];
+  const effect = SHOWCASE_EFFECT_PRESETS[settings?.effect ?? "gentle"];
+  const key = showcase.map((c, i) => `${c.slug}:${c.title}:${photos[i]?.url ?? ""}`).join("|");
   const reduce = useReducedMotion();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
@@ -50,12 +57,15 @@ export function ProductShowcase({ enabled }: { enabled: Category[] }) {
 
   const items = useMemo(
     () =>
-      showcase.map((c) => ({
-        slug: c.slug,
-        title: c.title,
-        src: c.image.src,
-        aspect: c.image.width / c.image.height,
-      })),
+      showcase.map((c, i) => {
+        const custom = photos[i];
+        return {
+          slug: c.slug,
+          title: c.title,
+          src: custom?.url ?? c.image.src,
+          aspect: custom?.width && custom?.height ? custom.width / custom.height : c.image.width / c.image.height,
+        };
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [key],
   );
@@ -87,25 +97,40 @@ export function ProductShowcase({ enabled }: { enabled: Category[] }) {
             mobile={mobile}
             onFocusChange={setFocus}
             onSelect={(slug) => router.push(`/collections/${slug}`)}
+            effect={effect}
           />
         ) : (
           <ul className="no-scrollbar flex h-full snap-x snap-mandatory items-center gap-5 overflow-x-auto px-5 md:justify-center md:px-10">
-            {showcase.map((c) => (
-              <li key={c.slug} className="snap-center">
-                <Link href={`/collections/${c.slug}`} className="group block w-[200px] md:w-[210px]">
-                  <div className="overflow-hidden border border-gold/40 p-1">
-                    <Image
-                      src={c.image}
-                      alt={c.title}
-                      sizes="210px"
-                      placeholder="blur"
-                      className="aspect-[3/4] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <p className="mt-3 text-center text-[0.65rem] uppercase tracking-[0.3em] text-gold">{c.title}</p>
-                </Link>
-              </li>
-            ))}
+            {showcase.map((c, i) => {
+              const custom = photos[i];
+              return (
+                <li key={c.slug} className="snap-center">
+                  <Link href={`/collections/${c.slug}`} className="group block w-[200px] md:w-[210px]">
+                    <div className="overflow-hidden border border-gold/40 p-1">
+                      {custom ? (
+                        <Image
+                          src={custom.url}
+                          alt={c.title}
+                          width={custom.width ?? 600}
+                          height={custom.height ?? 800}
+                          sizes="210px"
+                          className="aspect-[3/4] w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <Image
+                          src={c.image}
+                          alt={c.title}
+                          sizes="210px"
+                          placeholder="blur"
+                          className="aspect-[3/4] w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      )}
+                    </div>
+                    <p className="mt-3 text-center text-[0.65rem] uppercase tracking-[0.3em] text-gold">{c.title}</p>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

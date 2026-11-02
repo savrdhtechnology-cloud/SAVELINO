@@ -25,6 +25,8 @@ import {
   SITE_THEME_LABELS,
   type SiteThemeId,
   SECTION_LABELS,
+  SHOWCASE_EFFECTS,
+  SHOWCASE_EFFECT_PRESETS,
   THEME_LABELS,
   THEME_MODES,
   type BgEffect,
@@ -36,7 +38,7 @@ import {
 } from "@/lib/settings";
 import type { Category } from "@/lib/data/types";
 import { CRM_PREVIEW_EVENT } from "./CrmShell";
-import { db, fetchCategories, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
+import { db, fetchCategories, fetchSettings, must, revalidateSite, saveSettings, uploadMedia, useLoad } from "./data";
 import { CRM_SWATCH } from "./theme";
 import { EASE, Field, ICONS, Icon, PageHeader, Panel, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
 
@@ -110,6 +112,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
   const [frameKey, setFrameKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState<number | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const dirty = JSON.stringify(s) !== JSON.stringify(saved);
 
@@ -183,6 +186,30 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
     } finally {
       setBusy(false);
     }
+  }
+
+  async function replaceShowcasePhoto(i: number, file: File) {
+    setUploadingPhoto(i);
+    try {
+      const up = await uploadMedia("showcase", file);
+      setS((x) => {
+        const photos = [...x.showcase.photos];
+        photos[i] = { url: up.url, path: up.path, width: up.width, height: up.height };
+        return { ...x, showcase: { ...x.showcase, photos } };
+      });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not upload this photo", "error");
+    } finally {
+      setUploadingPhoto(null);
+    }
+  }
+
+  function resetShowcasePhoto(i: number) {
+    setS((x) => {
+      const photos = [...x.showcase.photos];
+      photos[i] = null;
+      return { ...x, showcase: { ...x.showcase, photos } };
+    });
   }
 
   async function setCat(c: Category, p: Partial<Category>) {
@@ -270,6 +297,72 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
             </li>
           ))}
         </ul>
+      </Panel>
+      <Panel
+        title="3D Collection Showcase — Image Studio"
+        icon={ICONS.image}
+        subtitle="Upload up to six photos for “Every piece, in the round”. Your original images stay put until you publish. Recommended: portrait, at least 900×1200."
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {s.showcase.photos.map((p, i) => (
+            <div key={i} className="crm-panel-soft overflow-hidden rounded-xl p-2.5 text-center">
+              <span className="relative mb-2 block aspect-[3/4] w-full overflow-hidden rounded-lg" style={{ background: "var(--crm-wash)" }}>
+                {p ? (
+                  <Image src={p.url} alt="" fill sizes="160px" className="object-cover" />
+                ) : (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Icon d={ICONS.image} className="h-6 w-6 crm-muted" />
+                  </span>
+                )}
+                {uploadingPhoto === i && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[0.65rem] text-white">Uploading…</span>
+                )}
+              </span>
+              <p className="mb-1.5 text-xs crm-muted">Photo {i + 1}</p>
+              <label className="crm-chip block cursor-pointer text-center">
+                Replace photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) void replaceShowcasePhoto(i, file);
+                  }}
+                />
+              </label>
+              {p && (
+                <button type="button" onClick={() => resetShowcasePhoto(i)} className="mt-1.5 text-[0.7rem] crm-muted underline-offset-2 hover:underline">
+                  Reset
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <Panel title="Showcase effect" icon={ICONS.sparkle} subtitle="How the 3D ring turns, drifts and tilts — pick a style, publish to go live">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {SHOWCASE_EFFECTS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => patch("showcase", { effect: id })}
+              className="crm-panel-soft rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5"
+              style={{ borderColor: s.showcase.effect === id ? "var(--crm-accent)" : "var(--crm-border-soft)", boxShadow: s.showcase.effect === id ? "0 0 0 1px var(--crm-accent)" : undefined }}
+            >
+              <span className="flex items-center justify-between">
+                <span className="text-sm font-medium">{SHOWCASE_EFFECT_PRESETS[id].label}</span>
+                {s.showcase.effect === id && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "var(--crm-accent)" }}>
+                    <Icon d={ICONS.check} className="h-3 w-3 text-black" />
+                  </span>
+                )}
+              </span>
+              <span className="mt-1 block text-[0.72rem] crm-muted">{SHOWCASE_EFFECT_PRESETS[id].note}</span>
+            </button>
+          ))}
+        </div>
       </Panel>
     </>
   );

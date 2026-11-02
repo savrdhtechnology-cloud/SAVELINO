@@ -99,6 +99,54 @@ export const MOTION_STYLE_LABELS: Record<MotionStyle, string> = {
   cinematic: "Cinematic — reveal + card hover lift, tilt & glow",
 };
 
+/**
+ * Motion presets for the homepage "Every piece, in the round" 3D showcase — how the ring of cards
+ * turns (speed/direction), drifts (float) and tilts. Purely cosmetic knobs on ProductCarousel.
+ */
+export const SHOWCASE_EFFECTS = [
+  "gentle",
+  "grand",
+  "reverse",
+  "brisk",
+  "hover",
+  "dreamy",
+  "regal",
+  "swift",
+  "orbit",
+  "still",
+] as const;
+export type ShowcaseEffectId = (typeof SHOWCASE_EFFECTS)[number];
+export type ShowcaseEffectPreset = {
+  label: string;
+  note: string;
+  /** Ring rotation, radians/second. Negative reverses direction. */
+  speed: number;
+  /** Multiplies the base ring radius (wider = more dramatic). */
+  radiusScale: number;
+  /** Float (bob) speed and amount. */
+  floatSpeed: number;
+  floatIntensity: number;
+  /** Subtle group tilt as it floats. */
+  tilt: number;
+  /** Sparkle drift speed. */
+  sparkleSpeed: number;
+};
+export const SHOWCASE_EFFECT_PRESETS: Record<ShowcaseEffectId, ShowcaseEffectPreset> = {
+  gentle: { label: "Gentle Drift", note: "The house default — slow, calm turn", speed: 0.16, radiusScale: 1, floatSpeed: 0.8, floatIntensity: 0.25, tilt: 0.05, sparkleSpeed: 0.2 },
+  grand: { label: "Grand Carousel", note: "Wide ring, slow and stately", speed: 0.12, radiusScale: 1.22, floatSpeed: 0.6, floatIntensity: 0.2, tilt: 0.04, sparkleSpeed: 0.18 },
+  reverse: { label: "Reverse Promenade", note: "Turns the other way", speed: -0.16, radiusScale: 1, floatSpeed: 0.8, floatIntensity: 0.25, tilt: 0.05, sparkleSpeed: 0.2 },
+  brisk: { label: "Brisk Turn", note: "Noticeably faster", speed: 0.3, radiusScale: 0.95, floatSpeed: 1, floatIntensity: 0.2, tilt: 0.05, sparkleSpeed: 0.3 },
+  hover: { label: "Floating Jewels", note: "Slower spin, pronounced bob", speed: 0.1, radiusScale: 1, floatSpeed: 1.4, floatIntensity: 0.45, tilt: 0.09, sparkleSpeed: 0.25 },
+  dreamy: { label: "Dreamy Haze", note: "Very slow, soft sparkle drift", speed: 0.07, radiusScale: 1.05, floatSpeed: 0.5, floatIntensity: 0.3, tilt: 0.06, sparkleSpeed: 0.12 },
+  regal: { label: "Regal Showcase", note: "Tight ring, deliberate pace, minimal float", speed: 0.14, radiusScale: 0.88, floatSpeed: 0.5, floatIntensity: 0.12, tilt: 0.02, sparkleSpeed: 0.18 },
+  swift: { label: "Swift Gallery", note: "Fast and tight, energetic", speed: 0.42, radiusScale: 0.9, floatSpeed: 1.2, floatIntensity: 0.18, tilt: 0.04, sparkleSpeed: 0.35 },
+  orbit: { label: "Wide Orbit", note: "Widest ring, moderate speed", speed: 0.2, radiusScale: 1.35, floatSpeed: 0.9, floatIntensity: 0.22, tilt: 0.05, sparkleSpeed: 0.22 },
+  still: { label: "Still Gallery", note: "No auto-turn — a static arc of cards", speed: 0, radiusScale: 1, floatSpeed: 0.3, floatIntensity: 0.08, tilt: 0.01, sparkleSpeed: 0.08 },
+};
+
+/** A photo uploaded for the homepage 3D showcase (CRM → Appearance Studio → Homepage → Image Studio). */
+export type ShowcasePhoto = { url: string; path?: string; width?: number; height?: number } | null;
+
 /** CRM looks: "luxe" = maroon silk & gold (signature), "royal" = black & gold, "ivory" = light ivory & gold. */
 export const CRM_THEMES = ["luxe", "royal", "ivory"] as const;
 export type CrmTheme = (typeof CRM_THEMES)[number];
@@ -193,6 +241,8 @@ export type SiteSettings = {
   };
   announcement: { enabled: boolean; text: string; href: string };
   sections: { id: SectionId; visible: boolean }[];
+  /** Homepage "Every piece, in the round" 3D showcase — custom photos + motion preset. */
+  showcase: { photos: ShowcasePhoto[]; effect: ShowcaseEffectId };
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -249,6 +299,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
   announcement: { enabled: false, text: "", href: "" },
   sections: SECTION_IDS.map((id) => ({ id, visible: true })),
+  showcase: { photos: [null, null, null, null, null, null], effect: "gentle" },
 };
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -274,7 +325,7 @@ export function mergeSettings(stored: unknown): SiteSettings {
     const t = src.theme;
     src.theme = { ...t, dark: { gold: t.gold, noir: t.noir, ivory: t.ivory, burgundy: t.burgundy } };
   }
-  for (const group of ["layout", "brand", "commerce", "theme", "hero", "announcement", "crm", "effects", "seo"] as const) {
+  for (const group of ["layout", "brand", "commerce", "theme", "hero", "announcement", "crm", "effects", "seo", "showcase"] as const) {
     mergeInto(out[group] as unknown as Record<string, unknown>, src[group]);
   }
   if (!HERO_PRESETS.includes(out.hero.preset)) out.hero.preset = "classic-3d";
@@ -293,6 +344,16 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
   if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
   if (!SITE_THEMES.includes(out.layout.theme)) out.layout.theme = "signature";
+  if (!SHOWCASE_EFFECTS.includes(out.showcase.effect)) out.showcase.effect = "gentle";
+  if (isObj(src.showcase) && Array.isArray((src.showcase as { photos?: unknown }).photos)) {
+    const photos = (src.showcase as { photos: unknown[] }).photos;
+    out.showcase.photos = Array.from({ length: 6 }, (_, i) => {
+      const p = photos[i];
+      return isObj(p) && typeof p.url === "string" && p.url
+        ? { url: p.url, path: typeof p.path === "string" ? p.path : undefined, width: typeof p.width === "number" ? p.width : undefined, height: typeof p.height === "number" ? p.height : undefined }
+        : null;
+    });
+  }
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];

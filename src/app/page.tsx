@@ -53,7 +53,7 @@ export default async function Home({ searchParams }: Props) {
     "designer-blouses": enabledSet.has("designer-blouses") ? (
       <DesignerBlouses product={showcaseProduct(liveProducts, designerBlousesId)} />
     ) : null,
-    showcase: <ProductShowcase enabled={enabled} />,
+    showcase: <ProductShowcase enabled={enabled} settings={settings.showcase} />,
     signature: <SignatureGallery enabled={enabledSlugs} />,
     "ready-made": enabledSet.has("ready-made-blouses") ? (
       <ReadyMade product={showcaseProduct(liveProducts, readyMadeId)} />

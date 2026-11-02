@@ -4,6 +4,7 @@ import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Float, Sparkles, useTexture } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { SHOWCASE_EFFECT_PRESETS, type ShowcaseEffectPreset } from "@/lib/settings";
 
 export type CarouselItem = { slug: string; title: string; src: string; aspect: number };
 
@@ -13,6 +14,8 @@ type Props = {
   mobile: boolean;
   onFocusChange: (index: number) => void;
   onSelect: (slug: string) => void;
+  /** Motion preset (speed, radius, float, tilt, sparkle) — see Appearance Studio → Homepage. */
+  effect?: ShowcaseEffectPreset;
 };
 
 const CARD_H = 2.3;
@@ -78,11 +81,12 @@ function Card({
   );
 }
 
-function Ring({ items, mobile, onFocusChange, onSelect }: Omit<Props, "active">) {
+function Ring({ items, mobile, onFocusChange, onSelect, effect }: Omit<Props, "active">) {
   const textures = useTexture(items.map((i) => i.src));
   const ring = useRef<THREE.Group>(null);
   const focused = useRef(-1);
-  const radius = mobile ? 2.6 : 3.6;
+  const radius = (mobile ? 2.6 : 3.6) * (effect?.radiusScale ?? 1);
+  const speed = effect?.speed ?? 0.16;
   const step = (Math.PI * 2) / items.length;
 
   useMemo(() => {
@@ -95,7 +99,7 @@ function Ring({ items, mobile, onFocusChange, onSelect }: Omit<Props, "active">)
 
   useFrame((_, delta) => {
     if (!ring.current) return;
-    ring.current.rotation.y -= Math.min(delta, 0.05) * 0.16;
+    if (speed !== 0) ring.current.rotation.y -= Math.min(delta, 0.05) * speed;
     // Which card currently faces the camera?
     const rot = ((-ring.current.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const index = Math.round(rot / step) % items.length;
@@ -121,7 +125,7 @@ function Ring({ items, mobile, onFocusChange, onSelect }: Omit<Props, "active">)
   );
 }
 
-export default function ProductCarousel({ items, active, mobile, onFocusChange, onSelect }: Props) {
+export default function ProductCarousel({ items, active, mobile, onFocusChange, onSelect, effect = SHOWCASE_EFFECT_PRESETS.gentle }: Props) {
   // Match the floor to the current theme background (dark or light template).
   const [floor, setFloor] = useState("#0b0b0b");
   useEffect(() => {
@@ -144,11 +148,11 @@ export default function ProductCarousel({ items, active, mobile, onFocusChange, 
       <directionalLight position={[0, 4, 5]} intensity={2} color="#fff1cc" />
       <pointLight position={[0, -1.5, 2]} intensity={8} color="#d4af37" distance={10} />
       <Suspense fallback={null}>
-        <Float speed={0.8} rotationIntensity={0.05} floatIntensity={0.25}>
-          <Ring items={items} mobile={mobile} onFocusChange={onFocusChange} onSelect={onSelect} />
+        <Float speed={effect.floatSpeed} rotationIntensity={effect.tilt} floatIntensity={effect.floatIntensity}>
+          <Ring items={items} mobile={mobile} onFocusChange={onFocusChange} onSelect={onSelect} effect={effect} />
         </Float>
       </Suspense>
-      <Sparkles count={mobile ? 30 : 60} scale={[9, 4, 4]} size={2.2} speed={0.2} opacity={0.6} color="#e9cf7d" />
+      <Sparkles count={mobile ? 30 : 60} scale={[9, 4, 4]} size={2.2} speed={effect.sparkleSpeed} opacity={0.6} color="#e9cf7d" />
       {/* Polished noir floor reflection hint */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.45, 0]}>
         <circleGeometry args={[6, 64]} />
