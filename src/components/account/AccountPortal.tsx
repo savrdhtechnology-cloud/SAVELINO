@@ -110,60 +110,56 @@ function AuthForms({ db }: { db: Client }) {
   }
 
   return (
-    <div className="grid min-h-[80vh] md:grid-cols-2">
-      <div className="relative hidden min-h-[320px] overflow-hidden md:block">
-        <Image src={images.heritage} alt="" fill sizes="50vw" className="object-cover" priority />
-        <div className="absolute inset-0 bg-gradient-to-t from-noir via-noir/10 to-transparent" />
+    <div className="grid md:min-h-[640px] md:grid-cols-2">
+      <div className="relative hidden overflow-hidden md:block">
+        <Image src={images.heritage} alt="" fill sizes="50vw" className="object-cover object-[30%_20%]" priority />
+        <div className="absolute inset-0 bg-gradient-to-t from-noir via-noir/15 to-transparent" />
       </div>
-      <div className="flex flex-col justify-center gap-10 px-5 py-14 md:px-12 lg:px-16">
-        <div className="mx-auto w-full max-w-md text-center">
+      <div className="flex flex-col justify-center gap-5 px-5 py-8 md:px-10 lg:px-14">
+        <div className="mx-auto w-full max-w-sm text-center">
           <p className="eyebrow">Customer portal</p>
-          <h1 className="mt-3 font-display text-3xl text-ivory md:text-[2.4rem]">{mode === "up" ? "Create your account" : "Sign in to SAVLINO"}</h1>
-          <p className="mt-2 text-sm text-ivory/65">Track your orders, manage custom blouse requests, and keep everything at your fingertips.</p>
+          <h1 className="mt-1.5 font-display text-2xl text-ivory md:text-[1.9rem]">{mode === "up" ? "Create your account" : "Sign in to SAVLINO"}</h1>
+          <p className="mt-1.5 text-[0.82rem] text-ivory/60">Track your orders and manage custom blouse requests.</p>
         </div>
 
-        <form onSubmit={submit} className="mx-auto w-full max-w-md rounded-2xl border border-gold/25 bg-noir-soft p-6 md:p-8">
-          <div className="mb-5 flex gap-2 text-[0.72rem] uppercase tracking-[0.22em]">
+        <form onSubmit={submit} className="mx-auto w-full max-w-sm rounded-2xl border border-gold/25 bg-noir-soft p-5">
+          <div className="mb-4 flex gap-2 text-[0.7rem] uppercase tracking-[0.2em]">
             {(["in", "up"] as const).map((m) => (
-              <button key={m} type="button" onClick={() => { setMode(m); setError(""); setInfo(""); }} className={`flex-1 rounded-full border px-3 py-2.5 transition-colors ${mode === m || (mode === "reset" && m === "in") ? "border-gold bg-gold text-noir" : "border-gold/30 text-ivory/75 hover:border-gold"}`}>
+              <button key={m} type="button" onClick={() => { setMode(m); setError(""); setInfo(""); }} className={`flex-1 rounded-full border px-3 py-2 transition-colors ${mode === m || (mode === "reset" && m === "in") ? "border-gold bg-gold text-noir" : "border-gold/30 text-ivory/75 hover:border-gold"}`}>
                 {m === "in" ? "Sign in" : "Create account"}
               </button>
             ))}
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {mode === "up" && (
               <>
                 <label className="block"><span className={label}>Full name</span><input name="name" required autoComplete="name" className={input} /></label>
                 <label className="block"><span className={label}>Mobile number</span><input name="phone" type="tel" inputMode="tel" required autoComplete="tel" placeholder="10-digit mobile" className={input} /></label>
               </>
             )}
-            <label className="block"><span className={label}>Email or mobile number</span><input name="email" type="email" required autoComplete="email" placeholder="Enter your email or mobile number" className={input} /></label>
+            <label className="block"><span className={label}>Email</span><input name="email" type="email" required autoComplete="email" className={input} /></label>
             {mode !== "reset" && (
-              <label className="block"><span className={label}>Password</span><input name="password" type="password" required minLength={8} autoComplete={mode === "up" ? "new-password" : "current-password"} placeholder="Enter your password" className={input} /></label>
+              <label className="block"><span className={label}>Password</span><input name="password" type="password" required minLength={8} autoComplete={mode === "up" ? "new-password" : "current-password"} className={input} /></label>
             )}
             {mode === "up" && (
               <label className="block"><span className={label}>Confirm password</span><input name="password2" type="password" required minLength={8} autoComplete="new-password" className={input} /></label>
             )}
           </div>
-          {error && <p role="alert" className="mt-4 rounded-lg border border-burgundy bg-burgundy/30 px-4 py-3 text-sm text-ivory">{error}</p>}
-          {info && <p role="status" className="mt-4 rounded-lg border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold-light">{info}</p>}
-          <button type="submit" disabled={busy} className={`${btn} mt-6 w-full`}>{busy ? "Please wait…" : mode === "up" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}</button>
+          {error && <p role="alert" className="mt-3 rounded-lg border border-burgundy bg-burgundy/30 px-4 py-2.5 text-sm text-ivory">{error}</p>}
+          {info && <p role="status" className="mt-3 rounded-lg border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm text-gold-light">{info}</p>}
+          <button type="submit" disabled={busy} className={`${btn} mt-5 w-full`}>{busy ? "Please wait…" : mode === "up" ? "Create account" : mode === "reset" ? "Send reset link" : "Sign in"}</button>
           {mode !== "up" && (
-            <button type="button" onClick={() => { setMode(mode === "reset" ? "in" : "reset"); setError(""); setInfo(""); }} className="mt-4 w-full text-center text-[0.85rem] text-ivory/70 underline-offset-2 hover:text-gold hover:underline">
+            <button type="button" onClick={() => { setMode(mode === "reset" ? "in" : "reset"); setError(""); setInfo(""); }} className="mt-3 w-full text-center text-[0.8rem] text-ivory/70 underline-offset-2 hover:text-gold hover:underline">
               {mode === "reset" ? "Back to sign in" : "Forgot your password?"}
             </button>
           )}
         </form>
 
-        <div className="mx-auto grid w-full max-w-md gap-4 rounded-2xl border border-gold/20 bg-[linear-gradient(160deg,rgba(101,13,32,0.3),rgba(10,7,9,0.5))] p-6">
-          <p className="font-display text-lg text-ivory">Your SAVLINO benefits</p>
-          {PERKS.map(([t, d]) => (
-            <div key={t} className="flex gap-3">
-              <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" />
-              <span>
-                <span className="block text-sm font-medium text-ivory">{t}</span>
-                <span className="block text-[0.82rem] text-ivory/65">{d}</span>
-              </span>
+        <div className="mx-auto grid w-full max-w-sm grid-cols-2 gap-2.5">
+          {PERKS.map(([t]) => (
+            <div key={t} className="flex items-center gap-2 rounded-xl border border-gold/20 bg-[linear-gradient(160deg,rgba(101,13,32,0.25),rgba(10,7,9,0.4))] px-3 py-2.5">
+              <span aria-hidden className="h-1.5 w-1.5 shrink-0 rotate-45 bg-gold" />
+              <span className="text-[0.76rem] leading-tight text-ivory/85">{t}</span>
             </div>
           ))}
         </div>
