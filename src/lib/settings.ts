@@ -223,6 +223,8 @@ export type SiteSettings = {
     /** Royal Cinema theme only: the hero photo slider. */
     slides: CinemaSlide[];
   };
+  /** Optional replacement images for the six Signature Gallery cards, ordered as displayed. */
+  signatureImages: string[];
   announcement: { enabled: boolean; text: string; href: string };
   sections: { id: SectionId; visible: boolean }[];
 };
@@ -326,6 +328,12 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
   if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
   if (!SITE_THEMES.includes(out.layout.theme)) out.layout.theme = "signature";
+  if (Array.isArray(src.signatureImages)) {
+    out.signatureImages = Array.from({ length: 6 }, (_, i) => {
+      const url = src.signatureImages[i];
+      return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
+    });
+  }
   const rawSlides = isObj(src.hero) && Array.isArray(src.hero.slides) ? src.hero.slides : null;
   if (rawSlides) {
     const str = (v: unknown, d: string) => (typeof v === "string" ? v : d);
