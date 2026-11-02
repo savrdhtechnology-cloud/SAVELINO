@@ -259,8 +259,9 @@ function garmentTint(src: Source): string {
   const hex = (v:number)=>Math.round(v/winner.n).toString(16).padStart(2,"0");
   return "#"+hex(winner.r)+hex(winner.g)+hex(winner.b);
 }
-/** Background colour presets for the Creative Studio ("" = SAVLINO brown, "auto" = from the blouse). */
+/** Background colour presets for the Creative Studio ("" = SAVLINO brown, "auto" = from the blouse, "none" = plain neutral grey). */
 export const BG_PRESETS: { name: string; value: string; swatch: string }[] = [
+  { name: "No colour", value: "none", swatch: "linear-gradient(135deg, #4a4a4a 0%, #4a4a4a 49%, #2a2a2a 51%, #2a2a2a 100%)" },
   { name: "SAVLINO brown", value: "", swatch: "#8d6852" },
   { name: "Auto · matches blouse", value: "auto", swatch: "conic-gradient(#d6246e, #f2a900, #1c7fa6, #1f7a3a, #d6246e)" },
   { name: "Wine", value: "#6E1A2C", swatch: "#6E1A2C" },
@@ -271,6 +272,17 @@ export const BG_PRESETS: { name: string; value: string; swatch: string }[] = [
   { name: "Charcoal", value: "#2E2A2A", swatch: "#2E2A2A" },
   { name: "Beige", value: "#D9C3A5", swatch: "#D9C3A5" },
 ];
+
+/** Neutral grey gradient stops used for the "No colour" background and as the 0% end of the colour-intensity blend. */
+const NEUTRAL_STOPS: [string, string, string, string] = ["#5c5c5c", "#3a3a3a", "#232323", "#141414"];
+
+/** Linear-interpolates two #rrggbb colours by t (0 = a, 1 = b). */
+function mixHex(a: string, b: string, t: number): string {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  const c = pa.map((v, i) => Math.round(v + (pb[i] - v) * t));
+  return "#" + c.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("");
+}
 
 function baseColor(settings?: CreativeSettings, source?: Source): string | null {
   const v = settings?.bgColor ?? "";
@@ -319,8 +331,13 @@ function luminance(hex: string) {
 
 function background(ctx: Ctx, W: number, H: number, seed = 1, settings?: CreativeSettings, source?: Source) {
   const g = ctx.createRadialGradient(W * 0.3, H * 0.34, 0, W * 0.3, H * 0.34, Math.max(W, H) * 0.95);
-  const base = baseColor(settings, source);
-  const stops = base ? shades(base) : ["#b8917a", "#8d6852", "#4d3328", "#33221b"];
+  const isNone = (settings?.bgColor ?? "") === "none";
+  const base = isNone ? null : baseColor(settings, source);
+  const coloured = base ? shades(base) : (["#b8917a", "#8d6852", "#4d3328", "#33221b"] as [string, string, string, string]);
+  // Colour intensity: 0% = plain neutral grey, 100% = the chosen colour at full strength. "No colour" is always neutral.
+  const intensity = isNone ? 0 : Math.max(0, Math.min(100, settings?.bgOpacity ?? 100)) / 100;
+  const stops: [string, string, string, string] =
+    intensity >= 1 ? coloured : (NEUTRAL_STOPS.map((n, i) => mixHex(n, coloured[i], intensity)) as [string, string, string, string]);
   g.addColorStop(0, stops[0]);
   g.addColorStop(0.36, stops[1]);
   g.addColorStop(0.74, stops[2]);

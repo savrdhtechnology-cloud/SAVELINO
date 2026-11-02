@@ -68,8 +68,10 @@ export type CreativeSettings = {
   backgroundColor: string;
   backgroundOpacity: number;
   backgroundSize: number;
-  /** Creative background: "" = SAVLINO brown, "auto" = deep tone of the blouse colour, or a hex colour. */
+  /** Creative background: "" = SAVLINO brown, "auto" = deep tone of the blouse colour, "none" = neutral grey, or a hex colour. */
   bgColor?: string;
+  /** How much of the chosen background colour shows, 0–100. 0 = neutral grey, 100 = full colour. */
+  bgOpacity?: number;
   /** Logo & icon placement (optional — older products use the defaults). */
   layout?: Partial<CreativeLayout>;
   /** Framing per raw photo id. */

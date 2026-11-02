@@ -179,6 +179,17 @@ export function CreativeDesign({ settings, onChange }: { settings: CreativeSetti
         </div>
         <p className="mt-1.5 text-[0.7rem] crm-muted">{BG_PRESETS.find((b) => b.value === (settings.bgColor ?? ""))?.name ?? `Own colour ${settings.bgColor}`} · text colour adjusts automatically</p>
         <div className="mt-3 space-y-2">
+          {(settings.bgColor ?? "") !== "none" && (
+            <Range
+              label="Colour intensity"
+              value={settings.bgOpacity ?? 100}
+              min={0}
+              max={100}
+              step={5}
+              show={(v) => `${Math.round(v)}%`}
+              onChange={(v) => set({ bgOpacity: v })}
+            />
+          )}
           <Toggle checked={settings.backgroundAuto ?? true} onChange={(v) => set({ backgroundAuto: v })} label="Soft glow from blouse colour" />
           {(settings.backgroundAuto ?? true) && <Range label="Glow strength" value={settings.backgroundOpacity ?? 0.36} min={0} max={1} step={0.05} show={(v) => `${Math.round(v * 100)}%`} onChange={(v) => set({ backgroundOpacity: v })} />}
         </div>
