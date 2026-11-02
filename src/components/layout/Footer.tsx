@@ -58,7 +58,7 @@ export function Footer({ categories }: { categories: FooterLink[] }) {
         <div className="mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <p className="font-display text-2xl italic text-ivory">Timeless women’s luxury.</p>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-ivory/55">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-ivory/72">
               Designer blouses, custom stitching and intimate essentials — crafted with Indian heritage, made for the
               modern woman.
             </p>
@@ -90,7 +90,7 @@ export function Footer({ categories }: { categories: FooterLink[] }) {
           ))}
         </div>
 
-        <div className="mt-20 flex flex-col items-center justify-between gap-4 border-t border-gold/10 py-8 text-[0.62rem] uppercase tracking-[0.3em] text-ivory/40 md:flex-row">
+        <div className="mt-20 flex flex-col items-center justify-between gap-4 border-t border-gold/10 py-8 text-[0.74rem] uppercase tracking-[0.3em] text-ivory/60 md:flex-row">
           <p>© {new Date().getFullYear()} SAVLINO. All rights reserved.</p>
           <nav aria-label="Legal" className="flex gap-6">
             {legalNav.map((l) => (

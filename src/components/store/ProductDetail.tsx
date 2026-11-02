@@ -118,7 +118,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
     <div className="space-y-5">
       {product.colors.length > 0 && (
         <fieldset>
-          <legend className="text-[0.62rem] uppercase tracking-[0.28em] text-ivory/55">
+          <legend className="text-[0.74rem] uppercase tracking-[0.28em] text-ivory/72">
             Colour{color && <span className="ml-2 normal-case tracking-normal text-gold">{color}</span>}
           </legend>
           <div className="mt-3 flex flex-wrap gap-2.5">
@@ -141,7 +141,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
 
       {product.sizes.length > 0 && (
         <fieldset>
-          <legend className="flex w-full items-center justify-between text-[0.62rem] uppercase tracking-[0.28em] text-ivory/55">
+          <legend className="flex w-full items-center justify-between text-[0.74rem] uppercase tracking-[0.28em] text-ivory/72">
             <span>Size</span>
             <Link href="/size-guide" className="normal-case tracking-normal text-gold underline-offset-4 hover:underline">
               Size guide
@@ -164,7 +164,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
       )}
 
       <div className="flex items-center gap-4">
-        <span className="text-[0.62rem] uppercase tracking-[0.28em] text-ivory/55">Qty</span>
+        <span className="text-[0.74rem] uppercase tracking-[0.28em] text-ivory/72">Qty</span>
         <div className="flex items-center rounded-full border border-gold/35">
           <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} className="h-10 w-10 text-lg text-ivory/70 hover:text-gold" aria-label="Fewer">
             −
@@ -193,7 +193,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
           <button
             type="button"
             onClick={() => add(true)}
-            className="w-full rounded-full bg-burgundy py-4 text-[0.68rem] font-medium uppercase tracking-[0.28em] text-ivory shadow-[0_12px_40px_-12px_var(--color-burgundy)] transition-colors hover:bg-burgundy-deep"
+            className="w-full rounded-full bg-burgundy py-4 text-[0.78rem] font-medium uppercase tracking-[0.28em] text-ivory shadow-[0_12px_40px_-12px_var(--color-burgundy)] transition-colors hover:bg-burgundy-deep"
           >
             Pre-order now · {inr(product.price * qty)}
           </button>
@@ -203,14 +203,14 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
         <button
           type="button"
           onClick={() => add(false)}
-          className="flex items-center justify-center gap-2.5 rounded-full border border-gold/60 py-4 text-[0.68rem] font-medium uppercase tracking-[0.28em] text-gold transition-colors hover:bg-gold hover:text-noir"
+          className="flex items-center justify-center gap-2.5 rounded-full border border-gold/60 py-4 text-[0.78rem] font-medium uppercase tracking-[0.28em] text-gold transition-colors hover:bg-gold hover:text-noir"
         >
           <BagIcon className="h-4 w-4" /> Add to bag
         </button>
         <button
           type="button"
           onClick={() => add(true)}
-          className="rounded-full bg-burgundy py-4 text-[0.68rem] font-medium uppercase tracking-[0.28em] text-ivory shadow-[0_12px_40px_-12px_var(--color-burgundy)] transition-colors hover:bg-burgundy-deep"
+          className="rounded-full bg-burgundy py-4 text-[0.78rem] font-medium uppercase tracking-[0.28em] text-ivory shadow-[0_12px_40px_-12px_var(--color-burgundy)] transition-colors hover:bg-burgundy-deep"
         >
           Buy now · {inr(product.price * qty)}
         </button>
@@ -222,7 +222,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
           href={`https://wa.me/${wa}?text=${encodeURIComponent(enquiry)}`}
           target="_blank"
           rel="noreferrer"
-          className="block text-center text-[0.68rem] uppercase tracking-[0.25em] text-ivory/55 hover:text-gold"
+          className="block text-center text-[0.78rem] uppercase tracking-[0.25em] text-ivory/72 hover:text-gold"
         >
           Questions? Ask us on WhatsApp
         </a>

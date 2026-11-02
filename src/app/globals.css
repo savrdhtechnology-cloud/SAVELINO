@@ -141,6 +141,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  line-height: 1.65;
+}
+
+/* Cormorant is very light at small sizes; a medium weight keeps italic taglines and subtitles readable on dark backgrounds. */
+.font-serif {
+  font-weight: 500;
 }
 
 ::selection {
@@ -204,8 +210,9 @@ body {
 
 .eyebrow {
   font-family: var(--font-sans);
-  font-size: 0.7rem;
-  letter-spacing: 0.42em;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--color-gold);
 }

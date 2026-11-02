@@ -44,7 +44,7 @@ export default async function CollectionPage({ params }: Params) {
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 py-14 md:px-10 md:py-24 lg:grid-cols-2 lg:gap-24">
           <div className="order-2 lg:order-1">
-            <nav aria-label="Breadcrumb" className="text-[0.62rem] uppercase tracking-[0.28em] text-ivory/50">
+            <nav aria-label="Breadcrumb" className="text-[0.74rem] uppercase tracking-[0.28em] text-ivory/70">
               <Link href="/" className="hover:text-gold">
                 Home
               </Link>
@@ -65,7 +65,7 @@ export default async function CollectionPage({ params }: Params) {
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-ivory/60">{c.story}</p>
               <ul className="mt-8 flex flex-wrap gap-2">
                 {c.highlights.map((h) => (
-                  <li key={h} className="border border-gold/25 px-3 py-1.5 text-[0.62rem] uppercase tracking-[0.22em] text-ivory/70">
+                  <li key={h} className="border border-gold/25 px-3 py-1.5 text-[0.74rem] uppercase tracking-[0.22em] text-ivory/70">
                     {h}
                   </li>
                 ))}
@@ -90,7 +90,7 @@ export default async function CollectionPage({ params }: Params) {
             )}
             {products.length > 0 && (
               <Reveal delay={0.3} className="mt-10">
-                <a href="#pieces" className="inline-flex items-center gap-4 text-[0.68rem] uppercase tracking-[0.32em] text-gold">
+                <a href="#pieces" className="inline-flex items-center gap-4 text-[0.78rem] uppercase tracking-[0.32em] text-gold">
                   <span className="h-px w-10 bg-gold" />
                   See {products.length} {products.length === 1 ? "piece" : "pieces"}
                 </a>

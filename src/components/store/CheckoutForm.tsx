@@ -98,7 +98,7 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
             <Field label="City" name="city" required autoComplete="address-level2" />
             <Field label="PIN code" name="pincode" required inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="postal-code" />
             <label className="block sm:col-span-2">
-              <span className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/55">State</span>
+              <span className="text-[0.72rem] uppercase tracking-[0.25em] text-ivory/72">State</span>
               <select name="state" required defaultValue="" className={input}>
                 <option value="" disabled>
                   Choose your state
@@ -109,7 +109,7 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
               </select>
             </label>
             <label className="block sm:col-span-2">
-              <span className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/55">Note for us (optional)</span>
+              <span className="text-[0.72rem] uppercase tracking-[0.25em] text-ivory/72">Note for us (optional)</span>
               <textarea name="notes" rows={2} className={input} placeholder="Landmark, preferred delivery time…" />
             </label>
             <input name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
@@ -160,7 +160,7 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
         >
           {busy ? "Placing order…" : "Place order"}
         </button>
-        <p className="mt-3 text-center text-[0.68rem] text-ivory/40">
+        <p className="mt-3 text-center text-[0.78rem] text-ivory/60">
           By ordering you agree to our <Link href="/terms" className="underline-offset-2 hover:underline">terms</Link> and{" "}
           <Link href="/shipping-returns" className="underline-offset-2 hover:underline">returns policy</Link>.
         </p>
@@ -181,7 +181,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function Field({ label, className, ...props }: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className={`block ${className ?? ""}`}>
-      <span className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/55">{label}</span>
+      <span className="text-[0.72rem] uppercase tracking-[0.25em] text-ivory/72">{label}</span>
       <input {...props} className={input} />
     </label>
   );
@@ -191,7 +191,7 @@ function PayOption({ active, onClick, title, note }: { active: boolean; onClick:
   return (
     <button type="button" onClick={onClick} aria-pressed={active} className={`rounded-xl border p-4 text-left transition-colors ${active ? "border-gold bg-gold/10" : "border-gold/20 hover:border-gold/50"}`}>
       <span className={`block text-sm ${active ? "text-gold" : "text-ivory"}`}>{title}</span>
-      <span className="mt-1 block text-xs text-ivory/50">{note}</span>
+      <span className="mt-1 block text-xs text-ivory/70">{note}</span>
     </button>
   );
 }
@@ -238,7 +238,7 @@ function OrderPlaced({ done, whatsapp, upiId, upiName }: { done: Done; whatsapp:
           <p className="text-sm text-ivory/75">
             Pay <span className="text-gold">{inr(done.total)}</span> to <span className="font-mono text-ivory">{upiId}</span> ({upiName || "SAVLINO"}).
           </p>
-          <a href={upiLink} className="block rounded-full bg-burgundy py-3.5 text-center text-[0.68rem] font-medium uppercase tracking-[0.25em] text-ivory md:hidden">
+          <a href={upiLink} className="block rounded-full bg-burgundy py-3.5 text-center text-[0.78rem] font-medium uppercase tracking-[0.25em] text-ivory md:hidden">
             Pay with UPI app
           </a>
           {state === "sent" ? (
@@ -246,7 +246,7 @@ function OrderPlaced({ done, whatsapp, upiId, upiName }: { done: Done; whatsapp:
           ) : (
             <form onSubmit={sendUtr} className="space-y-3">
               <label className="block">
-                <span className="text-[0.6rem] uppercase tracking-[0.25em] text-ivory/55">After paying, enter the UTR / reference number</span>
+                <span className="text-[0.72rem] uppercase tracking-[0.25em] text-ivory/72">After paying, enter the UTR / reference number</span>
                 <input value={utr} onChange={(e) => setUtr(e.target.value)} required minLength={6} maxLength={40} className={input} placeholder="e.g. 427386591204" />
               </label>
               {error && <p className="text-sm text-gold">{error}</p>}

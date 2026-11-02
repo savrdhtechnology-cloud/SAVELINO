@@ -30,7 +30,7 @@ export function Collections({ items }: { items: Category[] }) {
             <a
               key={c.slug}
               href={`#${c.slug}`}
-              className="border border-gold/25 px-4 py-2 text-[0.62rem] uppercase tracking-[0.28em] text-ivory/75 transition-colors duration-500 hover:border-gold hover:text-gold"
+              className="border border-gold/25 px-4 py-2 text-[0.74rem] uppercase tracking-[0.28em] text-ivory/75 transition-colors duration-500 hover:border-gold hover:text-gold"
             >
               {c.title}
             </a>
@@ -78,14 +78,14 @@ export function Collections({ items }: { items: Category[] }) {
                 <Reveal delay={0.12}>
                   <ul className="mt-8 flex flex-wrap gap-2">
                     {c.highlights.map((h) => (
-                      <li key={h} className="border border-gold/20 px-3 py-1.5 text-[0.62rem] uppercase tracking-[0.22em] text-ivory/65">
+                      <li key={h} className="border border-gold/20 px-3 py-1.5 text-[0.74rem] uppercase tracking-[0.22em] text-ivory/65">
                         {h}
                       </li>
                     ))}
                   </ul>
                   <Link
                     href={`/collections/${c.slug}`}
-                    className="group mt-10 inline-flex items-center gap-4 text-[0.68rem] uppercase tracking-[0.32em] text-gold"
+                    className="group mt-10 inline-flex items-center gap-4 text-[0.78rem] uppercase tracking-[0.32em] text-gold"
                   >
                     <span className="h-px w-10 bg-gold transition-all duration-500 group-hover:w-16" />
                     Explore {c.title}

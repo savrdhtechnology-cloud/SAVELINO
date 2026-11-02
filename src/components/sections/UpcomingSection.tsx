@@ -19,7 +19,7 @@ export function UpcomingSection({ products, limit = 12, title = "Coming soon", i
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <SectionHeading eyebrow="In the atelier now" title={title} intro="These pieces are being stitched by hand. Pre-order yours today — we deliver as soon as they are finished." />
           {products.length > limit && (
-            <Link href="/shop#upcoming" className="group inline-flex shrink-0 items-center gap-4 text-[0.68rem] uppercase tracking-[0.32em] text-gold">
+            <Link href="/shop#upcoming" className="group inline-flex shrink-0 items-center gap-4 text-[0.78rem] uppercase tracking-[0.32em] text-gold">
               <span className="h-px w-10 bg-gold transition-all duration-500 group-hover:w-16" />
               See all
             </Link>

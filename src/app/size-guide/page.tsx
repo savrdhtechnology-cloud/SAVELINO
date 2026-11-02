@@ -37,7 +37,7 @@ export default function SizeGuidePage() {
             <thead>
               <tr className="border-b border-gold/25 bg-noir-soft">
                 {["Size", "Label", "Bust", "Under bust", "Waist", "Shoulder"].map((h) => (
-                  <th key={h} scope="col" className="px-5 py-4 text-[0.62rem] font-medium uppercase tracking-[0.25em] text-gold">
+                  <th key={h} scope="col" className="px-5 py-4 text-[0.74rem] font-medium uppercase tracking-[0.25em] text-gold">
                     {h}
                   </th>
                 ))}

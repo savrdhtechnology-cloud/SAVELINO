@@ -72,7 +72,7 @@ export function Heritage() {
               ].map(([a, b]) => (
                 <div key={a}>
                   <dt className="font-display text-2xl italic text-gold md:text-3xl">{a}</dt>
-                  <dd className="mt-1 text-[0.65rem] uppercase tracking-[0.25em] text-ivory/55">{b}</dd>
+                  <dd className="mt-1 text-[0.65rem] uppercase tracking-[0.25em] text-ivory/72">{b}</dd>
                 </div>
               ))}
             </dl>

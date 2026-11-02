@@ -166,7 +166,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
                 aria-hidden={!on}
                 className={`absolute inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 ${on ? "" : "pointer-events-none [&_*]:!pointer-events-none"}`}
               >
-                <motion.p {...rise(on, 0)} className="flex items-center gap-4 text-[0.66rem] uppercase tracking-[0.42em]" style={{ color: look.accent }}>
+                <motion.p {...rise(on, 0)} className="flex items-center gap-4 text-[0.78rem] uppercase tracking-[0.42em]" style={{ color: look.accent }}>
                   <span aria-hidden className="h-px w-10" style={{ background: look.accent }} />
                   {sl.eyebrow}
                 </motion.p>
@@ -202,7 +202,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
               <span className="cin-icon-ring flex h-11 w-11 items-center justify-center rounded-full text-gold" style={{ animationDelay: `${i * 0.6}s` }}>
                 <CinemaIcon name={p.icon} className="h-5 w-5" />
               </span>
-              <span className="text-[0.58rem] uppercase leading-snug tracking-[0.2em] text-ivory/75">{p.label}</span>
+              <span className="text-[0.7rem] uppercase leading-snug tracking-[0.2em] text-ivory/75">{p.label}</span>
             </li>
           ))}
         </ul>
