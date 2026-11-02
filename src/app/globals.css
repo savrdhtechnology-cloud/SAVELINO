@@ -583,3 +583,293 @@ body {
 [data-site-theme="pearl"] [data-studio="announcement"] {
   background-image: linear-gradient(90deg, #a65d6e, #d6a06b, #a65d6e);
 }
+
+/* ───────── Website theme: "Royal Cinema" ─────────
+   Royal maroon velvet, midnight black and metallic gold. Tokens are set on the page wrapper
+   (not <html>), so the CRM and other pages keep their own look. */
+:where(body) [data-site-theme="cinema"] {
+  color-scheme: dark;
+  --color-noir: #0a0709;
+  --color-noir-soft: #1a080e;
+  --color-ivory: #fff5e6;
+  --color-burgundy: #650d20;
+  --color-burgundy-deep: #390711;
+  --cin-maroon: #390711;
+  --cin-burgundy: #650d20;
+  --cin-champagne: #f3d18b;
+  background: linear-gradient(180deg, #120509 0%, #0a0709 100%);
+}
+[data-site-theme="cinema"] .savlino-btn {
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 70%, transparent), 0 10px 30px -14px color-mix(in srgb, var(--color-gold) 65%, transparent);
+}
+[data-site-theme="cinema"] footer {
+  background: linear-gradient(180deg, var(--cin-maroon) 0%, #1a060c 45%, #0a0709 100%);
+}
+[data-site-theme="cinema"] [data-studio="announcement"] {
+  background-image: linear-gradient(90deg, #390711, #8a6a1e, #390711);
+}
+
+.cin-hero {
+  background: #0a0709;
+}
+.cin-palace {
+  background:
+    radial-gradient(ellipse 70% 60% at 72% 40%, rgba(101, 13, 32, 0.85), transparent 70%),
+    radial-gradient(ellipse 50% 70% at 10% 90%, rgba(57, 7, 17, 0.9), transparent 70%),
+    linear-gradient(115deg, #0a0709 0%, #250510 45%, #390711 70%, #12050a 100%);
+}
+/* Palace arches: repeating arched windows drawn with masks — low-contrast gold light. */
+.cin-arches {
+  opacity: 0.55;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7%, rgba(212, 175, 55, 0.07) 7% 7.25%, transparent 7.25% 20%);
+  -webkit-mask-image: linear-gradient(to left, black 30%, transparent 95%);
+  mask-image: linear-gradient(to left, black 30%, transparent 95%);
+}
+.cin-arches::before,
+.cin-arches::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  width: 34%;
+  height: 92%;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, rgba(243, 209, 139, 0.08), transparent 60%);
+}
+.cin-arches::before {
+  right: 8%;
+}
+.cin-arches::after {
+  right: 46%;
+  top: 18%;
+  height: 82%;
+  width: 26%;
+  opacity: 0.6;
+}
+.cin-sun {
+  background: radial-gradient(circle, rgba(243, 209, 139, 0.28) 0%, rgba(212, 175, 55, 0.1) 35%, transparent 68%);
+  filter: blur(10px);
+}
+.cin-silk {
+  opacity: 0.35;
+  background:
+    linear-gradient(100deg, transparent 20%, rgba(255, 245, 230, 0.06) 35%, transparent 45%),
+    linear-gradient(80deg, transparent 50%, rgba(212, 175, 55, 0.07) 62%, transparent 74%);
+  background-size: 220% 100%;
+}
+.cin-vignette {
+  background: radial-gradient(ellipse 85% 75% at 55% 45%, transparent 55%, rgba(5, 3, 4, 0.85) 100%);
+}
+.cin-shimmer {
+  background: linear-gradient(100deg, #b8892a 0%, #d4af37 25%, #fff1c4 45%, #f3d18b 55%, #d4af37 75%, #9c7a22 100%);
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-right: 0.08em;
+}
+.cin-arch-frame {
+  border-radius: 999px 999px 1.6rem 1.6rem;
+  border: 1px solid rgba(212, 175, 55, 0.65);
+  box-shadow:
+    0 0 0 6px rgba(10, 7, 9, 0.6),
+    0 0 0 7px rgba(212, 175, 55, 0.35),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+.cin-frame-glow {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.22), rgba(101, 13, 32, 0.25) 45%, transparent 70%);
+  filter: blur(20px);
+}
+.cin-sheen {
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 241, 196, 0.16) 48%, transparent 60%);
+  background-size: 300% 100%;
+  background-position: 120% 0;
+}
+.cin-floor,
+.cin-reflection {
+  background: radial-gradient(ellipse, rgba(212, 175, 55, 0.3), transparent 70%);
+  filter: blur(12px);
+}
+.cin-icon-ring {
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  background: radial-gradient(circle, rgba(101, 13, 32, 0.55), rgba(10, 7, 9, 0.4));
+}
+.cin-band {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(101, 13, 32, 0.45), transparent 70%),
+    linear-gradient(180deg, #0a0709, #160609 50%, #0a0709);
+}
+.cin-band-deep {
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 60%, rgba(212, 175, 55, 0.08), transparent 70%),
+    linear-gradient(180deg, #0a0709 0%, #2a0711 50%, #0a0709 100%);
+}
+.cin-trust {
+  background: linear-gradient(90deg, #1a060c, #390711 50%, #1a060c);
+}
+.cin-track {
+  scrollbar-width: none;
+}
+.cin-track::-webkit-scrollbar {
+  display: none;
+}
+.cin-cat {
+  --tx: 0deg;
+  --ty: 0deg;
+  transform: rotateX(var(--tx)) rotateY(var(--ty));
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+}
+.cin-cat-inner {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 24px 50px -28px rgba(0, 0, 0, 0.9);
+  transition: border-color 0.5s, box-shadow 0.6s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cin-cat:hover .cin-cat-inner,
+.cin-cat:focus-visible .cin-cat-inner {
+  transform: translateY(-10px) scale(1.02);
+  border-color: rgba(243, 209, 139, 0.85);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 30px 60px -24px rgba(212, 175, 55, 0.35);
+}
+.cin-arrow {
+  display: flex;
+  height: 44px;
+  width: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  background: rgba(10, 7, 9, 0.7);
+  color: var(--color-gold);
+  backdrop-filter: blur(8px);
+  transition: background 0.3s, opacity 0.3s;
+}
+.cin-arrow:hover {
+  background: rgba(57, 7, 17, 0.9);
+}
+.cin-arrow:disabled {
+  opacity: 0.3;
+}
+.cin-pcard {
+  transform-style: preserve-3d;
+}
+.cin-card {
+  background: linear-gradient(160deg, #2a0812, #12060a 60%);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.95);
+  transition: box-shadow 0.8s, border-color 0.8s;
+}
+.cin-card-on {
+  border-color: rgba(243, 209, 139, 0.8);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3), 0 40px 80px -30px rgba(212, 175, 55, 0.35);
+}
+.cin-gold-btn {
+  background: linear-gradient(100deg, #b8892a, #f3d18b 50%, #d4af37);
+  transition: filter 0.3s;
+}
+.cin-gold-btn:hover {
+  filter: brightness(1.08);
+}
+.cin-glass {
+  background: linear-gradient(160deg, rgba(101, 13, 32, 0.35), rgba(10, 7, 9, 0.55));
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(243, 209, 139, 0.12), 0 30px 60px -36px rgba(0, 0, 0, 0.9);
+}
+.cin-step-badge {
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  background: radial-gradient(circle, rgba(101, 13, 32, 0.9), #12060a 75%);
+  box-shadow: 0 0 0 6px rgba(10, 7, 9, 0.8), 0 0 30px -6px rgba(212, 175, 55, 0.45);
+}
+.cin-particles span {
+  position: absolute;
+  bottom: -10px;
+  border-radius: 999px;
+  background: #f3d18b;
+  box-shadow: 0 0 6px 1px rgba(243, 209, 139, 0.65);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cin-shimmer {
+    animation: cin-shimmer 6s ease-in-out infinite;
+  }
+  .cin-sheen {
+    animation: cin-shimmer 7s ease-in-out infinite;
+  }
+  .cin-silk {
+    animation: cin-silk 18s ease-in-out infinite alternate;
+  }
+  .cin-sun {
+    animation: cin-breathe 9s ease-in-out infinite alternate;
+  }
+  .cin-icon-ring {
+    animation: cin-glow 4.5s ease-in-out infinite;
+  }
+  .cin-particles span {
+    animation: cin-rise linear infinite;
+  }
+}
+/* Studio "still" motion style and reduced motion: no particles. */
+@media (prefers-reduced-motion: reduce) {
+  .cin-particles {
+    display: none;
+  }
+}
+@keyframes cin-shimmer {
+  0%,
+  15% {
+    background-position: 100% 0;
+  }
+  60%,
+  100% {
+    background-position: 0% 0;
+  }
+}
+@keyframes cin-silk {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+@keyframes cin-breathe {
+  from {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+@keyframes cin-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px -2px rgba(212, 175, 55, 0.45);
+  }
+}
+@keyframes cin-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-105vh);
+    opacity: 0;
+  }
+}
