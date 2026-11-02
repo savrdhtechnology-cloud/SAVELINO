@@ -6,6 +6,8 @@ import { db, must, useLoad } from "@/components/crm/data";
 import { MEASURE_FIELDS, errMsg, fetchRevisions, fetchSizes, num, rpc, useRole, type DlDesign, type Measures, type Revision, type RevisionStatus } from "./data";
 import { ErrorBox, Pill } from "./shared";
 
+const STD = ["S", "M", "L", "XL"];
+
 const REV_COLOR: Record<RevisionStatus, string> = { draft: "#e0a83a", submitted: "#5aa0e8", approved: "#58c48a", rejected: "#ef6b6b", superseded: "#8a8a8a" };
 const REQUIRED_G = MEASURE_FIELDS.filter((m) => m.required).map((m) => m.key);
 const REQUIRED_C = ["bust", "front_length", "back_length", "shoulder"];
@@ -28,8 +30,7 @@ export function PatternTab({ design, part }: { design: DlDesign; part: "measurem
   const [selId, setSelId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
-  const [newSize, setNewSize] = useState("38");
-  const [custom, setCustom] = useState("");
+  const [newSize, setNewSize] = useState("M");
   const [copyFrom, setCopyFrom] = useState("");
   const [by, setBy] = useState("");
   const [note, setNote] = useState("");
@@ -46,8 +47,22 @@ export function PatternTab({ design, part }: { design: DlDesign; part: "measurem
     try { await job(); toast(ok); await revs.reload(); } catch (e) { toast(errMsg(e), "error"); } finally { setBusy(false); }
   };
 
+  /** Picking a size opens its revision, and creates it pre-filled from the standard size template if it does not exist yet. */
+  const pickSize = (size: string) => {
+    setNewSize(size);
+    setCopyFrom("");
+    const existing = list.find((r) => r.size_label === size);
+    if (existing) return setSelId(existing.id);
+    const tpl = (sizes.data ?? []).find((s) => s.size_label === size);
+    if (!tpl) return toast(`No standard values for ${size} yet — run migration 005.`, "error");
+    void act(async () => {
+      const id = await rpc<string>("designlab_create_revision", { p_design: design.id, p_size: size, p_template: tpl.id, p_copy_from: null });
+      setSelId(id);
+    }, `Size ${size} filled with standard measurements`);
+  };
+
   const create = () => act(async () => {
-    const size = (newSize === "__custom" ? custom : newSize).trim();
+    const size = newSize.trim();
     const tpl = (sizes.data ?? []).find((s) => s.size_label === size);
     const id = await rpc<string>("designlab_create_revision", { p_design: design.id, p_size: size, p_template: copyFrom ? null : tpl?.id ?? null, p_copy_from: copyFrom || null });
     setSelId(id);
@@ -78,7 +93,7 @@ export function PatternTab({ design, part }: { design: DlDesign; part: "measurem
   if (revs.loading && !revs.data) return <Skeleton className="h-80" />;
   if (revs.error) return <ErrorBox message={revs.error} retry={revs.reload} />;
 
-  const sizeOptions = [...new Set([...(sizes.data ?? []).map((s) => s.size_label)])];
+  const sizeOptions = STD;
   const isAdmin = role === "admin";
 
   return (
@@ -89,16 +104,15 @@ export function PatternTab({ design, part }: { design: DlDesign; part: "measurem
 
       <Panel title="Pattern revisions" icon={ICONS.layers} subtitle={`Pattern ${list.length ? "PT-" + design.design_code : "not started"}`}>
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
-          <Select label="Size" value={newSize} onChange={(e) => setNewSize(e.target.value)}>
+          <Select label="Size" value={newSize} disabled={busy} onChange={(e) => pickSize(e.target.value)}>
             {sizeOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-            <option value="__custom">Custom size…</option>
           </Select>
-          {newSize === "__custom" ? <Field label="Custom size name" value={custom} maxLength={20} onChange={(e) => setCustom(e.target.value)} placeholder="e.g. 46 or XL-Petite" /> : <div className="hidden sm:block" />}
+          <div className="hidden sm:block" />
           <Select label="Start from" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}>
-            <option value="">Size template (Size & Pattern Master)</option>
+            <option value="">Standard size values</option>
             {list.map((r) => <option key={r.id} value={r.id}>Copy of size {r.size_label} rev {r.revision}</option>)}
           </Select>
-          <button className="crm-btn crm-btn-gold" disabled={busy || (newSize === "__custom" && !custom.trim())} onClick={create}>New revision</button>
+          <button className="crm-btn crm-btn-gold" disabled={busy || !copyFrom} onClick={create} title="Pick a revision in Start from to make an editable copy">New revision (copy)</button>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <button className="crm-btn" disabled={busy} onClick={addStandard}>Add S · M · L · XL from templates</button>

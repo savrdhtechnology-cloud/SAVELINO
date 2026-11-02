@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Fragment, type CSSProperties } from "react";
 import { notFound } from "next/navigation";
-import { MEASURE_FIELDS } from "@/components/designlab/data";
-import { fabricNeed, fmtNum, STD_SIZES, spools } from "@/lib/designlab/requirements";
+import { MEASURE_FIELDS } from "@/lib/designlab/fields";
+import { cutPieces, fabricNeed, fmtNum, fromInches, layPlan, STD_SIZES, spools } from "@/lib/designlab/requirements";
 import { pickSizes, staffClient, type RevisionRow, type TemplateRow } from "@/lib/designlab/server";
 import { PrintButton } from "../../PrintButton";
 import { Diagram, toDiagram } from "../../Diagram";
+import { LayPlan } from "../../LayPlan";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Cutting sheet", robots: { index: false, follow: false } };
@@ -112,8 +113,13 @@ export default async function CuttingSheet({ params, searchParams }: { params: P
           const bust = num(val("bust")), waist = num(val("waist"));
           const half = (n: number) => (n ? fmtNum(n / 2, 1) : "—");
           const approx = s.source === "template" ? " (approx.)" : "";
+          const pieces = cutPieces(s.spec, { lined: true });
+          const lay = layPlan(pieces, widthIn);
+          const need = fabricNeed(s.spec, { widthIn, lined: true });
+          const d = (n: number) => fmtNum(fromInches(n, u), 1);
           return (
-            <section key={s.size} style={{ ...page, paddingTop: 4 }}>
+            <Fragment key={s.size}>
+            <section style={{ ...page, paddingTop: 4 }}>
               <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <p style={{ margin: 0, fontSize: 12 }}><b style={{ color: MAROON }}>SAVLINO</b> · {design.design_code} · {design.name}</p>
                 <p style={{ margin: 0, fontSize: 11, color: s.verified ? "#2e7d32" : "#b71c1c", fontWeight: 700 }}>{s.verified ? "APPROVED PATTERN" : "UNVERIFIED — NOT FOR CUTTING"}</p>
@@ -170,6 +176,46 @@ export default async function CuttingSheet({ params, searchParams }: { params: P
                 <b>Note:</b> {s.source === "template" ? "These are STARTER values from the size template. Measure the physical sample, correct them in DesignLab, and get the pattern approved before cutting." : "Values come from this design's pattern revision."} Adjust as per body shape and fitting preference.
               </p>
             </section>
+
+            <section style={{ ...page, paddingTop: 4 }}>
+              <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, borderBottom: `2px solid ${MAROON}` }}>
+                <p style={{ margin: 0, fontSize: 13 }}><b style={{ color: MAROON }}>SAVLINO</b> · {design.design_code} · {design.name} · <b>SIZE {s.size} — CUTTING GUIDE</b></p>
+                <p style={{ margin: 0, fontSize: 11, color: s.verified ? "#2e7d32" : "#b71c1c", fontWeight: 700 }}>{s.verified ? "APPROVED PATTERN" : "UNVERIFIED — NOT FOR CUTTING"}</p>
+              </header>
+              <h3 style={{ fontSize: 13, margin: "6px 0 3px", color: PINK }}>1. FABRIC & MATERIAL NEEDED (1 piece, fabric width {widthIn}”)</h3>
+              <table style={{ borderCollapse: "collapse", width: "100%" }}><tbody>
+                <tr><th style={head}>Main fabric</th><td style={cell}>{fmtNum(need.fabricM)} m</td><th style={head}>Lining</th><td style={cell}>{fmtNum(need.liningM)} m</td><th style={head}>Fusing</th><td style={cell}>{fmtNum(need.fusingM)} m</td></tr>
+                <tr><th style={head}>Hook &amp; eye sets</th><td style={cell}>{need.hooks}</td><th style={head}>Thread</th><td style={cell}>1 spool per 8 pcs</td><th style={head}>Seam allowance</th><td style={cell}>{s.spec.seam ?? "—"} {u}</td></tr>
+              </tbody></table>
+
+              <h3 style={{ fontSize: 13, margin: "10px 0 3px", color: PINK }}>2. PIECES TO CUT (sizes in {u === "in" ? "inches" : "cm"}, seam + hem allowance already added)</h3>
+              <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                <thead><tr><th style={head}>Piece</th><th style={head}>Fabric</th><th style={{ ...head, textAlign: "center" }}>Qty</th><th style={{ ...head, textAlign: "center" }}>Width × Length</th><th style={head}>How</th></tr></thead>
+                <tbody>{pieces.map((p, i) => (
+                  <tr key={i}><td style={cell}>{p.name}</td><td style={cell}>{p.fabric}</td><td style={{ ...cell, textAlign: "center" }}>{p.qty}</td><td style={{ ...cell, textAlign: "center" }}>{d(p.w)} × {d(p.l)}</td><td style={{ ...cell, fontSize: 11 }}>{p.note}</td></tr>
+                ))}</tbody>
+              </table>
+              <p style={{ fontSize: 10, color: "#555", margin: "3px 0" }}>Pieces are cut as rectangles first, then the neck, armhole and dart curves are marked from the pattern / sample and trimmed.{!need.usedSleeve ? " No sleeve length entered, so this is a sleeveless blouse." : ""}</p>
+
+              <h3 style={{ fontSize: 13, margin: "10px 0 3px", color: PINK }}>3. LAY PLAN — main fabric (about {fmtNum(fromInches(lay.length, "in") * 0.0254, 2)} m used before wastage)</h3>
+              <LayPlan placed={lay.placed} widthIn={widthIn} length={lay.length} />
+
+              <h3 style={{ fontSize: 13, margin: "10px 0 3px", color: PINK }}>4. HOW TO CUT — step by step</h3>
+              <ol style={{ fontSize: 12, margin: 0, paddingLeft: 18, lineHeight: 1.5 }}>
+                <li>Press the fabric flat. Check for flaws and mark them so no piece falls on one. Pre-wash or steam if the fabric can shrink.</li>
+                <li>Fold the fabric in half lengthways, <b>right sides together</b>, selvedges matching. The grain line of every piece runs parallel to the selvedge.</li>
+                <li>Place the pieces as in the lay plan. For fabrics with a motif or one-way shine, keep all pieces facing the same direction.</li>
+                <li>Mark each piece with tailor’s chalk: width × length from the table above, then the bust dart, neckline (front depth {val("front_neck_depth") || "—"}, back depth {val("back_neck_depth") || "—"}, width {val("neck_width") || "—"}) and armhole (depth {val("armhole") || "—"}) from the pattern or sample.</li>
+                <li>Cut with sharp shears using long strokes. Cut the front and back panels twice so you get a left and a right. Cut notches (small snips) at the bust point, waist and shoulder.</li>
+                <li>Cut the lining with the same shapes. Cut the bias strip at 45° to the grain.</li>
+                <li>Iron fusing on the wrong side of the neck and closure edges before stitching.</li>
+                <li>Bundle the pieces of one blouse together with a ticket: {design.design_code} · size {s.size} · {design.color || "colour"}. Check the piece count against the table before handing over to the tailor.</li>
+              </ol>
+              <p style={{ marginTop: 8, padding: 6, background: "#fde9f2", border: `1px solid ${PINK}`, borderRadius: 6, fontSize: 11 }}>
+                <b>Note:</b> This guide is a starting estimate from standard size values. Make one sample piece first, check the fit, correct the pattern in DesignLab and get it approved before cutting a full batch.
+              </p>
+            </section>
+            </Fragment>
           );
         })}
       </div>
