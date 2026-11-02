@@ -49,20 +49,32 @@ export function SignatureGallery({
     const product = link?.productId ? byId.get(link.productId) : undefined;
     if (product) {
       const { cover } = productCover(product.images);
-      const extra = (link.images ?? []).filter(Boolean);
-      const mainImg = images[index] || cover?.url || tile.img;
+      // A signature card must show photos of the SAME product it opens.
+      // Previously independent homepage images/overrides could show a different
+      // garment while the href pointed to the linked product ID.
+      const ownedImages = (product.gallery ?? product.images)
+        .filter((image) => image.url && (!image.product_id || image.product_id === product.id))
+        .map((image) => image.url);
+      const uniqueImages = [...new Set([cover?.url, ...ownedImages].filter((url): url is string => Boolean(url)))];
+      // Respect the admin's preferred carousel order only for images already
+      // attached to this product. Never mix unrelated homepage images into it.
+      const preferred = (link.images ?? []).filter((url) => uniqueImages.includes(url));
+      const gallery = [...new Set([...preferred, ...uniqueImages])];
+      const mainImg = gallery[0] ?? tile.img;
       return {
         ...tile,
         img: mainImg,
-        imgs: extra.length >= 2 ? extra : [mainImg],
-        title: link.title || product.name,
+        imgs: gallery.length ? gallery : [mainImg],
+        title: product.name,
         note: link.note || product.subtitle || "From the catalogue",
         href: `/shop/${product.slug}`,
         price: product.price,
         isProduct: true,
       };
     }
-    const soon = spare.shift();
+    // If a configured product was deleted/unpublished, do not silently
+    // substitute another product while keeping the old card photography.
+    const soon = link?.productId ? undefined : spare.shift();
     if (soon) {
       const { cover } = productCover(soon.images);
       const extra = soon.images.filter((i) => i.url && i.url !== cover?.url).slice(0, 2).map((i) => i.url);
@@ -99,7 +111,7 @@ export function SignatureGallery({
           {visible.map((t, i) => (
             <MotionCard key={`${t.title}-${i}`} className="mb-3 block break-inside-avoid md:mb-6">
               <div className="group relative overflow-hidden rounded-xl">
-                <Link href={t.href} aria-label={t.title} className="absolute inset-0 z-0">
+                <Link href={t.href} aria-label={t.title} className="absolute inset-0 z-10">
                   <span className="sr-only">{t.isProduct ? `View ${t.title}` : t.title}</span>
                 </Link>
                 <div className="pointer-events-none">
@@ -171,7 +183,7 @@ function LikeButton({ title }: { title: string }) {
         e.stopPropagation();
         setLiked((v) => !v);
       }}
-      className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-noir/40 text-ivory backdrop-blur transition-all duration-300 hover:bg-noir/70"
+      className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-noir/40 text-ivory backdrop-blur transition-all duration-300 hover:bg-noir/70"
     >
       <svg viewBox="0 0 24 24" strokeWidth={1.6} className="h-4 w-4" aria-hidden fill={liked ? "#D4AF37" : "none"} stroke={liked ? "#D4AF37" : "currentColor"}>
         <path d="M12 20.5s-7.5-4.6-10-9.2C.5 7.8 2.3 4.5 5.7 4c2-.3 3.9.7 6.3 3.1C14.4 4.7 16.3 3.7 18.3 4c3.4.5 5.2 3.8 3.7 7.3-2.5 4.6-10 9.2-10 9.2Z" strokeLinejoin="round" />
