@@ -48,6 +48,11 @@ export function addToBag(line: Omit<BagLine, "key">) {
   write(existing ? lines.map((l) => (l.key === key ? { ...l, qty: Math.min(10, l.qty + line.qty), price: line.price } : l)) : [...lines, { ...line, key }]);
 }
 
+/** A pre-order is placed on its own, so it replaces whatever else was in the bag. */
+export function replaceBag(line: Omit<BagLine, "key">) {
+  write([{ ...line, key: `${line.productId}|${line.size}|${line.color}` }]);
+}
+
 export const openBag = () => window.dispatchEvent(new Event(BAG_OPEN_EVENT));
 
 export function useBag() {

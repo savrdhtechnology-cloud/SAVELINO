@@ -53,6 +53,19 @@ export function PatternTab({ design, part }: { design: DlDesign; part: "measurem
     setSelId(id);
   }, "Revision created");
 
+  const addStandard = () => act(async () => {
+    const have = new Set(list.map((r) => r.size_label));
+    let made = 0;
+    for (const label of ["S", "M", "L", "XL"]) {
+      if (have.has(label)) continue;
+      const tpl = (sizes.data ?? []).find((s) => s.size_label === label);
+      if (!tpl) continue;
+      await rpc("designlab_create_revision", { p_design: design.id, p_size: label, p_template: tpl.id, p_copy_from: null });
+      made++;
+    }
+    if (made === 0) throw new Error("S, M, L and XL already exist for this design (or their templates are missing — run migration 005).");
+  }, "S / M / L / XL revisions added from the size templates");
+
   const save = () => act(async () => {
     if (!sel || !draft) return;
     const seam = num(draft.seam);
@@ -86,6 +99,10 @@ export function PatternTab({ design, part }: { design: DlDesign; part: "measurem
             {list.map((r) => <option key={r.id} value={r.id}>Copy of size {r.size_label} rev {r.revision}</option>)}
           </Select>
           <button className="crm-btn crm-btn-gold" disabled={busy || (newSize === "__custom" && !custom.trim())} onClick={create}>New revision</button>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button className="crm-btn" disabled={busy} onClick={addStandard}>Add S · M · L · XL from templates</button>
+          <a className="crm-btn" href={`/admin/print/designlab/sheet/${design.design_code}`} target="_blank" rel="noreferrer">Cutting sheet (PDF)</a>
         </div>
         {list.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">

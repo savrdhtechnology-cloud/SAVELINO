@@ -7,7 +7,8 @@ import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { CategoryImage } from "@/components/ui/CategoryImage";
 import { categoryImageUrl, resolveCategories } from "@/lib/catalogue";
-import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { UpcomingSection } from "@/components/sections/UpcomingSection";
 import { ProductGrid } from "@/components/store/ProductCard";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -36,6 +37,7 @@ export default async function CollectionPage({ params }: Params) {
     .filter((o) => o.slug !== c.slug)
     .slice(0, 4);
   const products = await getLiveProducts(c.id);
+  const upcoming = (await getUpcomingProducts()).filter((u) => !u.category_id || u.category_id === c.id);
 
   return (
     <PageShell>
@@ -114,6 +116,8 @@ export default async function CollectionPage({ params }: Params) {
           </div>
         </section>
       )}
+
+      <UpcomingSection products={upcoming} limit={12} title={`Upcoming in ${c.title}`} id="upcoming" />
 
       {others.length > 0 && (
       <section aria-label="More collections" className="border-t border-gold/10 py-16 md:py-24">

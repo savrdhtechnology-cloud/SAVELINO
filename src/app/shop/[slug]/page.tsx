@@ -8,7 +8,7 @@ import { BuyBox, FeatureBadges, ProductGallery } from "@/components/store/Produc
 import { ProductCreative } from "@/components/store/ProductCreative";
 import { resolveCategories } from "@/lib/catalogue";
 import { getSiteSettings } from "@/lib/settings-server";
-import { getLiveProduct, getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { getLiveProduct, getLiveProducts, getUpcomingProduct, getVisibleCategories } from "@/lib/data/catalog-server";
 import { inr } from "@/lib/data/types";
 import { site } from "@/lib/site";
 
@@ -16,7 +16,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const p = await getLiveProduct(slug);
+  const p = (await getLiveProduct(slug)) ?? (await getUpcomingProduct(slug));
   if (!p) return {};
   return {
     title: p.name,
@@ -28,8 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const product = await getLiveProduct(slug);
+  const product = (await getLiveProduct(slug)) ?? (await getUpcomingProduct(slug));
   if (!product) notFound();
+  const upcoming = product.status === "upcoming";
   const settings = await getSiteSettings();
   const category = resolveCategories(await getVisibleCategories()).find((c) => c.id === product.category_id);
   const related = product.category_id ? (await getLiveProducts(product.category_id)).filter((p) => p.id !== product.id).slice(0, 4) : [];
@@ -45,7 +46,7 @@ export default async function ProductPage({ params }: Props) {
     description: product.description || product.subtitle,
     image: product.images.map((i) => (i.url.startsWith("http") ? i.url : `${site.url}${i.url}`)),
     brand: { "@type": "Brand", name: site.name },
-    offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: "https://schema.org/InStock", url: `${site.url}/shop/${product.slug}` },
+    offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: upcoming ? "https://schema.org/PreOrder" : "https://schema.org/InStock", url: `${site.url}/shop/${product.slug}` },
   };
 
   return (
@@ -81,7 +82,7 @@ export default async function ProductPage({ params }: Props) {
         <div id="buy" className="grid scroll-mt-28 gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
           <ProductGallery product={{ ...product, images: galleryImages }} />
           <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:self-start">
-            <p className="eyebrow">{category?.title ?? "SAVLINO"}</p>
+            <p className="eyebrow">{upcoming ? "Upcoming · Pre-order" : (category?.title ?? "SAVLINO")}</p>
             <h1 className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[1.02] text-ivory">{product.name}</h1>
             {product.subtitle && <p className="mt-3 font-serif text-xl text-ivory/65">{product.subtitle}</p>}
             <p className="mt-6 flex items-baseline gap-3">

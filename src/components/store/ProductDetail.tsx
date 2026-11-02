@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { addToBag, openBag } from "@/lib/store/cart";
+import { addToBag, openBag, replaceBag } from "@/lib/store/cart";
 import { inr, type Product } from "@/lib/data/types";
 import { BagIcon } from "./ProductCard";
 
@@ -81,6 +81,7 @@ export function FeatureBadges({ features }: { features: string[] }) {
 
 export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: string }) {
   const router = useRouter();
+  const preorder = product.status === "upcoming";
   const [color, setColor] = useState(product.colors.length === 1 ? product.colors[0].name : "");
   const [size, setSize] = useState(product.sizes.length === 1 ? product.sizes[0] : "");
   const [qty, setQty] = useState(1);
@@ -90,16 +91,22 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
     if (product.colors.length > 0 && !color) return setHint("Please choose a colour");
     if (product.sizes.length > 0 && !size) return setHint("Please choose your size");
     setHint("");
-    addToBag({
+    const line = {
       productId: product.id,
       slug: product.slug,
-      name: product.name,
+      name: preorder ? `${product.name} (Pre-order)` : product.name,
       price: product.price,
       image: (product.images.find((i) => !i.width || !i.height || i.height >= i.width) ?? product.images[0])?.url ?? null,
       size,
       color,
       qty,
-    });
+    };
+    if (preorder) {
+      replaceBag(line);
+      router.push("/checkout");
+      return;
+    }
+    addToBag(line);
     if (goToCheckout) router.push("/checkout");
     else openBag();
   }
@@ -177,6 +184,21 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
         )}
       </AnimatePresence>
 
+      {preorder ? (
+        <div className="space-y-3">
+          <p className="rounded-2xl border border-gold/25 bg-gold/5 p-4 text-sm leading-relaxed text-ivory/75">
+            This piece is being stitched now. Pre-order to reserve it
+            {product.expected_at ? ` — expected ${new Date(`${product.expected_at}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}` : ""}. We ship it as soon as it is finished. A pre-order is placed on its own (not together with other items).
+          </p>
+          <button
+            type="button"
+            onClick={() => add(true)}
+            className="w-full rounded-full bg-burgundy py-4 text-[0.68rem] font-medium uppercase tracking-[0.28em] text-ivory shadow-[0_12px_40px_-12px_var(--color-burgundy)] transition-colors hover:bg-burgundy-deep"
+          >
+            Pre-order now · {inr(product.price * qty)}
+          </button>
+        </div>
+      ) : (
       <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
@@ -193,6 +215,7 @@ export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: stri
           Buy now · {inr(product.price * qty)}
         </button>
       </div>
+      )}
 
       {wa && (
         <a

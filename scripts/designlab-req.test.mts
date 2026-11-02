@@ -1,0 +1,13 @@
+import { fabricNeed, toInches, spools } from "../src/lib/designlab/requirements";
+const ok = (c: unknown, m: string) => { if (!c) { console.error("FAIL", m); process.exitCode = 1; } else console.log("ok  ", m); };
+const sheetXL = { unit: "in" as const, seam: 1, garment: { bust: "42", front_length: "13", back_length: "13" }, cutting: { hem_allowance: "1" } };
+const xl = fabricNeed(sheetXL);
+const s = fabricNeed({ ...sheetXL, garment: { bust: "36", front_length: "13", back_length: "13" } });
+console.log("XL", xl, "S", s);
+ok(xl.fabricM >= 0.8 && xl.fabricM <= 1.2, "XL sleeveless blouse ~1 m");
+ok(xl.fabricM >= s.fabricM, "bigger size never needs less fabric");
+ok(fabricNeed({ ...sheetXL, garment: { ...sheetXL.garment, sleeve_length: "6" } }).fabricM > xl.fabricM, "sleeves add fabric");
+ok(fabricNeed({ ...sheetXL }, { lined: false }).liningM === 0, "no lining when unlined");
+ok(Math.round(toInches("25.4", "cm") * 100) / 100 === 10, "cm to inches");
+ok(spools(0) === 0 && spools(9) === 2, "spools");
+ok(fabricNeed({ ...sheetXL }, { widthIn: 36 }).fabricM >= xl.fabricM, "narrower fabric never needs less");

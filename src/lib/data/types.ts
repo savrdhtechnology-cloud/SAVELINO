@@ -78,7 +78,7 @@ export type CreativeSettings = {
   framing: Record<string, Framing>;
 };
 
-export type ProductStatus = "draft" | "live" | "archived";
+export type ProductStatus = "draft" | "live" | "archived" | "upcoming";
 
 export type Product = {
   id: string;
@@ -97,6 +97,9 @@ export type Product = {
   /** Inventory alert level (stock at or below this is "low"). */
   low_stock_at?: number;
   status: ProductStatus;
+  /** Upcoming pieces: when they are expected, and how many pre-orders are waiting. */
+  expected_at?: string | null;
+  preorder_qty?: number;
   sort_order: number;
   created_at: string;
   updated_at?: string;

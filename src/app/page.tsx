@@ -18,7 +18,8 @@ import { StatsStrip } from "@/components/sections/StatsStrip";
 import { site } from "@/lib/site";
 import { resolveCategories } from "@/lib/catalogue";
 import { ShopSection } from "@/components/sections/ShopSection";
-import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { UpcomingSection } from "@/components/sections/UpcomingSection";
 import { MotionStyleProvider } from "@/components/site/Motion";
 import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
 import { productCover, showcaseProduct } from "@/lib/product-image";
@@ -62,6 +63,7 @@ export default async function Home({ searchParams }: Props) {
   const collectionItems = enabled.filter((c) => !(ownSection[c.slug] && visibleSections.has(ownSection[c.slug])));
   const enabledSet = new Set(enabledSlugs);
   const visibleIds = new Set(enabled.map((c) => c.id));
+  const upcoming = await getUpcomingProducts();
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
   const designerBlousesId = enabled.find((c) => c.slug === "designer-blouses")?.id;
   const readyMadeId = enabled.find((c) => c.slug === "ready-made-blouses")?.id;
@@ -120,6 +122,7 @@ export default async function Home({ searchParams }: Props) {
             <>
               <CinematicHero content={settings.hero} />
               <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
+              <UpcomingSection products={upcoming} />
               {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}
               <TrustFeatures />
               {visibleSections.has("custom-stitching") && <StitchingJourney />}
@@ -128,6 +131,7 @@ export default async function Home({ searchParams }: Props) {
             <>
               {siteTheme === "pearl" && heroSlides.length ? <HeroSlider slides={heroSlides} /> : <Hero content={settings.hero} />}
               {siteTheme === "pearl" && <StatsStrip />}
+              <UpcomingSection products={upcoming} />
             </>
           )}
           {settings.sections
