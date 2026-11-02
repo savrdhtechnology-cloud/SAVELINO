@@ -127,7 +127,6 @@ export default async function Home({ searchParams }: Props) {
               <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
               <UpcomingSection products={upcoming} />
               <FeaturedProducts products={featured} />
-              <FeaturedProducts products={featured} />
               {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}
               <TrustFeatures />
               {visibleSections.has("custom-stitching") && <StitchingJourney />}
