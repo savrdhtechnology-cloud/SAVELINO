@@ -173,6 +173,24 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
   }, [s.crm]);
   useEffect(() => () => void window.dispatchEvent(new CustomEvent(CRM_PREVIEW_EVENT, { detail: null })), []);
 
+  // Gallery uploads are published immediately so the public 3D salon never gets stuck showing old images.
+  async function publishGalleryImages(key: "showcaseImages" | "signatureImages", urls: string[]) {
+    const next = { ...s, [key]: urls };
+    setS(next);
+    setBusy(true);
+    try {
+      await saveSettings(next);
+      setSaved(next);
+      setSavedAt(new Date().toISOString());
+      setFrameKey((k) => k + 1);
+      toast("Gallery images published to the website");
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Could not publish gallery images", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function publish() {
     setBusy(true);
     try {
@@ -245,8 +263,8 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
 
   const home = (
     <>
-      <ShowcaseImageStudio images={s.showcaseImages} onChange={(showcaseImages) => setS((x) => ({ ...x, showcaseImages }))} />
-      <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => setS((x) => ({ ...x, signatureImages }))} />
+      <ShowcaseImageStudio images={s.showcaseImages} onChange={(showcaseImages) => void publishGalleryImages("showcaseImages", showcaseImages)} />
+      <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => void publishGalleryImages("signatureImages", signatureImages)} />
       <Panel title="Announcement bar" icon={ICONS.bell}>
         <div className="space-y-3">
           <Toggle label="Show the announcement bar" checked={s.announcement.enabled} onChange={(v) => patch("announcement", { enabled: v })} />
