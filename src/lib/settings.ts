@@ -78,6 +78,17 @@ export const CURSOR_EFFECT_LABELS: Record<CursorEffect, { label: string; note: s
 export const EFFECT_INTENSITIES = ["subtle", "medium", "bold"] as const;
 export type EffectIntensity = (typeof EFFECT_INTENSITIES)[number];
 
+/**
+ * Full website look — the structural "theme" for the whole storefront (header, homepage composition, card
+ * styling), as opposed to the Hero preset above (which only changes the hero section). New looks are added
+ * here and to SITE_THEME_LABELS; the website and the CRM thumbnail grid pick them up automatically.
+ */
+export const SITE_THEMES = ["signature"] as const;
+export type SiteThemeId = (typeof SITE_THEMES)[number];
+export const SITE_THEME_LABELS: Record<SiteThemeId, { label: string; note: string }> = {
+  signature: { label: "SAVLINO Signature", note: "The current maroon-and-gold luxury look — your live design" },
+};
+
 /** "still" = no animation. "reveal" = fade/rise text + sections on scroll. "cinematic" = reveal + card hover lift/tilt/glow. */
 export const MOTION_STYLES = ["still", "reveal", "cinematic"] as const;
 export type MotionStyle = (typeof MOTION_STYLES)[number];
@@ -112,6 +123,8 @@ export const HERO_PRESET_PALETTES: Record<HeroPreset,{background:string;accent:s
   "champagne-atelier":{background:"#473125",accent:"#F1D6A8",shade:"#986E54"}
 };
 export type SiteSettings = {
+  /** The whole-website look (Appearance Studio → Website themes). More looks are added over time. */
+  layout: { theme: SiteThemeId };
   brand: {
     name: string;
     tagline: string;
@@ -182,6 +195,7 @@ export type SiteSettings = {
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
+  layout: { theme: "signature" },
   brand: {
     name: "SAVLINO",
     tagline: "A Legacy of Elegance",
@@ -259,7 +273,7 @@ export function mergeSettings(stored: unknown): SiteSettings {
     const t = src.theme;
     src.theme = { ...t, dark: { gold: t.gold, noir: t.noir, ivory: t.ivory, burgundy: t.burgundy } };
   }
-  for (const group of ["brand", "commerce", "theme", "hero", "announcement", "crm", "effects", "seo"] as const) {
+  for (const group of ["layout", "brand", "commerce", "theme", "hero", "announcement", "crm", "effects", "seo"] as const) {
     mergeInto(out[group] as unknown as Record<string, unknown>, src[group]);
   }
   if (!HERO_PRESETS.includes(out.hero.preset)) out.hero.preset = "classic-3d";
@@ -277,6 +291,7 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!CURSOR_EFFECTS.includes(out.effects.cursor)) out.effects.cursor = "default";
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
   if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
+  if (!SITE_THEMES.includes(out.layout.theme)) out.layout.theme = "signature";
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
     const list: { id: SectionId; visible: boolean }[] = [];

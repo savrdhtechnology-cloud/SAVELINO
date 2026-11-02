@@ -18,9 +18,15 @@ import { resolveCategories } from "@/lib/catalogue";
 import { ShopSection } from "@/components/sections/ShopSection";
 import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { MotionStyleProvider } from "@/components/site/Motion";
+import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
 
-export default async function Home() {
+type Props = { searchParams?: Promise<{ theme?: string }> };
+
+export default async function Home({ searchParams }: Props) {
   const settings = await getSiteSettings();
+  // Appearance Studio → Website themes previews an unsaved pick with ?theme=, same pattern as hero presets.
+  const { theme: themeParam } = (await searchParams) ?? {};
+  const siteTheme: SiteThemeId = SITE_THEMES.includes(themeParam as SiteThemeId) ? (themeParam as SiteThemeId) : settings.layout.theme;
   const enabled = resolveCategories(await getVisibleCategories());
   const enabledSlugs = enabled.map((c) => c.slug);
   const visibleSections = new Set(settings.sections.filter((s) => s.visible).map((s) => s.id));
@@ -66,7 +72,7 @@ export default async function Home() {
     <>
       <SiteHeader />
       <MotionStyleProvider style={settings.effects.motion}>
-        <main id="main">
+        <main id="main" data-site-theme={siteTheme}>
           <Hero content={settings.hero} />
           {settings.sections
             .filter((sec) => sec.visible)

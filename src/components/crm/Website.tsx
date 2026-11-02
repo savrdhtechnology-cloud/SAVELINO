@@ -21,6 +21,9 @@ import {
   MOTION_STYLES,
   MOTION_STYLE_LABELS,
   type MotionStyle,
+  SITE_THEMES,
+  SITE_THEME_LABELS,
+  type SiteThemeId,
   SECTION_LABELS,
   THEME_LABELS,
   THEME_MODES,
@@ -64,8 +67,9 @@ const DEVICES = [
   { id: "mobile", label: "Mobile", width: 390 },
 ] as const;
 
-type Tab = "hero" | "home" | "design" | "crm" | "seo";
+type Tab = "theme" | "hero" | "home" | "design" | "crm" | "seo";
 const TABS: { value: Tab; label: string; icon: string }[] = [
+  { value: "theme", label: "Website themes", icon: ICONS.layers },
   { value: "hero", label: "Hero themes", icon: ICONS.image },
   { value: "design", label: "Colours & fonts", icon: ICONS.palette },
   { value: "home", label: "Homepage", icon: ICONS.layers },
@@ -99,7 +103,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
   const [s, setS] = useState<SiteSettings>(initial);
   const [saved, setSaved] = useState<SiteSettings>(initial);
   const [cats, setCats] = useState(initialCategories);
-  const [tab, setTab] = useState<Tab>("hero");
+  const [tab, setTab] = useState<Tab>("theme");
   const [page, setPage] = useState("/");
   const [device, setDevice] = useState<(typeof DEVICES)[number]["id"]>("desktop");
   const [editMode, setEditMode] = useState<ThemeMode>(initial.theme.mode);
@@ -141,6 +145,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
     });
     post({ type: "savlino:studio:effects", effects: s.effects });
     post({ type: "savlino:studio:motion", motion: s.effects.motion });
+    post({ type: "savlino:studio:theme", theme: s.layout.theme });
     post({ type: "savlino:studio:hero", hero: { preset: s.hero.preset, height: s.hero.height, spotlight: s.hero.spotlight } });
     post({ type: "savlino:studio:text", key: "hero-eyebrow", value: s.hero.eyebrow });
     post({ type: "savlino:studio:text", key: "hero-title", value: s.hero.title });
@@ -190,6 +195,22 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
       toast(e instanceof Error ? e.message : "Could not update", "error");
     }
   }
+
+  const theme = (
+    <>
+      <Panel title="Website theme" icon={ICONS.layers} subtitle="A full site look — header, homepage layout, card styling. Pick one, publish to go live.">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {SITE_THEMES.map((id) => (
+            <SiteThemeThumb key={id} id={id} selected={s.layout.theme === id} live={saved.layout.theme === id} onPick={() => patch("layout", { theme: id })} />
+          ))}
+          <div className="crm-panel-soft flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-center" style={{ borderColor: "var(--crm-border-soft)" }}>
+            <Icon d={ICONS.sparkle} className="h-5 w-5 crm-muted" />
+            <span className="text-xs crm-muted">More website themes land here as they&apos;re added — pick any one and publish to switch the whole site to it.</span>
+          </div>
+        </div>
+      </Panel>
+    </>
+  );
 
   const hero = (
     <>
@@ -427,7 +448,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]">
         <AnimatePresence mode="wait">
           <motion.div key={tab} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.3, ease: EASE }} className="min-w-0 space-y-5">
-            {{ hero, home, design, crm, seo }[tab]}
+            {{ theme, hero, home, design, crm, seo }[tab]}
           </motion.div>
         </AnimatePresence>
 
@@ -519,6 +540,55 @@ const ScaledFrame = forwardRef<HTMLIFrameElement, { src: string; deviceWidth: nu
     </div>
   );
 });
+
+/** A website theme card with a real, scaled-down render of the actual homepage. */
+function SiteThemeThumb({ id, selected, live, onPick }: { id: SiteThemeId; selected: boolean; live: boolean; onPick: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const scale = w / 1280;
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      aria-pressed={selected}
+      className="group overflow-hidden rounded-xl border text-left transition-transform hover:-translate-y-0.5"
+      style={{ borderColor: selected ? "var(--crm-accent)" : "var(--crm-border-soft)", boxShadow: selected ? "0 0 0 1px var(--crm-accent), 0 12px 30px -16px var(--crm-accent)" : undefined }}
+    >
+      <div ref={box} className="relative aspect-[4/3] overflow-hidden bg-black">
+        {w > 0 && (
+          <iframe
+            src={`/?theme=${id}`}
+            title={SITE_THEME_LABELS[id].label}
+            loading="lazy"
+            tabIndex={-1}
+            aria-hidden
+            className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
+            style={{ width: 1280, height: 960, transform: `scale(${scale})` }}
+          />
+        )}
+        {selected && (
+          <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "var(--crm-accent)" }}>
+            <Icon d={ICONS.check} className="h-3 w-3 text-black" />
+          </span>
+        )}
+      </div>
+      <span className="flex items-center justify-between gap-2 px-2.5 py-2">
+        <span className="min-w-0">
+          <span className={`block truncate text-xs ${selected ? "crm-accent" : ""}`}>{SITE_THEME_LABELS[id].label}</span>
+          <span className="block truncate text-[0.68rem] crm-muted">{SITE_THEME_LABELS[id].note}</span>
+        </span>
+        {live && <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase" style={{ background: "color-mix(in srgb, var(--crm-success) 25%, transparent)", color: "var(--crm-success)" }}>Live</span>}
+      </span>
+    </button>
+  );
+}
 
 /** A hero theme card with a real, scaled-down render of the website hero. */
 function HeroThumb({ id, selected, live, onPick }: { id: HeroPreset; selected: boolean; live: boolean; onPick: () => void }) {
