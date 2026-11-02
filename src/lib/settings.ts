@@ -198,6 +198,8 @@ export type SiteSettings = {
     background: BgEffect;
     cursor: CursorEffect;
   };
+  /** Six optional custom photographs for the rotating 3D collection salon. */
+  showcaseImages: string[];
   /** Website background motion and mouse effects (Studio → Motion). */
   effects: {
     background: BgEffect;
@@ -261,6 +263,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     porcelain: { ...PORCELAIN_PALETTE },
   },
   crm: { theme: "luxe", headingFont: "cinzel", bodyFont: "manrope", background: "none", cursor: "default" },
+  showcaseImages: ["", "", "", "", "", ""],
   effects: { background: "none", intensity: "subtle", cursor: "default", mobile: false, motion: "cinematic" },
   seo: {
     title: "SAVLINO — Designer Blouses | A Legacy of Elegance",
@@ -367,6 +370,12 @@ export function mergeSettings(stored: unknown): SiteSettings {
       }
     }
     if (list.length) out.hero.slides = list;
+  }
+  if (Array.isArray(src.showcaseImages)) {
+    out.showcaseImages = Array.from({ length: 6 }, (_, i) => {
+      const url = src.showcaseImages[i];
+      return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
+    });
   }
   if (Array.isArray(src.sections)) {
     const seen = new Set<string>();
