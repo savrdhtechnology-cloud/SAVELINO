@@ -71,6 +71,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html
       lang="en"
       data-theme={settings.theme.mode}
+      data-site-theme={settings.layout.theme}
       suppressHydrationWarning
     >
       <head>

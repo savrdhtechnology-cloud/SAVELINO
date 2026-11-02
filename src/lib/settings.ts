@@ -83,10 +83,11 @@ export type EffectIntensity = (typeof EFFECT_INTENSITIES)[number];
  * styling), as opposed to the Hero preset above (which only changes the hero section). New looks are added
  * here and to SITE_THEME_LABELS; the website and the CRM thumbnail grid pick them up automatically.
  */
-export const SITE_THEMES = ["signature"] as const;
+export const SITE_THEMES = ["signature", "pearl"] as const;
 export type SiteThemeId = (typeof SITE_THEMES)[number];
 export const SITE_THEME_LABELS: Record<SiteThemeId, { label: string; note: string }> = {
-  signature: { label: "SAVLINO Signature", note: "The current maroon-and-gold luxury look — your live design" },
+  signature: { label: "SAVLINO Signature", note: "The current maroon-and-gold luxury look — angular gold buttons, no stats strip" },
+  pearl: { label: "Pearl Celebration", note: "Rounded pill buttons, a warm festive offer bar and a trust stats strip under the hero" },
 };
 
 /** "still" = no animation. "reveal" = fade/rise text + sections on scroll. "cinematic" = reveal + card hover lift/tilt/glow. */

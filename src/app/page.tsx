@@ -13,6 +13,7 @@ import { Heritage } from "@/components/sections/Heritage";
 import { Craftsmanship } from "@/components/sections/Craftsmanship";
 import { Lookbook } from "@/components/sections/Lookbook";
 import { Collections } from "@/components/sections/Collections";
+import { StatsStrip } from "@/components/sections/StatsStrip";
 import { site } from "@/lib/site";
 import { resolveCategories } from "@/lib/catalogue";
 import { ShopSection } from "@/components/sections/ShopSection";
@@ -74,6 +75,7 @@ export default async function Home({ searchParams }: Props) {
       <MotionStyleProvider style={settings.effects.motion}>
         <main id="main" data-site-theme={siteTheme}>
           <Hero content={settings.hero} />
+          {siteTheme === "pearl" && <StatsStrip />}
           {settings.sections
             .filter((sec) => sec.visible)
             .map((sec) => (

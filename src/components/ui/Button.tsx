@@ -9,7 +9,7 @@ type ButtonProps = {
 };
 
 const base =
-  "group relative inline-flex items-center justify-center gap-3 overflow-hidden px-7 py-3.5 text-[0.7rem] font-medium uppercase tracking-[0.32em] transition-colors duration-500";
+  "savlino-btn group relative inline-flex items-center justify-center gap-3 overflow-hidden px-7 py-3.5 text-[0.7rem] font-medium uppercase tracking-[0.32em] transition-colors duration-500";
 
 const variants = {
   gold: "bg-gold text-noir hover:text-noir",

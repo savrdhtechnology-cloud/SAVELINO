@@ -50,7 +50,7 @@ export function StudioBridge() {
       } else if (e.data.type === "savlino:studio:motion") {
         if (MOTION_STYLES.includes(e.data.motion)) window.dispatchEvent(new CustomEvent(MOTION_PREVIEW_EVENT, { detail: e.data.motion }));
       } else if (e.data.type === "savlino:studio:theme") {
-        if (SITE_THEMES.includes(e.data.theme)) document.querySelector("main")?.setAttribute("data-site-theme", e.data.theme);
+        if (SITE_THEMES.includes(e.data.theme)) document.documentElement.setAttribute("data-site-theme", e.data.theme);
       } else if (e.data.type === "savlino:studio:hero") {
         window.dispatchEvent(new CustomEvent(HERO_PREVIEW_EVENT, { detail: e.data.hero }));
       } else if (e.data.type === "savlino:studio:text") {

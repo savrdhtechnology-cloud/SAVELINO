@@ -575,3 +575,11 @@ body {
   background: color-mix(in srgb, var(--crm-accent) 35%, transparent);
   border-radius: 99px;
 }
+
+/* Website theme: "Pearl Celebration" — rounded buttons + a warmer, rose-gold announcement bar. */
+[data-site-theme="pearl"] .savlino-btn {
+  border-radius: 999px;
+}
+[data-site-theme="pearl"] [data-studio="announcement"] {
+  background-image: linear-gradient(90deg, #a65d6e, #d6a06b, #a65d6e);
+}
