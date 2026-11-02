@@ -4,21 +4,58 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { addToBag, openBag, replaceBag } from "@/lib/store/cart";
-import { inr, type Product } from "@/lib/data/types";
+import { inr, type Product, type ProductImage } from "@/lib/data/types";
 import { BagIcon } from "./ProductCard";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+const ColorCtx = createContext<{ color: string; setColor: (c: string) => void }>({ color: "", setColor: () => undefined });
+
+/** Shares the chosen colour between the gallery and the buy box, so picking a colour swaps the photos. */
+export function ProductColorProvider({ initial, children }: { initial: string; children: ReactNode }) {
+  const [color, setColor] = useState(initial);
+  return <ColorCtx.Provider value={{ color, setColor }}>{children}</ColorCtx.Provider>;
+}
+
+/** Photos for the chosen colour; if none are tagged with it, every picture of the product. */
+function pickImages(all: ProductImage[], color: string) {
+  const tagged = color ? all.filter((i) => i.color === color) : [];
+  return tagged.length ? tagged : all;
+}
+
 export function ProductGallery({ product }: { product: Product }) {
+  const { color } = useContext(ColorCtx);
+  const all = product.gallery?.length ? product.gallery : product.images;
+  const shown = pickImages(all, color);
   const [active, setActive] = useState(0);
-  const img = product.images[active] ?? product.images[0];
+  const [zoom, setZoom] = useState(false);
+  const key = shown.map((i) => i.id).join("|");
+  useEffect(() => setActive(0), [key]);
+  const img = shown[active] ?? shown[0];
   const ratio = img?.width && img?.height ? img.width / img.height : 4 / 5;
+  const step = useCallback((n: number) => setActive((a) => (a + n + shown.length) % shown.length), [shown.length]);
+
+  useEffect(() => {
+    if (!zoom) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoom(false);
+      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") step(1);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [zoom, step]);
+
   return (
     <div>
       <div className="relative mx-auto overflow-hidden rounded-2xl border border-gold/30 bg-noir-soft p-1.5" style={{ width: `min(100%, calc(76svh * ${ratio}))` }}>
-        <div className="relative overflow-hidden rounded-xl bg-noir" style={{ aspectRatio: String(ratio) }}>
+        <button type="button" onClick={() => img && setZoom(true)} aria-label="Open photo full screen" className="relative block w-full cursor-zoom-in overflow-hidden rounded-xl bg-noir" style={{ aspectRatio: String(ratio) }}>
           <AnimatePresence mode="wait">
             {img ? (
               <motion.div key={img.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }} className="absolute inset-0">
@@ -28,23 +65,52 @@ export function ProductGallery({ product }: { product: Product }) {
               <span className="absolute inset-0 flex items-center justify-center font-display text-7xl italic text-gold/25">S</span>
             )}
           </AnimatePresence>
-        </div>
+        </button>
+        {shown.length > 1 && (
+          <>
+            <button type="button" onClick={() => step(-1)} aria-label="Previous photo" className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gold/40 bg-noir/70 text-gold backdrop-blur hover:bg-gold hover:text-noir">‹</button>
+            <button type="button" onClick={() => step(1)} aria-label="Next photo" className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gold/40 bg-noir/70 text-gold backdrop-blur hover:bg-gold hover:text-noir">›</button>
+            <span className="absolute bottom-3 right-3 rounded-full bg-noir/75 px-2.5 py-1 text-[0.72rem] text-ivory">{active + 1} / {shown.length}</span>
+          </>
+        )}
       </div>
-      {product.images.length > 1 && (
+      {shown.length > 1 && (
         <ul className="mt-2 flex justify-center gap-2 overflow-x-auto pb-1">
-          {product.images.map((im, i) => (
+          {shown.map((im, i) => (
             <li key={im.id} className="shrink-0">
-              <button
-                type="button"
-                onClick={() => setActive(i)}
-                aria-label={`Photo ${i + 1}`}
-                className={`relative block h-14 w-14 overflow-hidden rounded-lg border transition-colors md:h-16 md:w-16 ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}
-              >
-                <Image quality={90} src={im.url} alt="" fill sizes="96px" className="object-cover" />
+              <button type="button" onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`} className={`relative block h-16 w-16 overflow-hidden rounded-lg border transition-colors md:h-[4.5rem] md:w-[4.5rem] ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}>
+                <Image quality={90} src={im.url} alt="" fill sizes="80px" className="object-cover" />
               </button>
             </li>
           ))}
         </ul>
+      )}
+
+      {zoom && img && (
+        <div role="dialog" aria-modal="true" aria-label={`${product.name} photos`} className="fixed inset-0 z-[100] flex flex-col bg-noir/95 backdrop-blur" onClick={() => setZoom(false)}>
+          <div className="flex items-center justify-between px-5 py-4 text-ivory">
+            <p className="text-sm">{product.name} · {active + 1} / {shown.length}{color ? ` · ${color}` : ""}</p>
+            <button type="button" onClick={() => setZoom(false)} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/50 text-xl text-gold hover:bg-gold hover:text-noir">×</button>
+          </div>
+          <div className="relative min-h-0 flex-1" onClick={(e) => e.stopPropagation()}>
+            <Image quality={90} src={img.url} alt={product.name} fill sizes="100vw" className="object-contain" />
+            {shown.length > 1 && (
+              <>
+                <button type="button" onClick={() => step(-1)} aria-label="Previous photo" className="absolute left-4 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gold/50 bg-noir/70 text-2xl text-gold hover:bg-gold hover:text-noir">‹</button>
+                <button type="button" onClick={() => step(1)} aria-label="Next photo" className="absolute right-4 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gold/50 bg-noir/70 text-2xl text-gold hover:bg-gold hover:text-noir">›</button>
+              </>
+            )}
+          </div>
+          <ul className="flex justify-center gap-2 overflow-x-auto px-5 py-4" onClick={(e) => e.stopPropagation()}>
+            {shown.map((im, i) => (
+              <li key={im.id} className="shrink-0">
+                <button type="button" onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`} className={`relative block h-16 w-16 overflow-hidden rounded-lg border ${i === active ? "border-gold" : "border-gold/20"}`}>
+                  <Image quality={90} src={im.url} alt="" fill sizes="64px" className="object-cover" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -82,7 +148,7 @@ export function FeatureBadges({ features }: { features: string[] }) {
 export function BuyBox({ product, whatsapp }: { product: Product; whatsapp: string }) {
   const router = useRouter();
   const preorder = product.status === "upcoming";
-  const [color, setColor] = useState(product.colors.length === 1 ? product.colors[0].name : "");
+  const { color, setColor } = useContext(ColorCtx);
   const [size, setSize] = useState(product.sizes.length === 1 ? product.sizes[0] : "");
   const [qty, setQty] = useState(1);
   const [hint, setHint] = useState("");

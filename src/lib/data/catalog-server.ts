@@ -21,15 +21,18 @@ function anon() {
 const sortImages = (p: Product): Product => {
   const all = [...(p.images ?? [])].sort((a, b) => a.position - b.position);
   const creatives = all.filter((i) => i.kind === "creative");
-  const photos = all.filter((i) => i.kind !== "creative");
-  if (!creatives.length) return { ...p, images: photos, generated: false };
+  const tags = p.creative?.photoColors ?? {};
+  const photos = all.filter((i) => i.kind !== "creative").map((i) => (tags[i.id] ? { ...i, color: tags[i.id] } : i));
+  // The product page gallery shows every picture, so nothing uploaded is hidden from customers.
+  const gallery = [...creatives, ...photos];
+  if (!creatives.length) return { ...p, images: photos, gallery, generated: false };
   const base = p.creative?.showRaw ? [...creatives, ...photos] : creatives;
   // A product with only the combined (3:2) creative and no per-photo (4:5) ones has nothing portrait
   // to show as a grid cover — forcing that wide creative into a 4:5 card crops straight through its
   // logo and title text. Keep one raw photo in reserve so the card always has a clean portrait cover.
   const hasPortrait = creatives.some((i) => !i.width || !i.height || i.height >= i.width);
   const images = hasPortrait || p.creative?.showRaw || !photos.length ? base : [...base, photos[0]];
-  return { ...p, images, generated: true };
+  return { ...p, images, gallery, generated: true };
 };
 
 /** Visible categories, in CRM order. */
