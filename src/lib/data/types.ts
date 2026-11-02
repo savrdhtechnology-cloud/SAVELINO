@@ -27,6 +27,8 @@ export type ProductImage = {
   width: number | null;
   height: number | null;
   kind?: ImageKind;
+  /** Colour this photo shows (website only, from the product's photo-colour tags). */
+  color?: string;
 };
 
 /** How a raw photo sits inside a creative frame (fractions of the photo). */
@@ -76,6 +78,8 @@ export type CreativeSettings = {
   layout?: Partial<CreativeLayout>;
   /** Framing per raw photo id. */
   framing: Record<string, Framing>;
+  /** Which colour each raw photo shows (photo id -> colour name). Photos without an entry belong to every colour. */
+  photoColors?: Record<string, string>;
 };
 
 export type ProductStatus = "draft" | "live" | "archived" | "upcoming";
@@ -107,6 +111,8 @@ export type Product = {
   creative?: Partial<CreativeSettings> | null;
   /** Website only: true when images are generated creatives (set by the catalogue loader). */
   generated?: boolean;
+  /** Website only: every picture of the product (creatives first, then all photos) for the product page gallery. */
+  gallery?: ProductImage[];
 };
 
 export type OrderItem = { productId: string; slug: string; name: string; price: number; size: string; color: string; qty: number };

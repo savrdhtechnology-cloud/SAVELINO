@@ -9,7 +9,7 @@ import { canvasBlob, defaultSettings, loadCreativeFonts, mergeSettings, renderAl
 import { db, dominantColor, fetchCategories, fetchProduct, must, nearestColor, removeMedia, revalidateSite, uploadBlob, uploadMedia, useLoad } from "./data";
 import { Area, Badge, EASE, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, Tabs, toast } from "./ui";
 
-type Photo = { key: string; url: string; file?: File; id?: string; path?: string | null; width: number | null; height: number | null };
+type Photo = { key: string; url: string; file?: File; id?: string; path?: string | null; width: number | null; height: number | null; color?: string };
 
 type Details = {
   name: string;
@@ -91,7 +91,7 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
     (product?.images ?? [])
       .filter((im) => im.kind !== "creative")
       .sort((a, b) => a.position - b.position)
-      .map((im) => ({ key: im.id, id: im.id, url: im.url, path: im.storage_path ?? null, width: im.width, height: im.height })),
+      .map((im) => ({ key: im.id, id: im.id, url: im.url, path: im.storage_path ?? null, width: im.width, height: im.height, color: product?.creative?.photoColors?.[im.id] || undefined })),
   );
   const [saved, setSaved] = useState<Photo[]>(photos);
   const [creatives, setCreatives] = useState<ProductImage[]>(() => (product?.images ?? []).filter((im) => im.kind === "creative"));
@@ -218,7 +218,7 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
           const ins = must(
             await client.from("product_images").insert({ product_id: pid, url: up.url, storage_path: up.path, position: i, width: up.width, height: up.height }).select("id").single(),
           ) as { id: string };
-          final.push({ key: ins.id, id: ins.id, url: up.url, path: up.path, width: up.width, height: up.height });
+          final.push({ key: ins.id, id: ins.id, url: up.url, path: up.path, width: up.width, height: up.height, color: p.color });
         } else {
           must(await client.from("product_images").update({ position: i }).eq("id", p.id as string).select("id"));
           final.push(p);
@@ -232,7 +232,8 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
       Object.entries(renamed).forEach(([from, to]) => bitmaps.rename(from, to));
       const framing = Object.fromEntries(Object.entries(cs.framing).filter(([k]) => final.some((p) => p.key === (renamed[k] ?? k))).map(([k, v]) => [renamed[k] ?? k, v]));
       const skip = cs.skip.map((x) => (x.startsWith("single:") && renamed[x.slice(7)] ? `single:${renamed[x.slice(7)]}` : x));
-      const nextCs: CreativeSettings = { ...cs, framing, skip };
+      const photoColors = Object.fromEntries(final.filter((p) => p.color).map((p) => [p.key, p.color as string]));
+      const nextCs: CreativeSettings = { ...cs, framing, skip, photoColors };
       const nextFaces: Faces = Object.fromEntries(Object.entries(faces).map(([k, v]) => [renamed[k] ?? k, v]));
 
       // Branded creatives: render full size, replace the previous set.
@@ -358,6 +359,17 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
                 <span className="absolute left-1 top-1 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase" style={{ background: i === 0 ? "var(--crm-accent)" : "rgba(0,0,0,.65)", color: i === 0 ? "var(--crm-accent-ink)" : "#fff" }}>
                   {ROLE(i)}
                 </span>
+                {d.colors.length > 0 && (
+                  <select
+                    aria-label="Colour shown in this photo"
+                    value={p.color ?? ""}
+                    onChange={(e) => setPhotos((l) => l.map((x) => (x.key === p.key ? { ...x, color: e.target.value || undefined } : x)))}
+                    className="absolute right-1 top-1 max-w-[70%] rounded-md bg-black/75 px-1 py-0.5 text-[0.6rem] text-white outline-none"
+                  >
+                    <option value="">All colours</option>
+                    {d.colors.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+                  </select>
+                )}
                 <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/75 p-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button type="button" title="Move left" onClick={() => move(i, i - 1)} className="px-1 text-white">
                     ←
