@@ -72,6 +72,7 @@ export function Header({
             <NavLink key={item.href} {...item} />
           ))}
           {themeToggle && <ThemeToggle lightMode={lightMode} />}
+          <Link href="/account" className="text-[0.74rem] uppercase tracking-[0.3em] text-ivory/80 transition-colors hover:text-gold">Account</Link>
           <BagButton />
         </div>
 
@@ -125,6 +126,13 @@ export function Header({
               ))}
             </ul>
             <div className="mt-10">
+              <Link
+                href="/account"
+                onClick={() => setOpen(false)}
+                className="mb-3 block border border-gold/50 py-3.5 text-center text-[0.7rem] uppercase tracking-[0.3em] text-gold"
+              >
+                My account
+              </Link>
               <Link
                 href="/shop"
                 onClick={() => setOpen(false)}
