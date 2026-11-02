@@ -49,23 +49,28 @@ export function SignatureGallery({
     const product = link?.productId ? byId.get(link.productId) : undefined;
     if (product) {
       const { cover } = productCover(product.images);
-      // A signature card must show photos of the SAME product it opens.
-      // Previously independent homepage images/overrides could show a different
-      // garment while the href pointed to the linked product ID.
-      const ownedImages = (product.gallery ?? product.images)
+      // Website Sections saves its three specifically curated photos under
+      // signature-gallery storage, not product_images. These photos belong to
+      // this selected card and are the merchant's intentional display choice.
+      const curated = (link.images ?? []).filter((url): url is string => Boolean(url?.trim()));
+      const standalone = images[index]?.trim();
+      const productPhotos = (product.gallery ?? product.images)
         .filter((image) => image.url && (!image.product_id || image.product_id === product.id))
         .map((image) => image.url);
-      const uniqueImages = [...new Set([cover?.url, ...ownedImages].filter((url): url is string => Boolean(url)))];
-      // Respect the admin's preferred carousel order only for images already
-      // attached to this product. Never mix unrelated homepage images into it.
-      const preferred = (link.images ?? []).filter((url) => uniqueImages.includes(url));
-      const gallery = [...new Set([...preferred, ...uniqueImages])];
+      const fallback = [...new Set([cover?.url, ...productPhotos].filter((url): url is string => Boolean(url)))];
+      // Display curated card photos first, then supplement with the selected
+      // product's actual gallery; never substitute a different product record.
+      const gallery = [...new Set([
+        ...curated,
+        ...(curated.length === 0 && standalone ? [standalone] : []),
+        ...fallback,
+      ])];
       const mainImg = gallery[0] ?? tile.img;
       return {
         ...tile,
         img: mainImg,
         imgs: gallery.length ? gallery : [mainImg],
-        title: product.name,
+        title: link.title || product.name,
         note: link.note || product.subtitle || "From the catalogue",
         href: `/shop/${product.slug}`,
         price: product.price,
