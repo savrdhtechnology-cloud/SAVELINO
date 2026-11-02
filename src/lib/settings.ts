@@ -150,6 +150,17 @@ export const SHOWCASE_EFFECT_PRESETS: Record<ShowcaseEffectId, ShowcaseEffectPre
   still: { label: "Still Gallery", note: "No auto-turn — a static arc of cards", speed: 0, radiusScale: 1, floatSpeed: 0.3, floatIntensity: 0.08, tilt: 0.01, sparkleSpeed: 0.08 },
 };
 
+/** One "Memories" (Signature Gallery) card — optionally linked to a real catalogue product. */
+export type SignatureTileLink = {
+  /** Product id from `public.products`. Empty = card keeps its default static collection link. */
+  productId: string;
+  /** Overrides the product name / static tile title when set. */
+  title: string;
+  /** Overrides the product subtitle / static tile note when set. */
+  note: string;
+};
+export const DEFAULT_SIGNATURE_LINKS: SignatureTileLink[] = Array.from({ length: 6 }, () => ({ productId: "", title: "", note: "" }));
+
 export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const HERO_PRESETS = ["classic-3d", "royal-cinema", "rose-silk", "purple-aura", "midnight-gold", "ivory-editorial", "emerald-court", "champagne-atelier"] as const;
@@ -274,6 +285,8 @@ export type SiteSettings = {
   showcaseEffect: ShowcaseEffectId;
   /** Optional replacement images for the six Signature Gallery cards, ordered as displayed. */
   signatureImages: string[];
+  /** Links each Signature Gallery ("Memories") card to a real product — click goes straight to /shop/{slug}. */
+  signatureLinks: SignatureTileLink[];
   announcement: { enabled: boolean; text: string; href: string };
   sections: { id: SectionId; visible: boolean }[];
 };
@@ -334,6 +347,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showcaseImages: ["", "", "", "", "", ""],
   showcaseEffect: "gentle",
   signatureImages: ["", "", "", "", "", ""],
+  signatureLinks: DEFAULT_SIGNATURE_LINKS,
   announcement: { enabled: false, text: "", href: "" },
   sections: SECTION_IDS.map((id) => ({ id, visible: true })),
 };
@@ -393,6 +407,18 @@ export function mergeSettings(stored: unknown): SiteSettings {
     out.signatureImages = Array.from({ length: 6 }, (_, i) => {
       const url: unknown = storedSignatureImages[i];
       return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
+    });
+  }
+  const storedSignatureLinks = src.signatureLinks;
+  if (Array.isArray(storedSignatureLinks)) {
+    out.signatureLinks = Array.from({ length: 6 }, (_, i) => {
+      const raw = storedSignatureLinks[i];
+      if (!isObj(raw)) return { productId: "", title: "", note: "" };
+      return {
+        productId: typeof raw.productId === "string" ? raw.productId : "",
+        title: typeof raw.title === "string" ? raw.title : "",
+        note: typeof raw.note === "string" ? raw.note : "",
+      };
     });
   }
   const rawSlides = isObj(src.hero) && Array.isArray(src.hero.slides) ? src.hero.slides : null;

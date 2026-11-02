@@ -28,6 +28,7 @@ import {
   SHOWCASE_EFFECTS,
   SHOWCASE_EFFECT_PRESETS,
   type ShowcaseEffectId,
+  type SignatureTileLink,
   THEME_LABELS,
   THEME_MODES,
   type BgEffect,
@@ -37,14 +38,14 @@ import {
   type SiteSettings,
   type ThemeMode,
 } from "@/lib/settings";
-import type { Category } from "@/lib/data/types";
+import type { Category, Product } from "@/lib/data/types";
 import { CRM_PREVIEW_EVENT } from "./CrmShell";
 import { CinemaSlides } from "./CinemaSlides";
 import { SignatureGalleryStudio } from "./SignatureGalleryStudio";
 import { ShowcaseImageStudio } from "./ShowcaseImageStudio";
-import { db, fetchCategories, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
+import { db, fetchCategories, fetchProducts, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
 import { CRM_SWATCH } from "./theme";
-import { EASE, Field, ICONS, Icon, PageHeader, Panel, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
+import { EASE, Field, ICONS, Icon, PageHeader, Panel, Select, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
 
 const PALETTE_PRESETS: Record<ThemeMode, { name: string; palette: Palette }[]> = {
   dark: [
@@ -91,8 +92,8 @@ const PAGES = [
 
 export function Website() {
   const { data, loading } = useLoad(async () => {
-    const [settings, categories] = await Promise.all([fetchSettings(), fetchCategories()]);
-    return { settings, categories };
+    const [settings, categories, products] = await Promise.all([fetchSettings(), fetchCategories(), fetchProducts()]);
+    return { settings, categories, products };
   });
   if (loading || !data) {
     return (
@@ -102,10 +103,10 @@ export function Website() {
       </div>
     );
   }
-  return <Editor initial={data.settings} initialCategories={data.categories} />;
+  return <Editor initial={data.settings} initialCategories={data.categories} products={data.products} />;
 }
 
-function Editor({ initial, initialCategories }: { initial: SiteSettings; initialCategories: Category[] }) {
+function Editor({ initial, initialCategories, products }: { initial: SiteSettings; initialCategories: Category[]; products: Product[] }) {
   const [s, setS] = useState<SiteSettings>(initial);
   const [saved, setSaved] = useState<SiteSettings>(initial);
   const [cats, setCats] = useState(initialCategories);
@@ -121,6 +122,11 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
 
   const patch = <K extends keyof SiteSettings>(k: K, v: Partial<SiteSettings[K]>) => setS((x) => ({ ...x, [k]: { ...(x[k] as object), ...v } }) as SiteSettings);
   const setShowcaseEffect = (id: ShowcaseEffectId) => setS((x) => ({ ...x, showcaseEffect: id }));
+  const setSignatureLink = (index: number, patchLink: Partial<SignatureTileLink>) =>
+    setS((x) => ({
+      ...x,
+      signatureLinks: x.signatureLinks.map((link, i) => (i === index ? { ...link, ...patchLink } : link)),
+    }));
   const setPalette = (mode: ThemeMode, p: Partial<Palette>) =>
     setS((x) => {
       const theme = { ...x.theme };
@@ -293,6 +299,39 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
         </div>
       </Panel>
       <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => void publishGalleryImages("signatureImages", signatureImages)} />
+      <Panel title="Memories — product links" icon={ICONS.products} subtitle="Link each Memories card to a real product so it shows live price, and “Shop this piece” goes straight to checkout">
+        <p className="mb-3 text-xs crm-muted">
+          Pick a product for a card to turn it into a live spotlight — its catalogue photo, name, price and link take over automatically (unless you type your own title/caption below). Leave “No product” to keep the card as a plain collection photo.
+        </p>
+        <div className="space-y-4">
+          {s.signatureLinks.map((link, i) => {
+            const product = products.find((p) => p.id === link.productId);
+            return (
+              <div key={i} className="crm-panel-soft rounded-xl border p-3" style={{ borderColor: "var(--crm-border-soft)" }}>
+                <span className="text-xs font-medium crm-muted">Card {i + 1}</span>
+                <Select label="Product" value={link.productId} onChange={(e) => setSignatureLink(i, { productId: e.target.value })} className="mt-2">
+                  <option value="">— No product (static collection photo) —</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                      {p.status !== "live" ? ` (${p.status})` : ""}
+                    </option>
+                  ))}
+                </Select>
+                {link.productId && (
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Field label="Title (optional)" placeholder={product?.name ?? ""} value={link.title} onChange={(e) => setSignatureLink(i, { title: e.target.value })} />
+                    <Field label="Caption (optional)" placeholder={product?.subtitle || "From the catalogue"} value={link.note} onChange={(e) => setSignatureLink(i, { note: e.target.value })} />
+                  </div>
+                )}
+                {link.productId && product?.status !== "live" && (
+                  <p className="mt-2 text-[0.7rem] text-burgundy">This product isn’t live yet — the card will fall back to its static photo until you publish it.</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
       <Panel title="Announcement bar" icon={ICONS.bell}>
         <div className="space-y-3">
           <Toggle label="Show the announcement bar" checked={s.announcement.enabled} onChange={(v) => patch("announcement", { enabled: v })} />
