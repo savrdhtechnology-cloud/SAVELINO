@@ -23,7 +23,7 @@ const PLACEHOLDERS: StaticImageData[] = [lookDurbar, lookCandlelight, heritage, 
 /** Per-style colour mood: the overlay that carries the text, the glow and the accent. */
 const LOOKS: Record<CinemaStyle, { overlay: string; mobile: string; glow: string; accent: string; title: string }> = {
   palace: {
-    overlay: "linear-gradient(90deg, rgba(57,7,17,0.94) 0%, rgba(57,7,17,0.62) 36%, rgba(57,7,17,0.12) 68%, transparent 100%)",
+    overlay: "linear-gradient(90deg, rgba(34,5,12,0.96) 0%, rgba(34,5,12,0.82) 36%, rgba(57,7,17,0.12) 68%, transparent 100%)",
     mobile: "linear-gradient(0deg, rgba(36,5,12,0.96) 0%, rgba(57,7,17,0.7) 45%, transparent 85%)",
     glow: "rgba(243,209,139,0.28)",
     accent: "#F3D18B",
@@ -148,7 +148,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
       <GoldParticles count={22} />
 
       <div className="relative mx-auto flex h-full max-w-[1440px] flex-col justify-end px-5 pb-24 pt-[calc(var(--header-h)+2rem)] md:justify-center md:px-10 md:pb-20">
-        <motion.div style={{ y: textY, opacity: fade }} className="relative min-h-[360px] max-w-[640px] md:min-h-[430px]">
+        <motion.div style={{ y: textY, opacity: fade }} className="relative min-h-[360px] max-w-[560px] md:min-h-[430px]">
           {slides.map((sl, i) => {
             const on = i === index;
             const look = LOOKS[sl.style] ?? LOOKS.palace;
@@ -172,7 +172,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
                   role="heading"
                   aria-level={i === 0 ? 1 : 2}
                   {...rise(on, 1)}
-                  className={`mt-5 font-display text-[clamp(2.5rem,6.2vw,5.8rem)] leading-[0.98] tracking-[-0.01em] text-ivory ${look.title}`}
+                  className={`mt-5 font-display text-[clamp(2.25rem,5vw,4.1rem)] leading-[0.98] tracking-[-0.01em] text-ivory ${look.title}`}
                 >
                   {lead && <span>{lead} </span>}
                   <span className="cin-shimmer inline-block italic">{last}</span>
