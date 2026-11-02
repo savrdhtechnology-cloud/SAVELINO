@@ -50,7 +50,7 @@ export default async function ShopPage({ searchParams }: Props) {
           </div>
         )}
       </section>
-      <UpcomingSection products={upcoming} limit={60} title="Upcoming — pre-order now" />
+      <UpcomingSection products={upcoming} limit={60} title="Coming soon — pre-order now" />
     </PageShell>
   );
 }

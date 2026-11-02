@@ -40,7 +40,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
           )}
           {upcoming ? (
-            <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-noir">Upcoming</span>
+            <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-noir">Coming soon</span>
           ) : (
             off > 0 && (
               <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-ivory">

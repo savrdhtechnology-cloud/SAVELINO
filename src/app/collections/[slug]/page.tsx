@@ -117,7 +117,7 @@ export default async function CollectionPage({ params }: Params) {
         </section>
       )}
 
-      <UpcomingSection products={upcoming} limit={12} title={`Upcoming in ${c.title}`} id="upcoming" />
+      <UpcomingSection products={upcoming} limit={12} title={`Coming soon in ${c.title}`} id="upcoming" />
 
       {others.length > 0 && (
       <section aria-label="More collections" className="border-t border-gold/10 py-16 md:py-24">
