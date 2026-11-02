@@ -71,7 +71,8 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
               priority={index === 0}
               quality={92}
               sizes="100vw"
-              className="object-cover object-center"
+              className="object-cover"
+              style={{ objectPosition: "50% 22%" }}
             />
           </motion.div>
           <div

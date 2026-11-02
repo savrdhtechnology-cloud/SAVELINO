@@ -21,7 +21,7 @@ import { ShopSection } from "@/components/sections/ShopSection";
 import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { MotionStyleProvider } from "@/components/site/Motion";
 import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
-import { showcaseProduct, heroPhoto } from "@/lib/product-image";
+import { showcaseProduct } from "@/lib/product-image";
 
 type Props = { searchParams?: Promise<{ theme?: string }> };
 
@@ -41,19 +41,12 @@ export default async function Home({ searchParams }: Props) {
   const liveProducts = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
   const designerBlousesId = enabled.find((c) => c.slug === "designer-blouses")?.id;
   const readyMadeId = enabled.find((c) => c.slug === "ready-made-blouses")?.id;
-  // Pearl theme hero: a photo slider built from real collection/category photography — featured first.
-  // A live product's own photo (full camera resolution) beats the bundled 896px collection thumbnail
-  // once it's stretched full-bleed across the screen, so prefer that when a category has one.
+  // Pearl theme hero: a photo slider of the curated editorial lookbook photography (not raw product
+  // shots — those read as catalogue photos, not the magazine-style hero the reference mockups want).
   const heroSlides: HeroSlide[] = [...enabled]
     .sort((a, b) => Number(b.featured) - Number(a.featured))
     .slice(0, 5)
-    .map((c) => ({
-      kicker: c.kicker,
-      title: c.title,
-      summary: c.summary,
-      image: heroPhoto(liveProducts, c.id)?.url ?? c.image,
-      href: `/collections/${c.slug}`,
-    }));
+    .map((c) => ({ kicker: c.kicker, title: c.title, summary: c.summary, image: c.image, href: `/collections/${c.slug}` }));
 
   const SECTIONS: Record<SectionId, ReactNode> = {
     shop: <ShopSection products={liveProducts} />,
