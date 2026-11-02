@@ -8,6 +8,7 @@ import { productCover } from "@/lib/product-image";
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
   const { cover, second, fit } = productCover(product.images);
   const off = product.compare_at_price ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
+  const upcoming = product.status === "upcoming";
   return (
     <MotionCard>
     <Link href={`/shop/${product.slug}`} className="group block">
@@ -38,19 +39,24 @@ export function ProductCard({ product, priority }: { product: Product; priority?
           ) : (
             <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
           )}
-          {off > 0 && (
-            <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-ivory">
-              {off}% off
-            </span>
+          {upcoming ? (
+            <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-noir">Upcoming</span>
+          ) : (
+            off > 0 && (
+              <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-ivory">
+                {off}% off
+              </span>
+            )
           )}
           <span className="absolute inset-x-3 bottom-3 flex translate-y-2 items-center justify-center gap-2 rounded-full bg-burgundy/95 py-2.5 text-[0.62rem] font-medium uppercase tracking-[0.25em] text-ivory opacity-0 shadow-lg backdrop-blur transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-            <BagIcon /> Shop now
+            <BagIcon /> {upcoming ? "Pre-order" : "Shop now"}
           </span>
         </div>
       </div>
       <div className="mt-4 px-1">
         <h3 className="font-display text-xl leading-tight text-ivory transition-colors group-hover:text-gold md:text-2xl">{product.name}</h3>
         {product.subtitle && <p className="mt-1 line-clamp-1 text-[0.8rem] text-ivory/50">{product.subtitle}</p>}
+        {upcoming && product.expected_at && <p className="mt-1 text-[0.72rem] uppercase tracking-[0.18em] text-gold/80">Expected {expectedLabel(product.expected_at)}</p>}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="flex items-baseline gap-2">
             <span className="text-base font-medium text-gold">{inr(product.price)}</span>
@@ -89,4 +95,10 @@ export function ProductGrid({ products }: { products: Product[] }) {
       ))}
     </ul>
   );
+}
+
+/** "22 Nov" style date for pre-order pieces. */
+export function expectedLabel(iso: string) {
+  const d = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }

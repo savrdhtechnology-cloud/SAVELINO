@@ -71,3 +71,28 @@ export const getLiveProduct = unstable_cache(
   ["live-product-v2"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
+
+/** Pieces in production that customers can pre-order (status "upcoming"). Never mixed into the live shop queries above. */
+export const getUpcomingProducts = unstable_cache(
+  async (): Promise<Product[]> => {
+    const db = anon();
+    if (!db) return [];
+    const { data, error } = await db.from("products").select(PRODUCT_SELECT).eq("status", "upcoming").order("expected_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }).limit(60);
+    if (error) console.error("[catalog] upcoming", error.message);
+    return ((data as Product[] | null) ?? []).map(sortImages);
+  },
+  ["upcoming-products-v1"],
+  { tags: [CATALOG_TAG], revalidate: 120 },
+);
+
+export const getUpcomingProduct = unstable_cache(
+  async (slug: string): Promise<Product | null> => {
+    const db = anon();
+    if (!db) return null;
+    const { data, error } = await db.from("products").select(PRODUCT_SELECT).eq("status", "upcoming").eq("slug", slug).maybeSingle();
+    if (error) console.error("[catalog] upcoming product", error.message);
+    return data ? sortImages(data as Product) : null;
+  },
+  ["upcoming-product-v1"],
+  { tags: [CATALOG_TAG], revalidate: 120 },
+);

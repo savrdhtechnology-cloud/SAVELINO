@@ -107,7 +107,10 @@ function OrderDetail({ order: o, onChanged }: { order: TailorOrder; onChanged: (
   const post = () => {
     const n = items.reduce((s, i) => s + i.accepted_qty, 0);
     if (!window.confirm(`Add ${n} QC-accepted piece(s) to the stock of the linked product? This can only be done once for ${o.order_no}.`)) return;
-    void act(() => rpc("designlab_post_finished_stock", { p_order: o.id }), "Stock updated");
+    void act(async () => {
+      const r = await rpc<{ to_stock: number; to_preorders: number; preorders_covered: number }>("designlab_post_finished_stock", { p_order: o.id });
+      if (r.to_preorders > 0) toast(`${r.to_preorders} pc reserved for ${r.preorders_covered} pre-order(s) · ${r.to_stock} pc added to stock`);
+    }, "Stock updated");
   };
 
   const qtyEditable = ["cutting", "stitching", "finishing", "qc"].includes(o.status);

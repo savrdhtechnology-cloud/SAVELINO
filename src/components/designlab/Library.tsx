@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageHeader, Panel, Skeleton, Empty, Field, Drawer, ICONS, Icon, toast, fmtDate } from "@/components/crm/ui";
-import { db, must, useLoad } from "@/components/crm/data";
-import { coverOf, errMsg, fetchDesigns, sortImages, type DesignStatus, type DlDesign } from "./data";
+import { db, must, revalidateSite, useLoad } from "@/components/crm/data";
+import { coverOf, errMsg, fetchDesigns, rpc, sortImages, type DesignStatus, type DlDesign } from "./data";
 import { DesignLabNav, DesignPill, ErrorBox, Lightbox, Photo, angleLabel, useDebounced } from "./shared";
 
 const FILTERS: { value: "all" | DesignStatus; label: string }[] = [
@@ -24,6 +24,10 @@ export function Library() {
   const [viewer, setViewer] = useState<{ d: DlDesign; i: number } | null>(null);
   const [edit, setEdit] = useState<DlDesign | null>(null);
   const query = useDebounced(q.trim().toLowerCase());
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [price, setPrice] = useState("");
+  const [expected, setExpected] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const rows = useMemo(() => {
     const all = (data ?? []).filter((d) => d.archived === showArchived);
@@ -44,15 +48,41 @@ export function Library() {
     }
   };
 
+  const toggle = (id: string) => setPicked((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+
+  /** Approve (if needed) and list the chosen designs as Upcoming so customers can pre-order. Admin only; each step is checked by the database. */
+  const listUpcoming = async () => {
+    const p = Math.round(Number(price));
+    if (!p || p <= 0) return toast("Enter the selling price (₹) first", "error");
+    const chosen = (data ?? []).filter((d) => picked.has(d.id));
+    if (!window.confirm(`Approve and list ${chosen.length} design(s) as Upcoming at ₹${p}? Customers will be able to pre-order them on the website.`)) return;
+    setBulkBusy(true);
+    const failed: string[] = [];
+    for (const d of chosen) {
+      try {
+        if (d.status === "new" || d.status === "in_review") await rpc("designlab_set_design_status", { p_design: d.id, p_status: "approved", p_note: "Bulk approve for upcoming listing" });
+        await rpc("designlab_set_listing", { p_design: d.id, p_mode: "upcoming", p_price: p, p_expected: expected || null });
+      } catch (e) { failed.push(`${d.design_code}: ${errMsg(e)}`); }
+    }
+    await revalidateSite().catch(() => undefined);
+    setBulkBusy(false);
+    await reload();
+    if (failed.length) toast(`${chosen.length - failed.length} listed, ${failed.length} failed — ${failed[0]}`, "error");
+    else { toast(`${chosen.length} design(s) are now Upcoming on the website`); setPicked(new Set()); }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         section="DesignLab"
         subtitle="Design Library"
         actions={
-          <Link href="/admin/designlab/import" className="crm-btn crm-btn-gold">
-            <Icon d={ICONS.upload} /> Import ZIP
-          </Link>
+          <>
+            <a href="/admin/print/designlab/requirements" target="_blank" rel="noreferrer" className="crm-btn">Material requirement (PDF)</a>
+            <Link href="/admin/designlab/import" className="crm-btn crm-btn-gold">
+              <Icon d={ICONS.upload} /> Import ZIP
+            </Link>
+          </>
         }
       />
       <DesignLabNav />
@@ -82,6 +112,16 @@ export function Library() {
         </div>
       </Panel>
 
+      {picked.size > 0 && (
+        <div className="crm-panel sticky top-2 z-20 flex flex-wrap items-end gap-3 p-4">
+          <p className="mr-2 text-sm"><b>{picked.size}</b> selected</p>
+          <Field label="Selling price (₹)" type="number" min={1} value={price} onChange={(e) => setPrice(e.target.value)} className="w-40" />
+          <Field label="Expected date" type="date" value={expected} onChange={(e) => setExpected(e.target.value)} className="w-48" />
+          <button className="crm-btn crm-btn-gold" disabled={bulkBusy} onClick={listUpcoming}>{bulkBusy ? "Listing…" : "Approve & list as Upcoming"}</button>
+          <button className="crm-btn" onClick={() => setPicked(new Set(rows.map((r) => r.id)))}>Select all shown</button>
+          <button className="crm-btn" onClick={() => setPicked(new Set())}>Clear</button>
+        </div>
+      )}
       {error && <ErrorBox message={error} retry={reload} />}
       {loading && !data && (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -107,7 +147,8 @@ export function Library() {
                 <span className="absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold tracking-wider" style={{ background: "rgba(20,6,10,.78)", color: "var(--crm-accent)", boxShadow: "inset 0 0 0 1px var(--crm-border)" }}>{d.design_code}</span>
                 <span className="absolute bottom-3 right-3 rounded-full px-2.5 py-1 text-xs" style={{ background: "rgba(20,6,10,.78)", color: "var(--crm-text)" }}>{imgs.length} {imgs.length === 1 ? "image" : "images"}</span>
               </button>
-              <div className="flex flex-1 flex-col gap-3 p-4">
+              <label className="flex items-center gap-2 px-4 pt-3 text-xs crm-muted"><input type="checkbox" checked={picked.has(d.id)} onChange={() => toggle(d.id)} /> Select for website listing</label>
+              <div className="flex flex-1 flex-col gap-3 p-4 pt-2">
                 <div>
                   <h3 className="crm-serif text-xl leading-tight">{d.name}</h3>
                   <p className="mt-1 text-sm crm-muted">{[d.category, d.color].filter(Boolean).join(" · ") || "No category / colour yet"}</p>

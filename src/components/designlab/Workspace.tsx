@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import { PageHeader, Panel, Field, Area, Select, Tabs, Skeleton, Empty, ICONS, Icon, toast, fmtDateTime } from "@/components/crm/ui";
-import { db, must, removeMedia, uploadMedia, useLoad } from "@/components/crm/data";
+import { db, must, removeMedia, revalidateSite, uploadMedia, useLoad } from "@/components/crm/data";
 import { sha256 } from "@/lib/designlab/zip";
 import { ANGLES, DESIGN_STATUS, errMsg, fetchApprovals, fetchDesign, rpc, sortImages, type Angle, type DlDesign, type DlImage } from "./data";
 import { DesignLabNav, DesignPill, ErrorBox, Lightbox, Photo, angleLabel } from "./shared";
@@ -253,6 +253,8 @@ function DetailsTab({ design, onPatch }: { design: DlDesign; onPatch: (p: Partia
         </div>
       </Panel>
 
+      <ListingPanel design={design} onPatch={onPatch} onLogged={() => void approvals.reload()} />
+
       <Panel title="Approval log" icon={ICONS.clock}>
         {approvals.data?.length === 0 && <p className="text-sm crm-muted">Nothing yet.</p>}
         <ul className="space-y-2 text-sm">
@@ -262,5 +264,58 @@ function DetailsTab({ design, onPatch }: { design: DlDesign; onPatch: (p: Partia
         </ul>
       </Panel>
     </div>
+  );
+}
+
+/* ───────────────────────── Website listing (Upcoming / Live) ───────────────────────── */
+
+type Listing = { id: string; slug: string; status: string; price: number; expected_at: string | null; stock: number; preorder_qty: number };
+
+function ListingPanel({ design, onPatch, onLogged }: { design: DlDesign; onPatch: (p: Partial<DlDesign>) => void; onLogged: () => void }) {
+  const prod = useLoad<Listing | null>(async () => {
+    if (!design.product_id) return null;
+    const rows = must(await db().from("products").select("id, slug, status, price, expected_at, stock, preorder_qty").eq("id", design.product_id).limit(1)) as Listing[];
+    return rows[0] ?? null;
+  }, [design.product_id, design.status]);
+  const [price, setPrice] = useState("");
+  const [date, setDate] = useState("");
+  const [busy, setBusy] = useState(false);
+  const p = prod.data;
+  const priceVal = price !== "" ? price : p?.price ? String(p.price) : "";
+  const dateVal = date !== "" ? date : p?.expected_at ?? "";
+  const status = p?.status ?? "none";
+
+  const run = async (mode: "upcoming" | "live" | "off", ok: string) => {
+    setBusy(true);
+    try {
+      const res = await rpc<{ product_id?: string }>("designlab_set_listing", { p_design: design.id, p_mode: mode, p_price: priceVal ? Math.round(Number(priceVal)) : null, p_expected: dateVal || null });
+      if (res.product_id && !design.product_id) onPatch({ product_id: res.product_id });
+      await revalidateSite().catch(() => undefined);
+      toast(ok);
+      await prod.reload();
+      onLogged();
+    } catch (e) { toast(errMsg(e), "error"); } finally { setBusy(false); }
+  };
+
+  const approved = ["approved", "in_production", "completed"].includes(design.status);
+  return (
+    <Panel title="Website listing" icon={ICONS.globe} subtitle="Upcoming pieces show on the home page and shop, and customers can pre-order them (no stock is used).">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <span>Status: <b style={{ color: status === "live" ? "#58c48a" : status === "upcoming" ? "#e0a83a" : "var(--crm-muted)" }}>{status === "none" ? "not listed" : status === "draft" ? "off the website" : status}</b></span>
+        {p && <span className="crm-muted">Stock {p.stock} · pre-ordered, waiting {p.preorder_qty}</span>}
+        {p && (status === "live" || status === "upcoming") && <a className="crm-accent underline" href={`/shop/${p.slug}`} target="_blank" rel="noreferrer">View on website</a>}
+      </div>
+      {!approved && <p className="mt-2 text-xs crm-muted">Approve the design first (above).</p>}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <Field label="Selling price (₹)" type="number" min={1} value={priceVal} onChange={(e) => setPrice(e.target.value)} />
+        <Field label="Expected date (upcoming)" type="date" value={dateVal} onChange={(e) => setDate(e.target.value)} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button className="crm-btn crm-btn-gold" disabled={busy || !approved || !priceVal} onClick={() => run("upcoming", "Listed as Upcoming — pre-orders are open")}>{status === "upcoming" ? "Update upcoming listing" : "List as Upcoming (pre-order)"}</button>
+        <button className="crm-btn" disabled={busy || !approved || !priceVal || status === "live"} onClick={() => run("live", "Moved to the live shop")}>Move to live shop</button>
+        <button className="crm-btn" disabled={busy || status === "none" || status === "draft"} onClick={() => window.confirm("Take this design off the website?") && run("off", "Taken off the website")}>Take off website</button>
+      </div>
+      <p className="mt-2 text-xs crm-muted">“Move to live shop” needs finished stock (post QC-accepted pieces from the Production Tracker first). Pre-orders already taken are served first from the finished pieces.</p>
+    </Panel>
   );
 }

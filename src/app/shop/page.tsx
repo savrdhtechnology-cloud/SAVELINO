@@ -3,7 +3,8 @@ import Link from "next/link";
 import { PageIntro, PageShell } from "@/components/layout/PageShell";
 import { ProductGrid } from "@/components/store/ProductCard";
 import { resolveCategories } from "@/lib/catalogue";
-import { getLiveProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
+import { UpcomingSection } from "@/components/sections/UpcomingSection";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -21,6 +22,7 @@ export default async function ShopPage({ searchParams }: Props) {
   const all = (await getLiveProducts()).filter((p) => p.category_id && visibleIds.has(p.category_id));
   const active = category && idBySlug.has(category) ? category : "";
   const products = active ? all.filter((p) => p.category_id === idBySlug.get(active)) : all;
+  const upcoming = await getUpcomingProducts();
   const withProducts = categories.filter((c) => all.some((p) => p.category_id === c.id));
 
   return (
@@ -41,13 +43,14 @@ export default async function ShopPage({ searchParams }: Props) {
         )}
         {products.length > 0 ? (
           <ProductGrid products={products} />
-        ) : (
+        ) : upcoming.length > 0 ? null : (
           <div className="mx-auto max-w-xl rounded-2xl border border-gold/20 bg-noir-soft p-10 text-center">
             <p className="eyebrow">New pieces arriving</p>
             <p className="mt-4 font-serif text-2xl text-ivory/75">Our next drop is being finished by hand. Check back soon.</p>
           </div>
         )}
       </section>
+      <UpcomingSection products={upcoming} limit={60} title="Upcoming — pre-order now" />
     </PageShell>
   );
 }
