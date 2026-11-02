@@ -45,7 +45,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
     <section
       id="top"
       aria-label="SAVLINO — featured collections"
-      className="grain relative h-[92svh] min-h-[560px] w-full overflow-hidden bg-noir"
+      className="grain relative h-[82svh] min-h-[480px] w-full overflow-hidden bg-noir md:h-[85svh]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -69,6 +69,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
               alt={slide.title}
               fill
               priority={index === 0}
+              quality={92}
               sizes="100vw"
               className="object-cover object-center"
             />

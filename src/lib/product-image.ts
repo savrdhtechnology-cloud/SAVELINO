@@ -17,3 +17,22 @@ export function showcaseProduct(products: Product[], categoryId?: string): Produ
   if (!categoryId) return undefined;
   return products.find((p) => p.category_id === categoryId && p.images.length > 0);
 }
+
+/**
+ * Widest landscape photo among a category's live products — for a full-bleed hero banner the
+ * bundled collection thumbnails (896px wide) stretch and blur, but a product's combined creative
+ * (1536px) or a wide raw photo holds up at full screen width.
+ */
+export function heroPhoto(products: Product[], categoryId?: string): ProductImage | undefined {
+  if (!categoryId) return undefined;
+  let best: ProductImage | undefined;
+  for (const p of products) {
+    if (p.category_id !== categoryId) continue;
+    for (const img of p.images) {
+      const landscape = img.width && img.height ? img.width > img.height : img.kind === "creative";
+      if (!landscape) continue;
+      if (!best || (img.width ?? 0) > (best.width ?? 0)) best = img;
+    }
+  }
+  return best;
+}
