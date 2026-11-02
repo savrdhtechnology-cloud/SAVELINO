@@ -147,10 +147,10 @@ export type CinemaSlide = {
 };
 export const MAX_CINEMA_SLIDES = 6;
 export const DEFAULT_CINEMA_SLIDES: CinemaSlide[] = [
-  { image: "", style: "palace", eyebrow: "The SAVLINO Edit", title: "Designer Blouse Collection", subtitle: "Timeless elegance. Perfect fit. Premium craftsmanship.", primaryLabel: "Shop Collection", primaryHref: "/shop", secondaryLabel: "Custom Stitching", secondaryHref: "/custom-stitching" },
-  { image: "", style: "noir", eyebrow: "Evening Couture", title: "Midnight Gold Blouses", subtitle: "Black silk and gold embroidery, made for evenings that are remembered.", primaryLabel: "Shop Collection", primaryHref: "/shop", secondaryLabel: "View Collections", secondaryHref: "/collections" },
-  { image: "", style: "festive", eyebrow: "Festive Luxury", title: "Celebrate Every Tradition", subtitle: "Mirror work, tassels and zari in colours made for your festive wardrobe.", primaryLabel: "Shop Festive", primaryHref: "/shop", secondaryLabel: "Custom Stitching", secondaryHref: "/custom-stitching" },
-  { image: "", style: "ivory", eyebrow: "The Pearl Edit", title: "Soft Pearl Collection", subtitle: "Pearl-scallop sleeves and champagne silks, finished by hand.", primaryLabel: "Shop Collection", primaryHref: "/shop", secondaryLabel: "Our Story", secondaryHref: "/our-story" },
+  { image: "", style: "palace", eyebrow: "The SAVLINO Edit", title: "Peacock Blue Gold Tassel Blouse", subtitle: "Peacock-blue elegance with signature golden tassel detailing and graceful craftsmanship.", primaryLabel: "Shop This Blouse", primaryHref: "/shop", secondaryLabel: "Custom Stitching", secondaryHref: "/custom-stitching" },
+  { image: "", style: "noir", eyebrow: "Royal Evening Edit", title: "Crafted for Royal Moments", subtitle: "Intricate embroidery, timeless elegance and refined detailing.", primaryLabel: "Explore Blouses", primaryHref: "/shop", secondaryLabel: "View Collections", secondaryHref: "/collections" },
+  { image: "", style: "festive", eyebrow: "The Emerald Edit", title: "Elegance in Every Detail", subtitle: "Rich velvet textures with exquisite golden craftsmanship.", primaryLabel: "Explore Collection", primaryHref: "/shop", secondaryLabel: "Custom Stitching", secondaryHref: "/custom-stitching" },
+  { image: "", style: "ivory", eyebrow: "Festive Colour Edit", title: "Celebrate in Colour", subtitle: "Vibrant designer blouses created for unforgettable celebrations.", primaryLabel: "Shop Festive", primaryHref: "/shop", secondaryLabel: "View Collections", secondaryHref: "/collections" },
 ];
 
 export type SiteSettings = {
@@ -344,6 +344,28 @@ export function mergeSettings(stored: unknown): SiteSettings {
         secondaryHref: str(r.secondaryHref, d.secondaryHref),
       };
     });
+    // Upgrade untouched legacy marketing copy without changing uploaded photos or custom admin wording.
+    const legacyTitles = [
+      "Designer Blouse Collection",
+      "Midnight Gold Blouses",
+      "Celebrate Every Tradition",
+      "Soft Pearl Collection",
+    ];
+    const legacyCopy = [
+      { subtitle: "Timeless elegance. Perfect fit. Premium craftsmanship.", primaryLabel: "Shop Collection" },
+      { subtitle: "Black silk and gold embroidery, made for evenings that are remembered.", primaryLabel: "Shop Collection" },
+      { subtitle: "Mirror work, tassels and zari in colours made for your festive wardrobe.", primaryLabel: "Shop Festive" },
+      { subtitle: "Pearl-scallop sleeves and champagne silks, finished by hand.", primaryLabel: "Shop Collection" },
+    ];
+    for (let i = 0; i < Math.min(4, list.length); i++) {
+      const d = DEFAULT_CINEMA_SLIDES[i];
+      if (list[i].title === legacyTitles[i]) {
+        list[i] = { ...list[i], eyebrow: d.eyebrow, title: d.title,
+          subtitle: list[i].subtitle === legacyCopy[i].subtitle ? d.subtitle : list[i].subtitle,
+          primaryLabel: list[i].primaryLabel === legacyCopy[i].primaryLabel ? d.primaryLabel : list[i].primaryLabel,
+          primaryHref: d.primaryHref };
+      }
+    }
     if (list.length) out.hero.slides = list;
   }
   if (Array.isArray(src.sections)) {
