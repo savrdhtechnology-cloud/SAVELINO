@@ -140,6 +140,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Prices, quantities and sizes always use lining (full-height) numerals, whatever font pair is chosen. */
+  font-variant-numeric: lining-nums;
   overflow-x: hidden;
   line-height: 1.65;
 }
@@ -879,4 +881,13 @@ body {
     transform: translateY(-105vh);
     opacity: 0;
   }
+}
+
+/* Buttons, inputs and selects always follow the site's body font. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-variant-numeric: lining-nums;
 }
