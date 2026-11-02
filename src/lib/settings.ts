@@ -223,6 +223,8 @@ export type SiteSettings = {
     /** Royal Cinema theme only: the hero photo slider. */
     slides: CinemaSlide[];
   };
+  /** Six optional images for the rotating 3D collection showcase. */
+  showcaseImages: string[];
   /** Optional replacement images for the six Signature Gallery cards, ordered as displayed. */
   signatureImages: string[];
   announcement: { enabled: boolean; text: string; href: string };
@@ -282,6 +284,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     secondaryHref: "/custom-stitching",
     slides: DEFAULT_CINEMA_SLIDES,
   },
+  showcaseImages: ["", "", "", "", "", ""],
   signatureImages: ["", "", "", "", "", ""],
   announcement: { enabled: false, text: "", href: "" },
   sections: SECTION_IDS.map((id) => ({ id, visible: true })),
@@ -329,6 +332,13 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
   if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
   if (!SITE_THEMES.includes(out.layout.theme)) out.layout.theme = "signature";
+  const storedShowcaseImages = src.showcaseImages;
+  if (Array.isArray(storedShowcaseImages)) {
+    out.showcaseImages = Array.from({ length: 6 }, (_, i) => {
+      const url: unknown = storedShowcaseImages[i];
+      return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
+    });
+  }
   const storedSignatureImages = src.signatureImages;
   if (Array.isArray(storedSignatureImages)) {
     out.signatureImages = Array.from({ length: 6 }, (_, i) => {
