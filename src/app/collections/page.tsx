@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { PageIntro, PageShell } from "@/components/layout/PageShell";
+import { PageShell } from "@/components/layout/PageShell";
 import { Reveal } from "@/components/ui/Reveal";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { PhotoHero } from "@/components/sections/PhotoHero";
+import { Button } from "@/components/ui/Button";
 import { StyleTiles } from "@/components/sections/StyleTiles";
 import { UpcomingSection } from "@/components/sections/UpcomingSection";
 import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
@@ -28,7 +30,9 @@ export default async function CollectionsIndexPage() {
     .filter((x) => x.count > 0);
   return (
     <PageShell>
-      <PageIntro eyebrow="The blouse collections" title="A blouse for every occasion" intro="Browse by collection, see every style we have, or have a piece stitched to your measurements." />
+      <PhotoHero eyebrow="Our collections" title="Curated blouse collections" intro="Designs, details and versatile styles — discover SAVLINO's blouse collections." product={live.find((p) => p.images.length > 0)}>
+        <Button href="#all-styles" variant="outline">Explore all styles</Button>
+      </PhotoHero>
 
       {cards.length > 0 && (
         <section className="mx-auto max-w-[1280px] px-5 pt-10 md:px-10">
@@ -39,15 +43,15 @@ export default async function CollectionsIndexPage() {
                 <li key={c.id}>
                   <Reveal delay={(i % 3) * 0.08} y={22}>
                     <TiltCard className="rounded-2xl">
-                      <Link href={`/collections/${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden rounded-2xl border border-gold/25 bg-noir-soft transition-colors hover:border-gold/70">
-                        {cover && <Image quality={90} src={cover.url} alt={first?.name ?? c.name} fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 46vw, 92vw" className="object-cover transition-transform duration-[1400ms] group-hover:scale-105" style={{ objectPosition: fit }} />}
-                        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-noir/90 via-noir/10 to-transparent" />
-                        <div className="absolute inset-x-0 bottom-0 p-5">
-                          <p className="text-[0.74rem] uppercase tracking-[0.26em] text-gold-light">{count} {count === 1 ? "style" : "styles"}</p>
-                          <h2 className="mt-1 font-display text-2xl text-ivory md:text-3xl">{c.name}</h2>
-                          <span className="mt-2 inline-flex items-center gap-3 text-[0.74rem] uppercase tracking-[0.28em] text-gold">
-                            <span className="h-px w-8 bg-gold transition-all duration-500 group-hover:w-14" />
-                            Explore
+                      <Link href={`/collections/${c.slug}`} className="group block overflow-hidden rounded-2xl border border-gold/25 bg-noir-soft transition-colors hover:border-gold/70">
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                          {cover && <Image quality={90} src={cover.url} alt={first?.name ?? c.name} fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 46vw, 92vw" className="object-cover transition-transform duration-[1400ms] group-hover:scale-105" style={{ objectPosition: fit }} />}
+                        </div>
+                        <div className="p-5">
+                          <h2 className="font-display text-xl uppercase tracking-[0.08em] text-ivory">{c.name}</h2>
+                          <p className="mt-1 line-clamp-2 text-[0.88rem] text-ivory/70">{c.description || c.kicker || `${count} ${count === 1 ? "style" : "styles"}`}</p>
+                          <span className="mt-3 inline-flex items-center gap-3 text-[0.74rem] uppercase tracking-[0.28em] text-gold">
+                            Explore <span className="h-px w-8 bg-gold transition-all duration-500 group-hover:w-14" />
                           </span>
                         </div>
                       </Link>
@@ -59,7 +63,7 @@ export default async function CollectionsIndexPage() {
             <li>
               <Reveal delay={0.1} y={22}>
                 <TiltCard className="rounded-2xl">
-                  <Link href="/custom-stitching" className="group flex aspect-[4/5] flex-col justify-end rounded-2xl border border-gold/40 bg-gradient-to-br from-burgundy-deep to-noir p-6 transition-colors hover:border-gold">
+                  <Link href="/custom-stitching" className="group flex h-full min-h-[300px] flex-col justify-end rounded-2xl border border-gold/40 bg-gradient-to-br from-burgundy-deep to-noir p-6 transition-colors hover:border-gold">
                     <p className="text-[0.74rem] uppercase tracking-[0.26em] text-gold-light">Made to measure</p>
                     <h2 className="mt-1 font-display text-2xl text-ivory md:text-3xl">Custom blouse stitching</h2>
                     <p className="mt-2 text-[0.92rem] text-ivory/75">Share your design and measurements — we stitch it for you.</p>

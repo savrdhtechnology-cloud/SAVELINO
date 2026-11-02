@@ -126,7 +126,7 @@ export default async function Home({ searchParams }: Props) {
             <>
               <CinematicHero content={settings.hero} />
               <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
-              <StyleTiles products={liveProducts} intro="Every style we have ready to ship — tap a blouse to see all its photos, colours and sizes." />
+              <StyleTiles products={liveProducts} eyebrow="Fresh designs, timeless appeal" title="New arrivals" intro="Tap a blouse to see all its photos, colours and sizes." />
               <UpcomingSection products={upcoming} />
               <FeaturedProducts products={featured} />
               {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}

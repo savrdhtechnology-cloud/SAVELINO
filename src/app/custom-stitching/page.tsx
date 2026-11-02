@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { PageIntro, PageShell } from "@/components/layout/PageShell";
+import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Timeline } from "@/components/ui/Timeline";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { PhotoHero } from "@/components/sections/PhotoHero";
 import { StyleTiles } from "@/components/sections/StyleTiles";
 import { getLiveProducts } from "@/lib/data/catalog-server";
 
@@ -15,9 +16,10 @@ export const metadata: Metadata = {
 };
 
 const perks = [
-  { t: "Perfect fit", d: "Tailored to your measurements" },
-  { t: "Personalised details", d: "From neckline to back design" },
-  { t: "Careful finishing", d: "Clean, structured, precise" },
+  { t: "Perfect fit", d: "Your measurements" },
+  { t: "Design your style", d: "As you like" },
+  { t: "Premium crafting", d: "Boutique finish" },
+  { t: "Expert support", d: "From design to delivery" },
 ];
 
 const measurements = [
@@ -85,18 +87,19 @@ export default async function CustomStitchingPage() {
   const products = await getLiveProducts();
   return (
     <PageShell>
-      <PageIntro eyebrow="Custom stitching" title="Your blouse, drafted for you" intro="Made-to-measure blouse customisation with a perfect fit, refined detailing and choices that reflect your style." />
-
-      <div className="mx-auto flex max-w-[1100px] flex-wrap justify-center gap-3 px-5 pt-8">
-        <Button href="/contact">Start custom stitching</Button>
-        <Button href="/contact" variant="ghost">Talk to our team</Button>
-      </div>
-      <ul className="mx-auto mt-8 grid max-w-[900px] grid-cols-1 gap-4 px-5 sm:grid-cols-3">
+      <PhotoHero side="left" eyebrow="Custom stitching" title="Your blouse, drafted for you" intro="A guide to the measurements and choices that go into every made-to-measure SAVLINO blouse." product={products.find((p) => p.images.length > 0)}>
+        <div className="flex flex-wrap gap-3">
+          <Button href="/contact">Start custom stitching</Button>
+          <Button href="#measurements" variant="outline">Measurement guide</Button>
+        </div>
+      </PhotoHero>
+      <ul className="mx-auto grid max-w-[1000px] grid-cols-2 gap-5 px-5 py-8 text-center md:grid-cols-4">
         {perks.map((p, i) => (
           <li key={p.t}>
-            <Reveal delay={i * 0.08} y={16} className="text-center sm:text-left">
-              <p className="font-display text-lg text-gold">{p.t}</p>
-              <p className="text-[0.88rem] text-ivory/70">{p.d}</p>
+            <Reveal delay={i * 0.08} y={16}>
+              <span aria-hidden className="mx-auto mb-2 block h-2 w-2 rotate-45 border border-gold" />
+              <p className="font-display text-base text-ivory">{p.t}</p>
+              <p className="text-[0.82rem] text-ivory/65">{p.d}</p>
             </Reveal>
           </li>
         ))}
