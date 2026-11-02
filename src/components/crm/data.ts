@@ -19,7 +19,14 @@ export function must<T>(res: Res<T>): T {
 }
 
 /** Refreshes the public website after a change. */
-export const revalidateSite = () => fetch("/api/revalidate", { method: "POST" }).catch(() => undefined);
+export async function revalidateSite() {
+  const response = await fetch("/api/revalidate", { method: "POST", credentials: "same-origin", cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(response.status === 403
+      ? "Photos saved, but website refresh was denied. Sign in again as an admin and republish."
+      : "Photos saved, but the website cache could not refresh. Please republish.");
+  }
+}
 
 /** Loads data on mount; `reload()` to refresh. */
 export function useLoad<T>(loader: () => Promise<T>, deps: unknown[] = []) {
