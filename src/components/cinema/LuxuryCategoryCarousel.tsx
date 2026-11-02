@@ -38,7 +38,7 @@ export function LuxuryCategoryCarousel({ items }: { items: CategoryCard[] }) {
     <section aria-labelledby="cin-cats" className="cin-band relative overflow-hidden py-20 md:py-28">
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
         <Reveal className="flex flex-col items-center text-center">
-          <p className="text-[0.64rem] uppercase tracking-[0.42em] text-gold-light">Explore</p>
+          <p className="text-[0.76rem] uppercase tracking-[0.42em] text-gold-light">Explore</p>
           <h2 id="cin-cats" className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory">
             Shop by <span className="cin-shimmer italic">Category</span>
           </h2>
@@ -55,7 +55,7 @@ export function LuxuryCategoryCarousel({ items }: { items: CategoryCard[] }) {
                     <CategoryImage src={c.image} alt={c.title} sizes="(min-width: 1280px) 19vw, (min-width: 768px) 30vw, 68vw" className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110" />
                     <span aria-hidden className="absolute inset-0 bg-[linear-gradient(to_top,rgba(10,7,9,0.92)_8%,rgba(57,7,17,0.35)_48%,transparent)]" />
                     <span className="absolute inset-x-0 bottom-0 flex flex-col items-center p-5 text-center">
-                      <span className="text-[0.55rem] uppercase tracking-[0.3em] text-gold-light/80 transition-all duration-500 group-hover:tracking-[0.38em]">{c.kicker}</span>
+                      <span className="text-[0.68rem] uppercase tracking-[0.3em] text-gold-light/80 transition-all duration-500 group-hover:tracking-[0.38em]">{c.kicker}</span>
                       <span className="mt-2 font-display text-2xl leading-tight text-ivory">{c.title}</span>
                       <span className="mt-3 h-px w-8 bg-gold transition-all duration-500 group-hover:w-20" />
                     </span>

@@ -21,7 +21,7 @@ export function TrustFeatures() {
               </span>
               <span>
                 <span className="block font-display text-lg text-ivory">{it.title}</span>
-                <span className="mt-1 block text-[0.78rem] leading-snug text-ivory/55">{it.text}</span>
+                <span className="mt-1 block text-[0.78rem] leading-snug text-ivory/72">{it.text}</span>
               </span>
             </Reveal>
           </li>

@@ -11,7 +11,7 @@ export function AnnouncementBar({ text, href }: { text: string; href: string }) 
   return (
     <div
       data-studio="announcement"
-      className="relative z-[60] bg-gradient-to-r from-gold-deep via-gold to-gold-deep px-4 py-2 text-center text-[0.62rem] font-medium uppercase tracking-[0.3em] text-noir"
+      className="relative z-[60] bg-gradient-to-r from-gold-deep via-gold to-gold-deep px-4 py-2 text-center text-[0.74rem] font-medium uppercase tracking-[0.3em] text-noir"
     >
       {href ? (
         <Link href={href} className="hover:underline">

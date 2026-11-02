@@ -52,7 +52,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <PageShell>
       <section className="mx-auto max-w-[1180px] px-5 py-6 md:px-10 md:py-8">
-        <nav aria-label="Breadcrumb" className="mb-4 text-[0.62rem] uppercase tracking-[0.28em] text-ivory/50">
+        <nav aria-label="Breadcrumb" className="mb-4 text-[0.74rem] uppercase tracking-[0.28em] text-ivory/70">
           <Link href="/shop" className="hover:text-gold">
             Shop
           </Link>
@@ -73,10 +73,10 @@ export default async function ProductPage({ params }: Props) {
             {product.subtitle && <p className="mt-1 font-serif text-lg text-ivory/65">{product.subtitle}</p>}
             <p className="mt-3 flex items-baseline gap-3">
               <span className="font-display text-3xl text-gold">{inr(product.price)}</span>
-              {product.compare_at_price && <span className="text-ivory/40 line-through">{inr(product.compare_at_price)}</span>}
-              {off > 0 && <span className="rounded-full bg-burgundy px-2.5 py-1 text-[0.6rem] uppercase tracking-[0.18em] text-ivory">{off}% off</span>}
+              {product.compare_at_price && <span className="text-ivory/60 line-through">{inr(product.compare_at_price)}</span>}
+              {off > 0 && <span className="rounded-full bg-burgundy px-2.5 py-1 text-[0.72rem] uppercase tracking-[0.18em] text-ivory">{off}% off</span>}
             </p>
-            <p className="mt-1 text-xs text-ivory/40">Inclusive of all taxes</p>
+            <p className="mt-1 text-xs text-ivory/60">Inclusive of all taxes</p>
             <div className="mt-5 border-y border-gold/15 py-5">
               <BuyBox product={product} whatsapp={settings.brand.whatsapp} />
             </div>

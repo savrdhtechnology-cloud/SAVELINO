@@ -40,7 +40,7 @@ export function ReadyMade({ product }: { product?: Product }) {
                   className="group flex h-16 w-16 flex-col items-center justify-center border border-noir/20 transition-colors duration-500 hover:border-burgundy hover:bg-burgundy hover:text-ivory"
                 >
                   <span className="font-display text-xl">{s.size}</span>
-                  <span className="text-[0.55rem] tracking-[0.2em] text-noir/50 group-hover:text-gold-light">{s.label}</span>
+                  <span className="text-[0.68rem] tracking-[0.2em] text-noir/50 group-hover:text-gold-light">{s.label}</span>
                 </li>
               ))}
             </ul>

@@ -18,7 +18,7 @@ export function StatsStrip() {
             <li key={s.label} className="flex flex-col items-center gap-2 text-center">
               <StatIcon name={s.icon} />
               <span className="font-display text-lg text-ivory md:text-xl">{s.value}</span>
-              <span className="text-[0.62rem] uppercase tracking-[0.18em] text-ivory/55">{s.label}</span>
+              <span className="text-[0.74rem] uppercase tracking-[0.18em] text-ivory/72">{s.label}</span>
             </li>
           ))}
         </ul>

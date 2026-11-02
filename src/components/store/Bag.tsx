@@ -22,7 +22,7 @@ export function BagButton() {
             key={count}
             initial={{ scale: 0.4, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[0.58rem] font-semibold text-noir"
+            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[0.7rem] font-semibold text-noir"
           >
             {count}
           </motion.span>
@@ -77,7 +77,7 @@ export function BagDrawer() {
           >
             <header className="flex items-center justify-between border-b border-gold/15 px-6 py-5">
               <p className="font-display text-2xl text-ivory">Your bag</p>
-              <button type="button" onClick={() => setOpen(false)} className="text-[0.62rem] uppercase tracking-[0.25em] text-ivory/55 hover:text-gold">
+              <button type="button" onClick={() => setOpen(false)} className="text-[0.74rem] uppercase tracking-[0.25em] text-ivory/72 hover:text-gold">
                 Close
               </button>
             </header>
@@ -101,7 +101,7 @@ export function BagDrawer() {
                         <Link href={`/shop/${l.slug}`} className="line-clamp-2 font-display text-lg leading-tight text-ivory hover:text-gold">
                           {l.name}
                         </Link>
-                        <p className="mt-1 text-xs text-ivory/50">{[l.color, l.size && `Size ${l.size}`].filter(Boolean).join(" · ")}</p>
+                        <p className="mt-1 text-xs text-ivory/70">{[l.color, l.size && `Size ${l.size}`].filter(Boolean).join(" · ")}</p>
                         <div className="mt-2 flex items-center justify-between">
                           <div className="flex items-center rounded-full border border-gold/30 text-sm">
                             <button type="button" onClick={() => setQty(l.key, l.qty - 1)} className="h-7 w-7 text-ivory/70 hover:text-gold" aria-label="Fewer">
@@ -114,7 +114,7 @@ export function BagDrawer() {
                           </div>
                           <span className="text-sm text-gold">{inr(l.price * l.qty)}</span>
                         </div>
-                        <button type="button" onClick={() => remove(l.key)} className="mt-2 text-[0.6rem] uppercase tracking-[0.2em] text-ivory/40 hover:text-gold">
+                        <button type="button" onClick={() => remove(l.key)} className="mt-2 text-[0.72rem] uppercase tracking-[0.2em] text-ivory/60 hover:text-gold">
                           Remove
                         </button>
                       </div>
@@ -126,8 +126,8 @@ export function BagDrawer() {
                     <span>Subtotal</span>
                     <span className="font-display text-2xl text-ivory">{inr(subtotal)}</span>
                   </p>
-                  <p className="text-xs text-ivory/40">Shipping is calculated at checkout.</p>
-                  <Link href="/checkout" className="block rounded-full bg-burgundy py-4 text-center text-[0.68rem] font-medium uppercase tracking-[0.28em] text-ivory hover:bg-burgundy-deep">
+                  <p className="text-xs text-ivory/60">Shipping is calculated at checkout.</p>
+                  <Link href="/checkout" className="block rounded-full bg-burgundy py-4 text-center text-[0.78rem] font-medium uppercase tracking-[0.28em] text-ivory hover:bg-burgundy-deep">
                     Checkout
                   </Link>
                 </footer>

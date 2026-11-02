@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Reveal } from "@/components/ui/Reveal";
 import { useMotionStyle } from "@/components/site/Motion";
 import { addToBag, openBag } from "@/lib/store/cart";
@@ -29,15 +29,25 @@ export function PerspectiveProductCarousel({ items }: { items: ShowcaseItem[] })
   const [active, setActive] = useState(() => Math.min(1, Math.max(0, items.length - 1)));
   const still = useMotionStyle() === "still";
   const startX = useRef<number | null>(null);
+  const [hold, setHold] = useState(false);
+  const count = items.length;
+
+  // Glides on its own, loops back to the first card, and stops while the visitor is hovering, touching or focused on it.
+  useEffect(() => {
+    if (still || hold || count < 2) return;
+    const t = window.setInterval(() => setActive((a) => (a + 1) % count), 3600);
+    return () => window.clearInterval(t);
+  }, [still, hold, count]);
+
   if (items.length === 0) return null;
 
-  const go = (n: number) => setActive((a) => Math.max(0, Math.min(items.length - 1, a + n)));
+  const go = (n: number) => setActive((a) => (a + n + items.length) % items.length);
 
   return (
     <section aria-labelledby="cin-featured" className="cin-band-deep relative overflow-hidden py-20 md:py-28">
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
         <Reveal className="flex flex-col items-center text-center">
-          <p className="text-[0.64rem] uppercase tracking-[0.42em] text-gold-light">Featured</p>
+          <p className="text-[0.76rem] uppercase tracking-[0.42em] text-gold-light">Featured</p>
           <h2 id="cin-featured" className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory">
             Featured <span className="cin-shimmer italic">Collections</span>
           </h2>
@@ -54,6 +64,10 @@ export function PerspectiveProductCarousel({ items }: { items: ShowcaseItem[] })
           if (e.key === "ArrowLeft") go(-1);
           if (e.key === "ArrowRight") go(1);
         }}
+        onMouseEnter={() => setHold(true)}
+        onMouseLeave={() => setHold(false)}
+        onFocus={() => setHold(true)}
+        onBlur={() => setHold(false)}
         onPointerDown={(e) => {
           startX.current = e.clientX;
         }}
@@ -90,10 +104,10 @@ export function PerspectiveProductCarousel({ items }: { items: ShowcaseItem[] })
             </div>
           );
         })}
-        <button type="button" onClick={() => go(-1)} disabled={active === 0} aria-label="Previous product" className="cin-arrow absolute left-3 top-[40%] z-20 md:left-10">
+        <button type="button" onClick={() => go(-1)} aria-label="Previous product" className="cin-arrow absolute left-3 top-[40%] z-20 md:left-10">
           <CinemaIcon name="arrowL" className="h-4 w-4" strokeWidth={1.6} />
         </button>
-        <button type="button" onClick={() => go(1)} disabled={active === items.length - 1} aria-label="Next product" className="cin-arrow absolute right-3 top-[40%] z-20 md:right-10">
+        <button type="button" onClick={() => go(1)} aria-label="Next product" className="cin-arrow absolute right-3 top-[40%] z-20 md:right-10">
           <CinemaIcon name="arrowR" className="h-4 w-4" strokeWidth={1.6} />
         </button>
       </div>
@@ -104,7 +118,7 @@ export function PerspectiveProductCarousel({ items }: { items: ShowcaseItem[] })
         ))}
       </div>
       <div className="mt-10 flex justify-center">
-        <Link href="/shop" className="group inline-flex items-center gap-4 text-[0.68rem] uppercase tracking-[0.32em] text-gold">
+        <Link href="/shop" className="group inline-flex items-center gap-4 text-[0.78rem] uppercase tracking-[0.32em] text-gold">
           <span className="h-px w-10 bg-gold transition-all duration-500 group-hover:w-16" />
           View all pieces
         </Link>
@@ -137,23 +151,23 @@ function ProductCardCinema({ item: p, centre }: { item: ShowcaseItem; centre: bo
         ) : (
           <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
         )}
-        {off > 0 && <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-ivory">{off}% off</span>}
-        <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-gold/40 bg-noir/70 px-2.5 py-1 text-[0.58rem] uppercase tracking-[0.2em] text-gold-light opacity-0 backdrop-blur transition-opacity duration-500 group-hover:opacity-100">
+        {off > 0 && <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.72rem] font-medium uppercase tracking-[0.18em] text-ivory">{off}% off</span>}
+        <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-gold/40 bg-noir/70 px-2.5 py-1 text-[0.7rem] uppercase tracking-[0.2em] text-gold-light opacity-0 backdrop-blur transition-opacity duration-500 group-hover:opacity-100">
           <CinemaIcon name="eye" className="h-3 w-3" /> Quick view
         </span>
       </Link>
       <div className="px-3 pb-3 pt-4 text-center">
         <h3 className="line-clamp-1 font-display text-xl text-ivory">{p.name}</h3>
-        {p.subtitle && <p className="mt-1 line-clamp-1 text-[0.78rem] text-ivory/50">{p.subtitle}</p>}
+        {p.subtitle && <p className="mt-1 line-clamp-1 text-[0.78rem] text-ivory/70">{p.subtitle}</p>}
         <p className="mt-2 flex items-baseline justify-center gap-2">
           <span className="text-base font-medium text-gold">{inr(p.price)}</span>
-          {off > 0 && p.compareAt && <span className="text-xs text-ivory/40 line-through">{inr(p.compareAt)}</span>}
+          {off > 0 && p.compareAt && <span className="text-xs text-ivory/60 line-through">{inr(p.compareAt)}</span>}
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Link href={`/shop/${p.slug}`} tabIndex={tab} className="rounded-full border border-gold/40 py-2.5 text-[0.6rem] uppercase tracking-[0.22em] text-gold transition-colors hover:bg-gold/10">
+          <Link href={`/shop/${p.slug}`} tabIndex={tab} className="rounded-full border border-gold/40 py-2.5 text-[0.72rem] uppercase tracking-[0.22em] text-gold transition-colors hover:bg-gold/10">
             Quick view
           </Link>
-          <button type="button" tabIndex={tab} onClick={add} className="cin-gold-btn rounded-full py-2.5 text-[0.6rem] font-medium uppercase tracking-[0.22em] text-noir">
+          <button type="button" tabIndex={tab} onClick={add} className="cin-gold-btn rounded-full py-2.5 text-[0.72rem] font-medium uppercase tracking-[0.22em] text-noir">
             {direct ? (added ? "In your bag" : "Add to bag") : "Choose size"}
           </button>
         </div>

@@ -130,7 +130,7 @@ export function Lookbook({ enabled }: { enabled?: string[] }) {
               </p>
               <span className="font-display text-sm text-gold/70">{String(i + 1).padStart(2, "0")}</span>
             </div>
-            <p className="mt-1 text-[0.65rem] uppercase tracking-[0.28em] text-ivory/50">{look.caption}</p>
+            <p className="mt-1 text-[0.65rem] uppercase tracking-[0.28em] text-ivory/70">{look.caption}</p>
           </Link>
         ))}
         <div aria-hidden className="w-5 shrink-0 md:w-10 lg:w-[8vw]" />

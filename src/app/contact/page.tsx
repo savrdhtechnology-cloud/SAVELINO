@@ -46,7 +46,7 @@ export default async function ContactPage() {
               <dl className="mt-4 space-y-3">
                 {details.map((d) => (
                   <div key={d.label}>
-                    <dt className="text-[0.58rem] uppercase tracking-[0.25em] text-ivory/45">{d.label}</dt>
+                    <dt className="text-[0.7rem] uppercase tracking-[0.25em] text-ivory/45">{d.label}</dt>
                     <dd className="mt-1 text-ivory">
                       {d.href ? (
                         <a href={d.href} className="hover:text-gold">

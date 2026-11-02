@@ -197,7 +197,7 @@ export function Hero({ content: saved = DEFAULT_SETTINGS.hero, still = false }: 
 function ScrollCue() {
   return (
     <div aria-hidden className="absolute bottom-6 right-6 z-10 hidden flex-col items-center gap-3 md:flex">
-      <span className="text-[0.6rem] uppercase tracking-[0.4em] text-gold/70 [writing-mode:vertical-rl]">Scroll</span>
+      <span className="text-[0.72rem] uppercase tracking-[0.4em] text-gold/70 [writing-mode:vertical-rl]">Scroll</span>
       <span className="relative h-14 w-px overflow-hidden bg-gold/20">
         <span className="absolute inset-x-0 top-0 h-1/2 animate-[cue_2.4s_ease-in-out_infinite] bg-gold" />
       </span>

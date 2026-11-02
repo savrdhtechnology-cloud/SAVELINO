@@ -149,7 +149,7 @@ function NavLink({ label, href }: { label: string; href: string }) {
   return (
     <Link
       href={href}
-      className="group relative py-2 text-[0.68rem] uppercase tracking-[0.3em] text-ivory/80 transition-colors duration-500 hover:text-gold"
+      className="group relative py-2 text-[0.78rem] uppercase tracking-[0.3em] text-ivory/80 transition-colors duration-500 hover:text-gold"
     >
       {label}
       <span

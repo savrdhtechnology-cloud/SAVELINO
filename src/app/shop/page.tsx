@@ -59,7 +59,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
   return (
     <Link
       href={href}
-      className={`rounded-full border px-5 py-2.5 text-[0.62rem] uppercase tracking-[0.25em] transition-colors ${
+      className={`rounded-full border px-5 py-2.5 text-[0.74rem] uppercase tracking-[0.25em] transition-colors ${
         active ? "border-gold bg-gold text-noir" : "border-gold/30 text-ivory/75 hover:border-gold hover:text-gold"
       }`}
     >

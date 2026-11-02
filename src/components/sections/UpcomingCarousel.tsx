@@ -41,16 +41,16 @@ export function UpcomingCarousel({ items }: { items: UpcomingItem[] }) {
                 ) : (
                   <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
                 )}
-                <span className="absolute left-3 top-3 rounded-full bg-gold px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-noir">Coming soon</span>
-                <span className="absolute bottom-3 left-3 right-3 rounded-full border border-gold/40 bg-noir/70 px-3 py-1.5 text-center text-[0.58rem] uppercase tracking-[0.22em] text-gold-light backdrop-blur">
+                <span className="absolute left-3 top-3 rounded-full bg-gold px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-noir">Coming soon</span>
+                <span className="absolute bottom-3 left-3 right-3 rounded-full border border-gold/40 bg-noir/70 px-3 py-1.5 text-center text-[0.7rem] uppercase tracking-[0.22em] text-gold-light backdrop-blur">
                   In production{p.expected ? ` · ${p.expected}` : ""}
                 </span>
               </div>
               <div className="px-3 pb-3 pt-4 text-center">
                 <h3 className="line-clamp-1 font-display text-xl text-ivory">{p.name}</h3>
-                {p.subtitle && <p className="mt-1 line-clamp-1 text-[0.78rem] text-ivory/50">{p.subtitle}</p>}
+                {p.subtitle && <p className="mt-1 line-clamp-1 text-[0.78rem] text-ivory/70">{p.subtitle}</p>}
                 <p className="mt-2 text-base font-medium text-gold">{inr(p.price)}</p>
-                <span className="mt-4 block rounded-full border border-gold/50 py-2.5 text-[0.62rem] uppercase tracking-[0.24em] text-gold transition-colors group-hover:bg-gold group-hover:text-noir">Pre-order now</span>
+                <span className="mt-4 block rounded-full border border-gold/50 py-2.5 text-[0.74rem] uppercase tracking-[0.24em] text-gold transition-colors group-hover:bg-gold group-hover:text-noir">Pre-order now</span>
               </div>
             </Link>
           </li>

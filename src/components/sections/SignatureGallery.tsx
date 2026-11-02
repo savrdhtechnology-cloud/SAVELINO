@@ -22,13 +22,14 @@ const tiles: Tile[] = [
   { img: images.lingerie, title: "Bordeaux Lace", note: "Lingerie", href: "/collections/lingerie" },
 ];
 
-type ResolvedTile = Tile & { imgs: (StaticImageData | string)[]; price?: number; isProduct: boolean };
+type ResolvedTile = Tile & { imgs: (StaticImageData | string)[]; price?: number; isProduct: boolean; soon?: string };
 
 export function SignatureGallery({
   enabled,
   images = [],
   products = [],
   links = [],
+  upcoming = [],
 }: {
   enabled?: string[];
   images?: string[];
@@ -36,7 +37,12 @@ export function SignatureGallery({
   products?: Product[];
   /** Admin-picked product (and optional title/note overrides) per card — see CRM → Appearance → Homepage. */
   links?: SignatureTileLink[];
+  /** "Coming soon" pieces — they fill every card the admin has not linked to a product, so the gallery always shows real pieces. */
+  upcoming?: Product[];
 }) {
+  const linkedIds = new Set(links.map((l) => l?.productId).filter(Boolean));
+  const spare = upcoming.filter((p) => !linkedIds.has(p.id));
+
   const byId = new Map(products.map((p) => [p.id, p]));
   const customized: ResolvedTile[] = tiles.map((tile, index) => {
     const link = links[index];
@@ -54,6 +60,23 @@ export function SignatureGallery({
         href: `/shop/${product.slug}`,
         price: product.price,
         isProduct: true,
+      };
+    }
+    const soon = spare.shift();
+    if (soon) {
+      const { cover } = productCover(soon.images);
+      const extra = soon.images.filter((i) => i.url && i.url !== cover?.url).slice(0, 2).map((i) => i.url);
+      const mainImg = cover?.url || tile.img;
+      return {
+        ...tile,
+        img: mainImg,
+        imgs: extra.length ? [mainImg, ...extra] : [mainImg],
+        title: soon.name,
+        note: soon.subtitle || "Coming soon",
+        href: `/shop/${soon.slug}`,
+        price: soon.price,
+        isProduct: true,
+        soon: soon.expected_at ? `Expected ${new Date(`${soon.expected_at}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : "In production",
       };
     }
     const soloImg = images[index] || tile.img;
@@ -85,19 +108,22 @@ export function SignatureGallery({
                   </ImageReveal>
                   <div className="absolute inset-0 bg-gradient-to-t from-noir/85 via-noir/10 to-transparent opacity-80 transition-opacity duration-700 group-hover:opacity-100" />
                   <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 transition-transform duration-700 group-hover:translate-y-0 md:p-6">
-                    <p className="eyebrow text-[0.58rem]!">{t.note}</p>
-                    <p className="mt-1 font-display text-xl italic text-ivory md:text-3xl">{t.title}</p>
-                    {t.isProduct && t.price != null && <p className="mt-1 text-sm text-gold">{inr(t.price)}</p>}
+                    <p className="line-clamp-2 text-[0.78rem] font-medium uppercase leading-snug tracking-[0.16em] text-gold-light md:text-[0.84rem]">{t.note}</p>
+                    <p className="mt-1.5 font-display text-2xl italic leading-tight text-ivory [text-shadow:0_2px_14px_rgba(0,0,0,0.55)] md:text-4xl">{t.title}</p>
+                    {t.isProduct && t.price != null && <p className="mt-1.5 text-base font-semibold text-gold md:text-lg">{inr(t.price)}</p>}
                     <span className="mt-2 flex items-center gap-3">
                       <span className="block h-px w-0 bg-gold transition-all duration-700 group-hover:w-16" />
                       {t.isProduct && (
-                        <span className="translate-y-1 text-[0.6rem] uppercase tracking-[0.25em] text-ivory/0 transition-all duration-700 group-hover:translate-y-0 group-hover:text-gold">
-                          Shop this piece →
+                        <span className="translate-y-1 text-[0.7rem] uppercase tracking-[0.22em] text-ivory/0 transition-all duration-700 group-hover:translate-y-0 group-hover:text-gold">
+                          {t.soon ? "Pre-order now →" : "Shop this piece →"}
                         </span>
                       )}
                     </span>
                   </div>
                 </div>
+                {t.soon && (
+                  <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-gold px-3 py-1 text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-noir">Coming soon · {t.soon}</span>
+                )}
                 <LikeButton title={t.title} />
               </div>
             </MotionCard>

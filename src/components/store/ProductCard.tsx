@@ -40,27 +40,27 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
           )}
           {upcoming ? (
-            <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-noir">Coming soon</span>
+            <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-noir">Coming soon</span>
           ) : (
             off > 0 && (
-              <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-ivory">
+              <span className="absolute left-3 top-3 rounded-full bg-burgundy px-2.5 py-1 text-[0.72rem] font-medium uppercase tracking-[0.18em] text-ivory">
                 {off}% off
               </span>
             )
           )}
-          <span className="absolute inset-x-3 bottom-3 flex translate-y-2 items-center justify-center gap-2 rounded-full bg-burgundy/95 py-2.5 text-[0.62rem] font-medium uppercase tracking-[0.25em] text-ivory opacity-0 shadow-lg backdrop-blur transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+          <span className="absolute inset-x-3 bottom-3 flex translate-y-2 items-center justify-center gap-2 rounded-full bg-burgundy/95 py-2.5 text-[0.74rem] font-medium uppercase tracking-[0.25em] text-ivory opacity-0 shadow-lg backdrop-blur transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
             <BagIcon /> {upcoming ? "Pre-order" : "Shop now"}
           </span>
         </div>
       </div>
       <div className="mt-4 px-1">
         <h3 className="font-display text-xl leading-tight text-ivory transition-colors group-hover:text-gold md:text-2xl">{product.name}</h3>
-        {product.subtitle && <p className="mt-1 line-clamp-1 text-[0.8rem] text-ivory/50">{product.subtitle}</p>}
+        {product.subtitle && <p className="mt-1 line-clamp-1 text-[0.8rem] text-ivory/70">{product.subtitle}</p>}
         {upcoming && product.expected_at && <p className="mt-1 text-[0.72rem] uppercase tracking-[0.18em] text-gold/80">Expected {expectedLabel(product.expected_at)}</p>}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="flex items-baseline gap-2">
             <span className="text-base font-medium text-gold">{inr(product.price)}</span>
-            {product.compare_at_price && <span className="text-xs text-ivory/40 line-through">{inr(product.compare_at_price)}</span>}
+            {product.compare_at_price && <span className="text-xs text-ivory/60 line-through">{inr(product.compare_at_price)}</span>}
           </p>
           {product.colors.length > 0 && (
             <span className="flex -space-x-1" aria-label={`${product.colors.length} colours`}>
