@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageHeader, Panel, Skeleton, Empty, Field, Drawer, ICONS, Icon, toast, fmtDate } from "@/components/crm/ui";
 import { db, must, useLoad } from "@/components/crm/data";
-import { DESIGN_STATUS, coverOf, errMsg, fetchDesigns, sortImages, type DesignStatus, type DlDesign } from "./data";
+import { coverOf, errMsg, fetchDesigns, sortImages, type DesignStatus, type DlDesign } from "./data";
 import { DesignLabNav, DesignPill, ErrorBox, Lightbox, Photo, angleLabel, useDebounced } from "./shared";
 
 const FILTERS: { value: "all" | DesignStatus; label: string }[] = [

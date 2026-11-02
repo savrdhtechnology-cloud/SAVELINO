@@ -6,7 +6,8 @@ const buf = readFileSync(process.argv[2]);
 const blob = new Blob([buf]);
 const { entries, skipped } = await listZip(blob);
 console.log("entries", entries.length, "skipped", skipped.length);
-let hashes = new Set<string>(), bad = 0;
+const hashes = new Set<string>();
+let bad = 0;
 for (const e of entries) { if (!/\.(jpe?g|png|webp|avif)$/i.test(e.path)) continue; const b = await readZipEntry(blob, e); if (!sniffImage(b)) bad++; hashes.add(await sha256(b)); }
 assert(bad === 0, "all images pass magic-number check");
 const csvE = entries.find((e) => /Product_Catalog\.csv$/i.test(e.path))!;
