@@ -282,6 +282,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     secondaryHref: "/custom-stitching",
     slides: DEFAULT_CINEMA_SLIDES,
   },
+  signatureImages: ["", "", "", "", "", ""],
   announcement: { enabled: false, text: "", href: "" },
   sections: SECTION_IDS.map((id) => ({ id, visible: true })),
 };
@@ -328,9 +329,10 @@ export function mergeSettings(stored: unknown): SiteSettings {
   if (!EFFECT_INTENSITIES.includes(out.effects.intensity)) out.effects.intensity = "subtle";
   if (!MOTION_STYLES.includes(out.effects.motion)) out.effects.motion = "cinematic";
   if (!SITE_THEMES.includes(out.layout.theme)) out.layout.theme = "signature";
-  if (Array.isArray(src.signatureImages)) {
+  const storedSignatureImages = src.signatureImages;
+  if (Array.isArray(storedSignatureImages)) {
     out.signatureImages = Array.from({ length: 6 }, (_, i) => {
-      const url = src.signatureImages[i];
+      const url: unknown = storedSignatureImages[i];
       return typeof url === "string" && /^https:\/\//.test(url) ? url : "";
     });
   }
