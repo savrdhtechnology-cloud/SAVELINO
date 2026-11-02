@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
+import { Reveal } from "@/components/ui/Reveal";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -16,16 +18,20 @@ export function PageShell({ children }: { children: ReactNode }) {
 
 export function PageIntro({ eyebrow, title, intro }: { eyebrow: string; title: string; intro?: string }) {
   return (
-    <div className="relative overflow-hidden border-b border-gold/10 px-5 py-16 text-center md:py-24">
+    <div className="relative overflow-hidden border-b border-gold/10 px-5 py-10 text-center md:py-14">
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-[360px] w-[720px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(212,175,55,0.14),transparent_70%)]"
+        className="pointer-events-none absolute left-1/2 top-0 h-[300px] w-[680px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(212,175,55,0.14),transparent_70%)]"
       />
-      <p className="eyebrow relative">{eyebrow}</p>
-      <h1 className="relative mx-auto mt-5 max-w-3xl font-display text-[clamp(2.4rem,6vw,4.8rem)] leading-[1.02] text-ivory">
-        {title}
-      </h1>
-      {intro && <p className="relative mx-auto mt-5 max-w-2xl font-serif text-xl text-ivory/70">{intro}</p>}
+      <Reveal y={12}>
+        <p className="eyebrow relative">{eyebrow}</p>
+      </Reveal>
+      <SplitHeadline as="h1" text={title} trigger="mount" delay={0.1} className="relative mx-auto mt-3 max-w-3xl font-display text-[clamp(2rem,4.8vw,3.6rem)] leading-[1.05] text-ivory" />
+      {intro && (
+        <Reveal delay={0.35} y={14}>
+          <p className="relative mx-auto mt-4 max-w-2xl font-serif text-lg text-ivory/75 md:text-xl">{intro}</p>
+        </Reveal>
+      )}
     </div>
   );
 }

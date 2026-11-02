@@ -37,6 +37,9 @@ const sortImages = (p: Product): Product => {
   return { ...p, images, gallery, generated: creatives.length > 0 };
 };
 
+/** Categories kept off the public website. */
+export const HIDDEN_CATEGORY_SLUGS = ["sarees"];
+
 /** Visible categories, in CRM order. */
 export const getVisibleCategories = unstable_cache(
   async (): Promise<Category[]> => {
@@ -44,9 +47,10 @@ export const getVisibleCategories = unstable_cache(
     if (!db) return [];
     const { data, error } = await db.from("categories").select("*").eq("is_visible", true).order("sort_order").order("name");
     if (error) console.error("[catalog] categories", error.message);
-    return (data as Category[] | null) ?? [];
+    // Sarees are not on the website for now — they stay in the CRM and come back when this list is emptied.
+    return ((data as Category[] | null) ?? []).filter((c) => !HIDDEN_CATEGORY_SLUGS.includes(c.slug));
   },
-  ["visible-categories-v1"],
+  ["visible-categories-v2"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
