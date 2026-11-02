@@ -282,6 +282,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     secondaryHref: "/custom-stitching",
     slides: DEFAULT_CINEMA_SLIDES,
   },
+  signatureImages: ["", "", "", "", "", ""],
   announcement: { enabled: false, text: "", href: "" },
   sections: SECTION_IDS.map((id) => ({ id, visible: true })),
 };
