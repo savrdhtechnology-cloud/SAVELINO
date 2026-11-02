@@ -92,6 +92,8 @@ export type Product = {
   sizes: string[];
   features: string[];
   stock: number;
+  /** Inventory alert level (stock at or below this is "low"). */
+  low_stock_at?: number;
   status: ProductStatus;
   sort_order: number;
   created_at: string;
@@ -190,3 +192,15 @@ export const slugify = (v: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+
+export type HistoryField = "price" | "compare_at_price" | "cost_price" | "stock";
+export type ProductHistory = {
+  id: string;
+  product_id: string;
+  field: HistoryField;
+  old_value: number | null;
+  new_value: number | null;
+  reason: string;
+  created_at: string;
+  products?: { name: string; sku: string | null } | null;
+};

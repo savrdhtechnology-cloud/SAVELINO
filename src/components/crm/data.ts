@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { mergeSettings, type SiteSettings } from "@/lib/settings";
-import type { Category, Order, Payment, Product, Profile } from "@/lib/data/types";
+import type { Category, HistoryField, Order, Payment, Product, ProductHistory, Profile } from "@/lib/data/types";
 
 /** Browser Supabase client with the signed-in staff session (RLS decides what it can do). */
 export function db() {
@@ -59,6 +59,24 @@ export async function fetchProducts(): Promise<Product[]> {
 export async function fetchProduct(id: string): Promise<Product | null> {
   const row = must(await db().from("products").select("*, images:product_images(id, url, storage_path, position, width, height, kind)").eq("id", id).maybeSingle());
   return row ? byPosition(row as Product) : null;
+}
+
+/** Staff-only cost prices, by product id. */
+export async function fetchCosts(): Promise<Record<string, number>> {
+  const rows = must(await db().from("product_costs").select("product_id, cost_price")) as { product_id: string; cost_price: number }[];
+  return Object.fromEntries(rows.map((r) => [r.product_id, r.cost_price]));
+}
+
+/** Price / MRP / cost / stock change log, newest first. */
+export async function fetchHistory(fields: HistoryField[], limit = 200): Promise<ProductHistory[]> {
+  return must(
+    await db().from("product_history").select("*, products(name, sku)").in("field", fields).order("created_at", { ascending: false }).limit(limit),
+  ) as ProductHistory[];
+}
+
+/** Runs async jobs a few at a time (bulk saves). */
+export async function inBatches<T>(items: T[], size: number, job: (item: T) => Promise<void>) {
+  for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(job));
 }
 
 export const fetchCategories = async (): Promise<Category[]> => must(await db().from("categories").select("*").order("sort_order").order("name")) as Category[];

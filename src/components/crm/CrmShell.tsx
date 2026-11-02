@@ -17,10 +17,20 @@ const ALL_FONTS = googleFontsHref(ALL_FONT_KEYS);
 
 export const CRM_PREVIEW_EVENT = "savlino:crm-appearance-preview";
 
-const NAV = [
+type NavItem = { href: string; label: string; icon: string; badge?: string; children?: { href: string; label: string }[] };
+const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: ICONS.dashboard },
   { href: "/admin/studio", label: "Product Studio", icon: ICONS.studio, badge: "New" },
-  { href: "/admin/products", label: "Products", icon: ICONS.products },
+  {
+    href: "/admin/products",
+    label: "Products",
+    icon: ICONS.products,
+    children: [
+      { href: "/admin/products", label: "All products" },
+      { href: "/admin/products/inventory", label: "Inventory" },
+      { href: "/admin/products/pricing", label: "Price Manager" },
+    ],
+  },
   { href: "/admin/orders", label: "Orders", icon: ICONS.orders },
   { href: "/admin/payments", label: "Payments", icon: ICONS.payments },
   { href: "/admin/website", label: "Appearance Studio", icon: ICONS.website },
@@ -108,7 +118,21 @@ export function CrmShell({ crm, user, children }: { crm: SiteSettings["crm"]; us
                     {item.badge}
                   </span>
                 )}
+                {item.children && <span className={`relative ml-auto text-xs transition-transform ${active ? "rotate-180" : ""}`}>▾</span>}
               </Link>
+              {item.children && (
+                <div className="mb-1 ml-[1.6rem] mt-1 space-y-0.5 border-l pl-3" style={{ borderColor: "var(--crm-border-soft)" }}>
+                  {item.children.map((c) => {
+                    const on = c.href === item.href ? pathname === c.href : pathname.startsWith(c.href);
+                    return (
+                      <Link key={c.href} href={c.href} className="relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-[0.85rem] transition-colors" style={{ color: on ? "var(--crm-accent)" : "var(--crm-muted)", background: on ? "color-mix(in srgb, var(--crm-accent) 10%, transparent)" : undefined }}>
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: on ? "var(--crm-accent)" : "var(--crm-border)" }} />
+                        {c.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           );
         })}
