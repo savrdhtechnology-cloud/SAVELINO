@@ -55,7 +55,7 @@ export function Library() {
     const p = Math.round(Number(price));
     if (!p || p <= 0) return toast("Enter the selling price (₹) first", "error");
     const chosen = (data ?? []).filter((d) => picked.has(d.id));
-    if (!window.confirm(`Approve and list ${chosen.length} design(s) as Upcoming at ₹${p}? Customers will be able to pre-order them on the website.`)) return;
+    if (!window.confirm(`Publish ${chosen.length} design(s) on the website as Coming soon at ₹${p}? They show in the home page slider and customers can pre-order them.`)) return;
     setBulkBusy(true);
     const failed: string[] = [];
     for (const d of chosen) {
@@ -117,7 +117,7 @@ export function Library() {
           <p className="mr-2 text-sm"><b>{picked.size}</b> selected</p>
           <Field label="Selling price (₹)" type="number" min={1} value={price} onChange={(e) => setPrice(e.target.value)} className="w-40" />
           <Field label="Expected date" type="date" value={expected} onChange={(e) => setExpected(e.target.value)} className="w-48" />
-          <button className="crm-btn crm-btn-gold" disabled={bulkBusy} onClick={listUpcoming}>{bulkBusy ? "Listing…" : "Approve & list as Upcoming"}</button>
+          <button className="crm-btn crm-btn-gold" disabled={bulkBusy} onClick={listUpcoming}>{bulkBusy ? "Publishing…" : "Publish to website (Coming soon)"}</button>
           <button className="crm-btn" onClick={() => setPicked(new Set(rows.map((r) => r.id)))}>Select all shown</button>
           <button className="crm-btn" onClick={() => setPicked(new Set())}>Clear</button>
         </div>
@@ -162,6 +162,9 @@ export function Library() {
                   <Link href={`/admin/designlab/designs/${d.design_code}`} className="crm-btn crm-btn-gold col-span-2 justify-center">Work on Design</Link>
                   <button className="crm-btn justify-center" onClick={() => imgs.length && setViewer({ d, i: 0 })}>View all images</button>
                   <button className="crm-btn justify-center" onClick={() => setEdit(d)}>Rename / edit</button>
+                  {!d.archived && (
+                    <button className="crm-btn col-span-2 justify-center" onClick={() => { setPicked(new Set([d.id])); window.scrollTo({ top: 0, behavior: "smooth" }); toast("Enter the price above, then press Publish to website"); }}>Publish to website (Coming soon)</button>
+                  )}
                   <button className="crm-btn col-span-2 justify-center" onClick={() => archive(d, !d.archived)}>{d.archived ? "Restore" : "Archive"}</button>
                 </div>
               </div>

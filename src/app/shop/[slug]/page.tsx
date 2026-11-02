@@ -82,7 +82,7 @@ export default async function ProductPage({ params }: Props) {
         <div id="buy" className="grid scroll-mt-28 gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
           <ProductGallery product={{ ...product, images: galleryImages }} />
           <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:self-start">
-            <p className="eyebrow">{upcoming ? "Upcoming · Pre-order" : (category?.title ?? "SAVLINO")}</p>
+            <p className="eyebrow">{upcoming ? "Coming soon · Pre-order" : (category?.title ?? "SAVLINO")}</p>
             <h1 className="mt-4 font-display text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[1.02] text-ivory">{product.name}</h1>
             {product.subtitle && <p className="mt-3 font-serif text-xl text-ivory/65">{product.subtitle}</p>}
             <p className="mt-6 flex items-baseline gap-3">
