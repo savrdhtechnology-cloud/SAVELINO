@@ -147,7 +147,7 @@ function ProductCardCinema({ item: p, centre }: { item: ShowcaseItem; centre: bo
     <article className={`cin-card rounded-[1.6rem] p-2 ${centre ? "cin-card-on" : ""}`}>
       <Link href={`/shop/${p.slug}`} tabIndex={tab} className="group relative block aspect-[4/5] overflow-hidden rounded-[1.2rem] bg-noir">
         {p.image ? (
-          <Image src={p.image.url} alt={p.name} fill sizes="340px" className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" style={{ objectPosition: p.image.fit }} />
+          <Image quality={90} src={p.image.url} alt={p.name} fill sizes="340px" className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" style={{ objectPosition: p.image.fit }} />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center font-display text-6xl italic text-gold/25">S</span>
         )}

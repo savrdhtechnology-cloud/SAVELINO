@@ -70,7 +70,7 @@ export function ReadyMade({ product }: { product?: Product }) {
         <div className="relative mx-auto w-full max-w-[460px] pb-20 lg:pb-0">
           <ImageReveal className="aspect-[4/5]">
             {cover ? (
-              <Image
+              <Image quality={90}
                 src={cover.url}
                 alt={product?.name ?? "Ready-made blouse"}
                 fill
@@ -79,7 +79,7 @@ export function ReadyMade({ product }: { product?: Product }) {
                 style={{ objectPosition: fit }}
               />
             ) : (
-              <Image
+              <Image quality={90}
                 src={images.readymade}
                 alt="Burgundy silk ready-made blouse with gold embroidered sweetheart neckline on a dress form"
                 fill

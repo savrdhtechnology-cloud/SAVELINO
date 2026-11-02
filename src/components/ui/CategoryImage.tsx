@@ -15,7 +15,7 @@ export function CategoryImage({
   priority?: boolean;
 }) {
   if (typeof src === "string") {
-    return <Image src={src} alt={alt} fill unoptimized sizes={sizes} priority={priority} className={className} />;
+    return <Image quality={90} src={src} alt={alt} fill unoptimized sizes={sizes} priority={priority} className={className} />;
   }
-  return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} placeholder="blur" className={className} />;
+  return <Image quality={90} src={src} alt={alt} fill sizes={sizes} priority={priority} placeholder="blur" className={className} />;
 }

@@ -130,7 +130,7 @@ export function CheckoutForm({ shippingFee, freeShippingAbove, whatsapp, codEnab
           {lines.map((l) => (
             <li key={l.key} className="flex gap-3">
               <span className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-noir">
-                {l.image && <Image src={l.image} alt="" fill sizes="56px" className="object-cover" style={{ objectPosition: "28% 50%" }} />}
+                {l.image && <Image quality={90} src={l.image} alt="" fill sizes="56px" className="object-cover" style={{ objectPosition: "28% 50%" }} />}
               </span>
               <span className="min-w-0 flex-1 text-sm">
                 <span className="line-clamp-1 text-ivory">{l.name}</span>

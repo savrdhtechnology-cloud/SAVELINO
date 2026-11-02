@@ -95,7 +95,7 @@ export function BagDrawer() {
                   {lines.map((l) => (
                     <li key={l.key} className="flex gap-4 rounded-xl border border-gold/15 p-3">
                       <Link href={`/shop/${l.slug}`} className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-noir-soft">
-                        {l.image && <Image src={l.image} alt="" fill sizes="80px" className="object-cover" style={{ objectPosition: "28% 50%" }} />}
+                        {l.image && <Image quality={90} src={l.image} alt="" fill sizes="80px" className="object-cover" style={{ objectPosition: "28% 50%" }} />}
                       </Link>
                       <div className="min-w-0 flex-1">
                         <Link href={`/shop/${l.slug}`} className="line-clamp-2 font-display text-lg leading-tight text-ivory hover:text-gold">

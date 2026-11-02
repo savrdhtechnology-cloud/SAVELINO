@@ -15,7 +15,7 @@ type LogoProps = {
 export function Logo({ height, priority, className }: LogoProps) {
   const width = Math.round((site.logo.lockupWidth / site.logo.lockupHeight) * height);
   return (
-    <Image
+    <Image quality={90}
       src={site.logo.lockup}
       alt="SAVLINO — A Legacy of Elegance"
       width={width}
@@ -30,7 +30,7 @@ export function Logo({ height, priority, className }: LogoProps) {
 
 export function Monogram({ size, priority, className }: { size: number; priority?: boolean; className?: string }) {
   return (
-    <Image
+    <Image quality={90}
       src={site.logo.monogram}
       alt="SAVLINO SL monogram"
       width={size}

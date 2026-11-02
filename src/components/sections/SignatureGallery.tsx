@@ -145,7 +145,7 @@ function CyclingImage({ images: imgs, alt, className }: { images: (StaticImageDa
   return (
     <>
       {imgs.map((src, i) => (
-        <Image
+        <Image quality={90}
           key={typeof src === "string" ? src : i}
           src={src}
           alt={alt}

@@ -16,7 +16,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-noir">
           {cover ? (
             <>
-              <Image
+              <Image quality={90}
                 src={cover.url}
                 alt={product.name}
                 fill
@@ -26,7 +26,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
                 style={{ objectPosition: fit }}
               />
               {second && (
-                <Image
+                <Image quality={90}
                   src={second.url}
                   alt=""
                   fill

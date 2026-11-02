@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageHeader, Panel, Skeleton, Empty, Field, Drawer, ICONS, Icon, toast, fmtDate } from "@/components/crm/ui";
 import { db, must, revalidateSite, useLoad } from "@/components/crm/data";
+import { BrandButton } from "@/components/crm/BrandButton";
+import { brandProducts } from "@/components/crm/brand";
 import { coverOf, errMsg, fetchDesigns, rpc, sortImages, type DesignStatus, type DlDesign } from "./data";
 import { DesignLabNav, DesignPill, ErrorBox, Lightbox, Photo, angleLabel, useDebounced } from "./shared";
 
@@ -65,6 +67,12 @@ export function Library() {
       } catch (e) { failed.push(`${d.design_code}: ${errMsg(e)}`); }
     }
     await revalidateSite().catch(() => undefined);
+    // Put the SAVLINO frame (logo, icons, title band) on the newly listed pieces, like every other product.
+    if (chosen.length > failed.length) {
+      toast("Applying the SAVLINO frame to the new products — keep this tab open…");
+      const framed = await brandProducts().catch(() => null);
+      if (framed?.failed.length) toast(`Frame failed for ${framed.failed.length} product(s): ${framed.failed[0]}`, "error");
+    }
     setBulkBusy(false);
     await reload();
     if (failed.length) toast(`${chosen.length - failed.length} listed, ${failed.length} failed — ${failed[0]}`, "error");
@@ -78,6 +86,7 @@ export function Library() {
         subtitle="Design Library"
         actions={
           <>
+            <BrandButton />
             <a href="/admin/print/designlab/requirements" target="_blank" rel="noreferrer" className="crm-btn">Material requirement (PDF)</a>
             <Link href="/admin/designlab/import" className="crm-btn crm-btn-gold">
               <Icon d={ICONS.upload} /> Import ZIP

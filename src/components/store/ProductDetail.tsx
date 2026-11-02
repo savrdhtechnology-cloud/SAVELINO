@@ -59,7 +59,7 @@ export function ProductGallery({ product }: { product: Product }) {
           <AnimatePresence mode="wait">
             {img ? (
               <motion.div key={img.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }} className="absolute inset-0">
-                <Image src={img.url} alt={product.name} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-contain" />
+                <Image quality={90} src={img.url} alt={product.name} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-contain" />
               </motion.div>
             ) : (
               <span className="absolute inset-0 flex items-center justify-center font-display text-7xl italic text-gold/25">S</span>
@@ -79,7 +79,7 @@ export function ProductGallery({ product }: { product: Product }) {
           {shown.map((im, i) => (
             <li key={im.id} className="shrink-0">
               <button type="button" onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`} className={`relative block h-16 w-16 overflow-hidden rounded-lg border transition-colors md:h-[4.5rem] md:w-[4.5rem] ${i === active ? "border-gold" : "border-gold/20 hover:border-gold/60"}`}>
-                <Image src={im.url} alt="" fill sizes="80px" className="object-cover" />
+                <Image quality={90} src={im.url} alt="" fill sizes="80px" className="object-cover" />
               </button>
             </li>
           ))}
@@ -93,7 +93,7 @@ export function ProductGallery({ product }: { product: Product }) {
             <button type="button" onClick={() => setZoom(false)} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/50 text-xl text-gold hover:bg-gold hover:text-noir">×</button>
           </div>
           <div className="relative min-h-0 flex-1" onClick={(e) => e.stopPropagation()}>
-            <Image src={img.url} alt={product.name} fill sizes="100vw" className="object-contain" />
+            <Image quality={90} src={img.url} alt={product.name} fill sizes="100vw" className="object-contain" />
             {shown.length > 1 && (
               <>
                 <button type="button" onClick={() => step(-1)} aria-label="Previous photo" className="absolute left-4 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gold/50 bg-noir/70 text-2xl text-gold hover:bg-gold hover:text-noir">‹</button>
@@ -105,7 +105,7 @@ export function ProductGallery({ product }: { product: Product }) {
             {shown.map((im, i) => (
               <li key={im.id} className="shrink-0">
                 <button type="button" onClick={() => setActive(i)} aria-label={`Photo ${i + 1}`} className={`relative block h-16 w-16 overflow-hidden rounded-lg border ${i === active ? "border-gold" : "border-gold/20"}`}>
-                  <Image src={im.url} alt="" fill sizes="64px" className="object-cover" />
+                  <Image quality={90} src={im.url} alt="" fill sizes="64px" className="object-cover" />
                 </button>
               </li>
             ))}
