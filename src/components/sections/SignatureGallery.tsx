@@ -58,13 +58,11 @@ export function SignatureGallery({
         .filter((image) => image.url && (!image.product_id || image.product_id === product.id))
         .map((image) => image.url);
       const fallback = [...new Set([cover?.url, ...productPhotos].filter((url): url is string => Boolean(url)))];
-      // Display curated card photos first, then supplement with the selected
-      // product's actual gallery; never substitute a different product record.
-      const gallery = [...new Set([
-        ...curated,
-        ...(curated.length === 0 && standalone ? [standalone] : []),
-        ...fallback,
-      ])];
+      // Curated card photos take precedence. Only use catalogue photos when
+      // there are no curated photos for the selected card.
+      const gallery = curated.length > 0
+        ? [...new Set(curated)]
+        : [...new Set([...(standalone ? [standalone] : []), ...fallback])];
       const mainImg = gallery[0] ?? tile.img;
       return {
         ...tile,
