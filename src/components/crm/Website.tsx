@@ -38,6 +38,7 @@ import type { Category } from "@/lib/data/types";
 import { CRM_PREVIEW_EVENT } from "./CrmShell";
 import { CinemaSlides } from "./CinemaSlides";
 import { SignatureGalleryStudio } from "./SignatureGalleryStudio";
+import { ShowcaseImageStudio } from "./ShowcaseImageStudio";
 import { db, fetchCategories, fetchSettings, must, revalidateSite, saveSettings, useLoad } from "./data";
 import { CRM_SWATCH } from "./theme";
 import { EASE, Field, ICONS, Icon, PageHeader, Panel, Skeleton, Tabs, Toggle, fmtDateTime, toast } from "./ui";
@@ -244,6 +245,7 @@ function Editor({ initial, initialCategories }: { initial: SiteSettings; initial
 
   const home = (
     <>
+      <ShowcaseImageStudio images={s.showcaseImages} onChange={(showcaseImages) => setS((x) => ({ ...x, showcaseImages }))} />
       <SignatureGalleryStudio images={s.signatureImages} onChange={(signatureImages) => setS((x) => ({ ...x, signatureImages }))} />
       <Panel title="Announcement bar" icon={ICONS.bell}>
         <div className="space-y-3">

@@ -13,12 +13,12 @@ import type { Category } from "@/lib/catalogue";
 const ProductCarousel = dynamic(() => import("@/components/three/ProductCarousel"), { ssr: false });
 
 /** The 3D showcase uses the bundled photography, so it shows the built-in categories that are switched on. */
-export function ProductShowcase({ enabled }: { enabled: Category[] }) {
+export function ProductShowcase({ enabled, images = [] }: { enabled: Category[]; images?: string[] }) {
   const titles = new Map(enabled.map((c) => [c.slug, c.title]));
   const showcase = collections
     .filter((c) => c.slug !== "ready-made-blouses" && titles.has(c.slug))
     .map((c) => ({ ...c, title: titles.get(c.slug) ?? c.title }));
-  const key = showcase.map((c) => `${c.slug}:${c.title}`).join("|");
+  const key = showcase.map((c, i) => `${c.slug}:${c.title}:${images[i] ?? ""}`).join("|");
   const reduce = useReducedMotion();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
@@ -50,11 +50,11 @@ export function ProductShowcase({ enabled }: { enabled: Category[] }) {
 
   const items = useMemo(
     () =>
-      showcase.map((c) => ({
+      showcase.map((c, i) => ({
         slug: c.slug,
         title: c.title,
-        src: c.image.src,
-        aspect: c.image.width / c.image.height,
+        src: images[i] || c.image.src,
+        aspect: images[i] ? 0.75 : c.image.width / c.image.height,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [key],
@@ -95,7 +95,7 @@ export function ProductShowcase({ enabled }: { enabled: Category[] }) {
                 <Link href={`/collections/${c.slug}`} className="group block w-[200px] md:w-[210px]">
                   <div className="overflow-hidden border border-gold/40 p-1">
                     <Image
-                      src={c.image}
+                      src={images[showcase.indexOf(c)] || c.image}
                       alt={c.title}
                       sizes="210px"
                       placeholder="blur"
