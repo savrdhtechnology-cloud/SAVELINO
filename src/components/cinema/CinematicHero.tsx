@@ -97,10 +97,12 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
   const textY = useTransform(scrollYProgress, [0, 1], still ? ["0%", "0%"] : ["0%", "26%"]);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
+  // initial={false}: the very first (server) render already uses the "animate" values, so the hidden slides' copy
+  // is invisible from the first paint. Without it, every slide's text is visible and stacked until JavaScript loads.
   const rise = (on: boolean, i: number) =>
     still
-      ? { animate: { opacity: on ? 1 : 0 }, transition: { duration: 0 } }
-      : { animate: { opacity: on ? 1 : 0, y: on ? 0 : 26 }, transition: { duration: on ? 1 : 0.35, delay: on ? 0.35 + i * 0.12 : 0, ease: EASE } };
+      ? { initial: false as const, animate: { opacity: on ? 1 : 0 }, transition: { duration: 0 } }
+      : { initial: false as const, animate: { opacity: on ? 1 : 0, y: on ? 0 : 26 }, transition: { duration: on ? 1 : 0.35, delay: on ? 0.35 + i * 0.12 : 0, ease: EASE } };
 
   return (
     <section
@@ -117,7 +119,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
         if (e.key === "ArrowRight") go(1);
       }}
       className="cin-hero grain relative isolate w-full overflow-hidden"
-      style={{ height: `${Math.min(content.height || 92, 100)}svh`, minHeight: 640 }}
+      style={{ height: `${Math.min(content.height || 92, 100)}svh`, minHeight: 720 }}
     >
       {/* Photographs: crossfade, with a slow push-in on the one showing */}
       <motion.div aria-hidden style={{ y: imgY }} className="absolute inset-[-4%_0_-4%_0] -z-10 bg-noir">
@@ -162,7 +164,7 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
                 aria-roledescription="slide"
                 aria-label={`${i + 1} of ${count}`}
                 aria-hidden={!on}
-                className={`absolute inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 ${on ? "" : "pointer-events-none"}`}
+                className={`absolute inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 ${on ? "" : "pointer-events-none [&_*]:!pointer-events-none"}`}
               >
                 <motion.p {...rise(on, 0)} className="flex items-center gap-4 text-[0.66rem] uppercase tracking-[0.42em]" style={{ color: look.accent }}>
                   <span aria-hidden className="h-px w-10" style={{ background: look.accent }} />
