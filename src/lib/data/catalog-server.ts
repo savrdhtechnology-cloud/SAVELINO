@@ -15,14 +15,8 @@ function anon() {
   return env ? createClient(env.url, env.anonKey, { auth: { persistSession: false } }) : null;
 }
 
-/**
- * Orders photos and, when the CRM generated branded creatives, shows those instead of the raw
- * photos (raw photos follow only if "show raw photos" was ticked in the Product Studio).
- */
+/** Use the cover selected in Product Studio, followed by the remaining photos in admin order. */
 const sortImages = (p: Product): Product => {
-  // Both storefront cards and detail pages must use the images belonging to
-  // this exact product. Use uploaded product photos as the default cover; branded
-  // promotional creatives belong in the gallery, not ahead of the garment photo.
   const all = [...(p.images ?? [])]
     .filter((image) => Boolean(image.url?.trim()) && (!image.product_id || image.product_id === p.id))
     .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
@@ -31,25 +25,9 @@ const sortImages = (p: Product): Product => {
   const photos = all
     .filter((image) => image.kind !== "creative")
     .map((image) => (tags[image.id] ? { ...image, color: tags[image.id] } : image));
-  // Rank for the storefront: sharp portrait photos first, then the framed portrait creatives,
-  // then softer or landscape shots. Thumbnails too small to show sharply are dropped.
-  const dims = (i: { width?: number | null; height?: number | null }) => ({ w: i.width ?? 0, h: i.height ?? 0 });
-  const usable = [...photos, ...creatives].filter((i) => { const { w, h } = dims(i); return !w || !h || Math.max(w, h) >= 500; });
-  const rank = (i: (typeof usable)[number]) => {
-    const { w, h } = dims(i);
-    const portrait = !w || !h || h >= w;
-    const sharp = !w || !h || Math.min(w, h) >= 900;
-    if (i.kind !== "creative" && portrait && sharp) return 0;
-    if (i.kind === "creative" && portrait) return 1;
-    if (portrait) return 2;
-    return i.kind === "creative" ? 4 : 3;
-  };
-  const ranked = usable.map((img, idx) => ({ img, idx })).sort((x, y) => rank(x.img) - rank(y.img) || x.idx - y.idx).map((x) => x.img);
-  const main = mainImageFor(p.slug, p.id);
-  // A hand-picked main image replaces the auto-generated frames for that product.
-  const list = main ? [main, ...ranked.filter((i) => i.kind !== "creative")] : ranked;
-  const gallery = list;
-  const images = list;
+  const fallback = mainImageFor(p.slug, p.id) ?? creatives[0];
+  const images = photos.length ? photos : fallback ? [fallback] : [];
+  const gallery = [...images, ...creatives.filter((image) => image.id !== images[0]?.id)];
   return { ...p, images, gallery, generated: creatives.length > 0 };
 };
 
@@ -81,7 +59,7 @@ export const getLiveProducts = unstable_cache(
     if (error) console.error("[catalog] products", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["live-products-v4"],
+  ["live-products-v5"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -93,7 +71,7 @@ export const getLiveProduct = unstable_cache(
     if (error) console.error("[catalog] product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["live-product-v4"],
+  ["live-product-v5"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -106,7 +84,7 @@ export const getUpcomingProducts = unstable_cache(
     if (error) console.error("[catalog] upcoming", error.message);
     return ((data as Product[] | null) ?? []).map(sortImages);
   },
-  ["upcoming-products-v3"],
+  ["upcoming-products-v4"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );
 
@@ -118,6 +96,6 @@ export const getUpcomingProduct = unstable_cache(
     if (error) console.error("[catalog] upcoming product", error.message);
     return data ? sortImages(data as Product) : null;
   },
-  ["upcoming-product-v3"],
+  ["upcoming-product-v4"],
   { tags: [CATALOG_TAG], revalidate: 120 },
 );

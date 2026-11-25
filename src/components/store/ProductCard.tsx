@@ -22,7 +22,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
                 fill
                 priority={priority}
                 sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
-                className={`object-cover transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105 ${second ? "group-hover:opacity-0" : ""}`}
+                className={`${cover.kind === "creative" ? "object-contain" : "object-cover"} transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105 ${second ? "group-hover:opacity-0" : ""}`}
                 style={{ objectPosition: fit }}
               />
               {second && (

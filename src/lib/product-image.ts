@@ -4,7 +4,7 @@ import type { Product, ProductImage } from "@/lib/data/types";
  * Cover for a product tile — the first of the ranked images.
  */
 export function productCover(images: ProductImage[]) {
-  // Images arrive ranked by the catalogue loader (sharp portrait photo → framed creative → rest).
+  // The catalogue loader puts the admin-selected storefront cover first.
   const [cover, second] = images;
   const landscape = !!cover?.width && !!cover?.height && cover.width > cover.height;
   const fit = cover?.kind === "creative" || landscape ? "50% 50%" : "50% 30%";

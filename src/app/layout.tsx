@@ -1,3 +1,4 @@
+import { MotionStyleProvider } from "@/components/site/Motion";
 import type { Metadata, Viewport } from "next";
 import { site } from "@/lib/site";
 import { themeCss } from "@/lib/settings";
@@ -96,7 +97,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         >
           Skip to content
         </a>
-        {children}
+        <MotionStyleProvider style={settings.effects.motion}>{children}</MotionStyleProvider>
         <BagDrawer />
       </body>
     </html>

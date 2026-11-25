@@ -348,48 +348,51 @@ function Studio({ categories, product }: { categories: Category[]; product: Prod
       </div>
 
       {photos.length > 0 && (
-        <ul className="mt-4 grid grid-cols-4 gap-2">
-          <AnimatePresence>
-            {photos.map((p, i) => (
-              <motion.li key={p.key} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className={`group relative overflow-hidden rounded-xl ${i === 0 ? "col-span-2 row-span-2" : ""}`} style={{ boxShadow: `0 0 0 ${i === 0 ? 2 : 1}px var(--crm-accent)` }}>
-                <div className="aspect-square">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url} alt="" className="h-full w-full object-cover" />
-                </div>
-                <span className="absolute left-1 top-1 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase" style={{ background: i === 0 ? "var(--crm-accent)" : "rgba(0,0,0,.65)", color: i === 0 ? "var(--crm-accent-ink)" : "#fff" }}>
-                  {ROLE(i)}
-                </span>
-                {d.colors.length > 0 && (
-                  <select
-                    aria-label="Colour shown in this photo"
-                    value={p.color ?? ""}
-                    onChange={(e) => setPhotos((l) => l.map((x) => (x.key === p.key ? { ...x, color: e.target.value || undefined } : x)))}
-                    className="absolute right-1 top-1 max-w-[70%] rounded-md bg-black/75 px-1 py-0.5 text-[0.6rem] text-white outline-none"
-                  >
-                    <option value="">All colours</option>
-                    {d.colors.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
-                  </select>
-                )}
-                <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/75 p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button type="button" title="Move left" onClick={() => move(i, i - 1)} className="px-1 text-white">
-                    ←
-                  </button>
-                  {i > 0 && (
-                    <button type="button" onClick={() => move(i, 0)} className="text-[0.55rem] font-semibold text-[#f0d38a]">
-                      Main
-                    </button>
+        <div className="mt-4">
+        <p className="mb-3 text-sm crm-muted">Choose a clean product photo as the storefront cover. The first photo appears in the shop, collections and product page.</p>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <AnimatePresence>
+              {photos.map((p, i) => (
+                <motion.li key={p.key} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className={`group relative overflow-hidden rounded-xl ${i === 0 ? "col-span-2 row-span-2" : ""}`} style={{ boxShadow: `0 0 0 ${i === 0 ? 2 : 1}px var(--crm-accent)` }}>
+                  <div className="aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt="" className="h-full w-full object-cover" />
+                  </div>
+                  <span className="absolute left-1 top-1 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase" style={{ background: i === 0 ? "var(--crm-accent)" : "rgba(0,0,0,.65)", color: i === 0 ? "var(--crm-accent-ink)" : "#fff" }}>
+                    {i === 0 ? "Storefront cover" : ROLE(i)}
+                  </span>
+                  {d.colors.length > 0 && (
+                    <select
+                      aria-label="Colour shown in this photo"
+                      value={p.color ?? ""}
+                      onChange={(e) => setPhotos((l) => l.map((x) => (x.key === p.key ? { ...x, color: e.target.value || undefined } : x)))}
+                      className="absolute right-1 top-1 max-w-[70%] rounded-md bg-black/75 px-1 py-0.5 text-[0.6rem] text-white outline-none"
+                    >
+                      <option value="">All colours</option>
+                      {d.colors.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+                    </select>
                   )}
-                  <button type="button" title="Remove" onClick={() => setPhotos((l) => l.filter((x) => x.key !== p.key))} className="px-1 text-[#ff9b9b]">
-                    ✕
-                  </button>
-                  <button type="button" title="Move right" onClick={() => move(i, i + 1)} className="px-1 text-white">
-                    →
-                  </button>
-                </div>
-              </motion.li>
-            ))}
-          </AnimatePresence>
-        </ul>
+                  <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/75 p-1">
+                    <button type="button" title="Move left" onClick={() => move(i, i - 1)} className="px-1 text-white">
+                      ←
+                    </button>
+                    {i > 0 && (
+                      <button type="button" onClick={() => move(i, 0)} className="text-[0.55rem] font-semibold text-[#f0d38a]">
+                        Set cover
+                      </button>
+                    )}
+                    <button type="button" title="Remove" onClick={() => setPhotos((l) => l.filter((x) => x.key !== p.key))} className="px-1 text-[#ff9b9b]">
+                      ✕
+                    </button>
+                    <button type="button" title="Move right" onClick={() => move(i, i + 1)} className="px-1 text-white">
+                      →
+                    </button>
+                  </div>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        </div>
       )}
 
       {photos.length > 0 && (

@@ -38,15 +38,15 @@ export default async function CollectionsIndexPage() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-[80%_42%] md:object-[center_42%]"
+            className="object-cover object-[88%_35%] md:object-[center_30%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#100b08] via-transparent to-transparent md:bg-gradient-to-r md:from-[#100b08] md:via-[#100b08]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#100b08] via-transparent to-transparent md:bg-gradient-to-r md:from-[#100b08] md:via-[#100b08]/20 md:to-transparent" />
         </div>
         <div className="relative mx-auto flex max-w-[1440px] items-center px-5 pb-12 md:min-h-[460px] md:px-12 md:py-16 lg:min-h-[510px] lg:px-20">
-          <div className="max-w-[570px] md:w-1/2">
+          <div className="max-w-[570px] md:w-[49%]">
             <Reveal y={10}><p className="eyebrow text-gold-light">Our collections</p></Reveal>
             <SplitHeadline as="h1" text="Curated blouse collections" trigger="mount" delay={0.1}
-              className="mt-4 font-display text-[clamp(2.7rem,5.1vw,5.3rem)] leading-[1.02] text-[#faf0e2]" />
+              className="mt-4 font-display text-[clamp(2.35rem,4.15vw,4.65rem)] leading-[1.02] text-[#faf0e2]" />
             <Reveal delay={0.25} y={14}>
               <p className="mt-5 max-w-[44ch] font-serif text-lg italic text-[#eadbc9] md:text-xl">
                 Discover SAVLINO’s designer blouses, from occasionwear to everyday styles.

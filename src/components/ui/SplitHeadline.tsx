@@ -1,6 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { Fragment } from "react";
+import { useMotionStyle } from "@/components/site/Motion";
 
 type SplitHeadlineProps = {
   text: string;
@@ -32,7 +34,7 @@ export function SplitHeadline({
   wordClassName,
   studioKey,
 }: SplitHeadlineProps) {
-  const reduce = useReducedMotion();
+  const reduce = useMotionStyle() === "still";
   const Tag = as;
   const words = text.split(" ");
 
@@ -51,18 +53,20 @@ export function SplitHeadline({
         variants={{ hidden: {}, show: { transition: { staggerChildren: reduce ? 0 : stagger, delayChildren: delay } } }}
       >
         {words.map((word, i) => (
-          <span key={`${word}-${i}`} className="inline-block overflow-hidden -mb-[0.1em] pb-[0.22em] pr-[0.06em] align-bottom">
-            <motion.span
-              className={`-mb-[0.2em] -mr-[0.08em] inline-block pb-[0.2em] pr-[0.08em] ${wordClassName ?? ""}`}
-              variants={{
-                hidden: { y: "110%", rotate: 4, opacity: 0 },
-                show: { y: "0%", rotate: 0, opacity: 1, transition: { duration: reduce ? 0 : 1.1, ease: EASE } },
-              }}
-            >
-              {word}
-            </motion.span>
-            {i < words.length - 1 ? " " : null}
-          </span>
+          <Fragment key={`${word}-${i}`}>
+            <span className="inline-block overflow-hidden -mb-[0.1em] pb-[0.22em] pr-[0.06em] align-bottom">
+              <motion.span
+                className={`-mb-[0.2em] -mr-[0.08em] inline-block pb-[0.2em] pr-[0.08em] ${wordClassName ?? ""}`}
+                variants={{
+                  hidden: { y: "110%", rotate: 4, opacity: 0 },
+                  show: { y: "0%", rotate: 0, opacity: 1, transition: { duration: reduce ? 0 : 1.1, ease: EASE } },
+                }}
+              >
+                {word}
+              </motion.span>
+            </span>
+            {i < words.length - 1 ? " " : null}
+          </Fragment>
         ))}
       </motion.span>
     </Tag>
