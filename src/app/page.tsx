@@ -22,7 +22,6 @@ import { FeaturedProducts } from "@/components/sections/FeaturedProducts";
 import { getLiveProducts, getUpcomingProducts, getVisibleCategories } from "@/lib/data/catalog-server";
 import { UpcomingSection } from "@/components/sections/UpcomingSection";
 import { StyleTiles } from "@/components/sections/StyleTiles";
-import { MotionStyleProvider } from "@/components/site/Motion";
 import { SITE_THEMES, type SiteThemeId } from "@/lib/settings";
 import { productCover, showcaseProduct } from "@/lib/product-image";
 import { CinematicHero } from "@/components/cinema/CinematicHero";
@@ -120,33 +119,31 @@ export default async function Home({ searchParams }: Props) {
   return (
     <div data-site-theme={siteTheme}>
       <SiteHeader />
-      <MotionStyleProvider style={settings.effects.motion}>
-        <main id="main" data-site-theme={siteTheme}>
-          {cinema ? (
-            <>
-              <CinematicHero content={settings.hero} />
-              <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
-              <StyleTiles products={liveProducts} eyebrow="Fresh designs, timeless appeal" title="New arrivals" intro="Tap a blouse to see all its photos, colours and sizes." />
-              <UpcomingSection products={upcoming} />
-              <FeaturedProducts products={featured} />
-              {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}
-              <TrustFeatures />
-              {visibleSections.has("custom-stitching") && <StitchingJourney />}
-            </>
-          ) : (
-            <>
-              {siteTheme === "pearl" && heroSlides.length ? <HeroSlider slides={heroSlides} /> : <Hero content={settings.hero} />}
-              {siteTheme === "pearl" && <StatsStrip />}
-              <UpcomingSection products={upcoming} />
-            </>
-          )}
-          {settings.sections
-            .filter((sec) => sec.visible && !(cinema && replacedByCinema.has(sec.id)))
-            .map((sec) => (
-              <Fragment key={sec.id}>{SECTIONS[sec.id]}</Fragment>
-            ))}
-        </main>
-      </MotionStyleProvider>
+      <main id="main" data-site-theme={siteTheme}>
+        {cinema ? (
+          <>
+            <CinematicHero content={settings.hero} />
+            <LuxuryCategoryCarousel items={enabled.map((c) => ({ slug: c.slug, title: c.title, kicker: c.kicker, image: c.image, href: `/collections/${c.slug}` }))} />
+            <StyleTiles products={liveProducts} eyebrow="Fresh designs, timeless appeal" title="New arrivals" intro="Tap a blouse to see all its photos, colours and sizes." />
+            <UpcomingSection products={upcoming} />
+            <FeaturedProducts products={featured} />
+            {visibleSections.has("shop") && <PerspectiveProductCarousel items={showcaseItems(liveProducts)} />}
+            <TrustFeatures />
+            {visibleSections.has("custom-stitching") && <StitchingJourney />}
+          </>
+        ) : (
+          <>
+            {siteTheme === "pearl" && heroSlides.length ? <HeroSlider slides={heroSlides} /> : <Hero content={settings.hero} />}
+            {siteTheme === "pearl" && <StatsStrip />}
+            <UpcomingSection products={upcoming} />
+          </>
+        )}
+        {settings.sections
+          .filter((sec) => sec.visible && !(cinema && replacedByCinema.has(sec.id)))
+          .map((sec) => (
+            <Fragment key={sec.id}>{SECTIONS[sec.id]}</Fragment>
+          ))}
+      </main>
       <SiteFooter />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </div>

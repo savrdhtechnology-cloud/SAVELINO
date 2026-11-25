@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { Reveal } from "@/components/ui/Reveal";
 import { StudioGallery } from "./StudioGallery";
 import styles from "./story.module.css";
@@ -32,7 +33,7 @@ export default function OurStoryPage() {
         <section className={styles.intro}>
           <Reveal className={styles.wrap} y={16}>
             <p className={styles.label}>Our story</p>
-            <h1>A legacy of elegance</h1>
+            <SplitHeadline as="h1" text="A legacy of elegance" trigger="mount" />
             <p className={styles.introCopy}>The house of SAVLINO was born from a love of Indian craft and a belief that every woman deserves to feel it.</p>
             <Link className={styles.jump} href="#bhopal-studio">Discover the proposed Bhopal studio ↓</Link>
           </Reveal>
