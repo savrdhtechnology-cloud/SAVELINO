@@ -18,7 +18,7 @@ const ALL_FONTS = googleFontsHref(ALL_FONT_KEYS);
 export const CRM_PREVIEW_EVENT = "savlino:crm-appearance-preview";
 
 type NavItem = { href: string; label: string; icon: string; badge?: string; children?: { href: string; label: string }[] };
-const NAV: NavItem[] = [
+const NAV: (NavItem & { adminOnly?: boolean })[] = [
   { href: "/admin", label: "Dashboard", icon: ICONS.dashboard },
   { href: "/admin/studio", label: "Product Studio", icon: ICONS.studio, badge: "New" },
   {
@@ -49,6 +49,7 @@ const NAV: NavItem[] = [
   { href: "/admin/payments", label: "Payments", icon: ICONS.payments },
   { href: "/admin/website", label: "Appearance Studio", icon: ICONS.website },
   { href: "/admin/sections", label: "Website Sections", icon: ICONS.image },
+  { href: "/admin/dpr", label: "DPR Dashboard", icon: ICONS.layers, adminOnly: true },
   { href: "/admin/settings", label: "Settings", icon: ICONS.settings },
 ];
 
@@ -111,7 +112,7 @@ export function CrmShell({ crm, user, children }: { crm: SiteSettings["crm"]; us
   const nav = (
     <LayoutGroup id="crm-nav">
       <nav aria-label="CRM" className="space-y-1">
-        {NAV.map((item, i) => {
+        {NAV.filter((item) => !item.adminOnly || user.role === "admin").map((item, i) => {
           const active = isActive(item.href);
           return (
             <motion.div key={item.href} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i, duration: 0.5, ease: EASE }}>
