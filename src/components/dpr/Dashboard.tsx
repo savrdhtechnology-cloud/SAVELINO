@@ -13,7 +13,7 @@ import { Card, Chart, lakh, number, Pairs, ratio, Table } from "./ui";
 import "./dashboard.css";
 
 const sections = [
-  ["Executive Summary", "▤"], ["Business Profile", "⌂"], ["Project Cost", "▱"],
+  ["Executive Summary", "▤"], ["Business Profile", "⌂"], ["Business Model", "◈"], ["Project Cost", "▱"],
   ["Financial Projections", "▥"], ["Repayment Plan", "▦"], ["Risk & Sensitivity", "◇"], ["Annexures", "▧"],
 ];
 const launchSteps = [
@@ -165,6 +165,34 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         </div></Card>{timeline}
       </div>}
       {index === 2 && <div className="detail">
+        <Card title="What SAVLINO Will Sell"><Pairs rows={[
+          ["Core products", "Women’s designer blouses in standard sizes, with made-to-order stitching and fit adjustments. Add related apparel as customer demand is established."],
+          ["Target customers", "Retail customers shopping for saree blouses for everyday, festive and occasion wear, through the website and local orders in Bhopal."],
+          ["Production model", "Make small batches of proven styles for ready stock. Cut and stitch custom orders after confirming measurements, design, scope and delivery date."],
+        ]} /></Card>
+        <Card title="Sales and Order Fulfilment"><Pairs rows={[
+          ["Website and digital · 60% planned", "Show blouse designs, photos, fabric, size chart, lead times and prices on the SAVLINO website. Take standard orders through checkout and confirm custom requirements before production."],
+          ["Local and custom · 40% planned", "Generate orders through local enquiries and referrals. Confirm the style, measurements, final quote and order terms before starting custom work."],
+          ["Order to delivery", "Record each paid or confirmed order, allocate stock or production capacity, inspect the finished garment, then pack and dispatch with tracking or arrange local handover."],
+          ["After-sales", "Log fit, damage and delivery complaints. Apply the published return or alteration terms and record feedback by design and size."],
+        ]} /></Card>
+        <Card title="Manufacturing Process"><div className="body">
+          <ol className="notes">
+            <li><strong>Design and plan.</strong> Select styles, prepare patterns and samples, confirm sizes and plan batch quantities or individual orders.</li>
+            <li><strong>Source and inspect.</strong> Purchase fabric, lining and trims, check quantity, shade and defects, and record material received.</li>
+            <li><strong>Measure and cut.</strong> Confirm measurements for custom orders, mark the pattern, cut fabric and lining, and label pieces by size or order.</li>
+            <li><strong>Stitch and finish.</strong> Assemble panels and lining, attach closures and trims, finish seams, trim loose threads and press the garment.</li>
+            <li><strong>Check quality and dispatch.</strong> Verify measurements, stitching, closures and finish against the order. Correct defects before packing, update stock and confirm delivery.</li>
+          </ol>
+        </div></Card>
+        <Card title="Revenue, Pricing and Cost Control"><Pairs rows={[
+          ["Revenue", "Revenue comes from completed online, local and made-to-order garment sales. Quote any custom work separately before order confirmation."],
+          ["Pricing", `Year 1 projects ${number(input.units[0], 0)} net units at ₹${number(input.price[0])} average net realization per unit, or ${lakh(first.netSales)} net sales.`],
+          ["Cost control", "Cost each style using fabric, trims, direct stitching and fulfilment. Review contribution after discounts and returns, and use it to assess pricing and batch sizes."],
+          ["Operating controls", "Track enquiries, paid orders, work in progress, dispatches, returns, collections and rework. Reconcile sales receipts and inventory against orders."],
+        ]} /></Card>
+      </div>}
+      {index === 3 && <div className="detail">
         <div className="split">{funding}<Card title="Opening Uses of Funds · ₹ lakh"><Pairs rows={costRows} money /></Card></div>
         <Card title="Itemized Project Budget · ₹ lakh"><Table headings={["Use of funds", "Amount"]} rows={[
           ...costLabels.slice(0, 6).map((label, index) => [label, input.cost[index]]), ["Total depreciable fixed asset budget", data.assets],
@@ -174,8 +202,8 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           <p>Suggested structure for branch appraisal uses term finance up to the fixed asset budget and working capital for the balance. The repayment model amortizes the full {lakh(input.loan)} over {input.term} months.</p>
         </div></Card>
       </div>}
-      {index === 3 && <div className="detail">{charts}<Financials input={input} data={data} /></div>}
-      {index === 4 && <div className="detail">
+      {index === 4 && <div className="detail">{charts}<Financials input={input} data={data} /></div>}
+      {index === 5 && <div className="detail">
         <div className="split"><Card title="Modeled Loan Terms"><Pairs rows={repaymentRows} money /></Card>
           <Chart title="Year-end Outstanding Loan" labels={data.loan.annual.map((_, index) => `Y${index + 1}`)}
             values={data.loan.annual.map((annual) => annual.closing)} />
@@ -192,7 +220,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         } /></Card>
         {!exporting && amortization(selectedYear, true)}
       </div>}
-      {index === 5 && <div className="detail">
+      {index === 6 && <div className="detail">
         <div className="split">{stressChart}<Chart title="5-Year Cash Debt Coverage" values={data.forecast.map((y) => y.cashCoverage)}
           labels={years} unit="×" threshold={1} colors={["#2bb3a3"]} /></div>
         <Card title="Year 1 Downside Scenarios · ₹ lakh except coverage"><Table
@@ -202,7 +230,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           headings={["Month", "Sales", "EBITDA", "WC increase", "Tax", "EMI", "Drawings", "Capex", "Closing cash"]}
           rows={data.scenarios[0].budget.map((m, index) => [String(index + 1), m.monthSales, m.ebitda, m.wcChange, m.tax, m.payment, m.drawings, m.capex, m.closing])} /></Card>
       </div>}
-      {index === 6 && <div className="detail">
+      {index === 7 && <div className="detail">
         <Card title="Bank Submission Checklist"><Pairs rows={[
           ["Identity and category", "PAN, bank-accepted KYC, photos, category certificate if applicable and signed application"],
           ["Residence", "Bank-accepted current address proof and ownership or occupancy documents as applicable"],
