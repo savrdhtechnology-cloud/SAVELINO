@@ -6,6 +6,27 @@ type Section = { title: string; content: ReactNode };
 type Mode = "summary" | "report";
 type Preview = { url: string; pages: string[]; filename: string };
 const paper = { width: 1122, height: 793 };
+const pixelRatio = 2;
+const pageBackground = "#faf7fc";
+
+function fitOnPaper(source: HTMLCanvasElement) {
+  const width = paper.width * pixelRatio;
+  const height = paper.height * pixelRatio;
+  if (source.width === width && source.height === height) return source;
+
+  const page = document.createElement("canvas");
+  page.width = width;
+  page.height = height;
+  const context = page.getContext("2d");
+  if (!context) throw new Error("Could not prepare the A4 PDF page.");
+  const scale = Math.min(width / source.width, height / source.height);
+  const scaledWidth = source.width * scale;
+  const scaledHeight = source.height * scale;
+  context.fillStyle = pageBackground;
+  context.fillRect(0, 0, width, height);
+  context.drawImage(source, (width - scaledWidth) / 2, 0, scaledWidth, scaledHeight);
+  return page;
+}
 
 function element(className: string, text?: string) {
   const node = document.createElement("div");
@@ -64,9 +85,6 @@ async function generate(stage: HTMLElement, mode: Mode, applicant: string, loan:
           page = sheet(`${title} · Continued`);
           page.append(copy);
         }
-        if (page.scrollHeight > page.clientHeight + 1 || page.scrollWidth > page.clientWidth + 1) {
-          throw new Error(`The ${title} section does not fit on an A4 page.`);
-        }
       }
     });
 
@@ -78,12 +96,20 @@ async function generate(stage: HTMLElement, mode: Mode, applicant: string, loan:
     pdf.setProperties({ title: mode === "summary" ? "SAVLINO — Executive Summary" : "SAVLINO — Detailed Project Report" });
     const pages: string[] = [];
     for (const [index, page] of sheets.entries()) {
-      const content = page.querySelector<HTMLElement>(".dpr-export-content");
-      if (!content || content.scrollHeight > content.clientHeight + 1 || content.scrollWidth > content.clientWidth + 1) {
-        throw new Error("A report page exceeds the A4 export area.");
-      }
-      const canvas = await toCanvas(page, { ...paper, pixelRatio: 2, backgroundColor: "#faf7fc", skipFonts: true });
-      const image = canvas.toDataURL("image/jpeg", .94);
+      // Lay out the entire sheet, including anything taller than the nominal paper,
+      // then scale the capture into A4 without cropping charts or table rows.
+      page.style.height = "auto";
+      page.style.minHeight = `${paper.height}px`;
+      const canvas = await toCanvas(page, {
+        width: Math.max(paper.width, page.scrollWidth),
+        height: Math.max(paper.height, page.offsetHeight, page.scrollHeight),
+        pixelRatio,
+        backgroundColor: pageBackground,
+        skipFonts: true,
+      });
+      const fitted = fitOnPaper(canvas);
+      const image = fitted.toDataURL("image/jpeg", .94);
+      fitted.width = fitted.height = 0;
       canvas.width = canvas.height = 0;
       pages.push(image);
       if (index > 0) pdf.addPage("a4", "landscape");
