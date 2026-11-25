@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { saveDpr } from "@/app/admin/(crm)/dpr/actions";
-import { AssumptionsEditor, restoreFigures } from "./AssumptionsEditor";
+import { AssumptionsEditor, assumptionsFormId, restoreFigures } from "./AssumptionsEditor";
 import { ReportExport } from "./ReportExport";
 import { Financials } from "./Financials";
 import { costLabels, type Assumptions } from "./defaults";
@@ -48,16 +48,19 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
     setStatus("Recalculated. Save changes to keep this version.");
   }
 
-  async function save() {
+  async function save(next: Assumptions) {
     if (revision === undefined || saving) return;
     setSaving(true);
     setError("");
+    setStatus("");
     try {
-      const result = await saveDpr(input, revision);
+      const result = await saveDpr(next, revision);
       if (result.revision === undefined) {
         setError(result.error ?? "The DPR could not be saved.");
       } else {
         setRevision(result.revision);
+        setInput(next);
+        setEditing(false);
         setDirty(false);
         setStatus("DPR changes saved.");
       }
@@ -243,7 +246,9 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         <button className="print" type="button" aria-expanded={editing} disabled={saving} onClick={() => setEditing(!editing)}>
           {editing ? "Close assumptions" : "Edit figures"}
         </button>
-        <button className="print" type="button" disabled={!dirty || saving || editing || revision === undefined} onClick={save}>
+        <button className="print" type={editing ? "submit" : "button"} form={editing ? assumptionsFormId : undefined}
+          value="save" disabled={(!dirty && !editing) || saving || revision === undefined}
+          onClick={editing ? undefined : () => void save(input)}>
           {saving ? "Saving…" : "Save changes"}
         </button>
         <ReportExport summary={renderSection(0, true)} reportSections={[
@@ -257,7 +262,8 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         {error && <span role="alert" className="error">{error}</span>}
         {revision === undefined && <span className="error">Shared storage unavailable. You can still preview figures.</span>}
       </div>
-      {editing && <AssumptionsEditor key={editorKey} input={input} onPreview={preview}
+      {editing && <AssumptionsEditor key={editorKey} input={input} onPreview={preview} onSave={save}
+        saving={saving} canSave={revision !== undefined}
         onRestore={() => { setEditorKey(editorKey + 1); preview(restoreFigures(input)); }} />}
       {renderSection(section)}
       <footer className="foot">Financial figures are DPR projections and illustrative financing assumptions. Final terms are subject to bank appraisal.</footer>
