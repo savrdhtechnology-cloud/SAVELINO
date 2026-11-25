@@ -519,6 +519,22 @@ nav button{
 .sav-dpr .dpr-export-content .tablewrap table { min-width: 0; }
 .sav-dpr .dpr-export-content .tablewrap th, .sav-dpr .dpr-export-content .tablewrap td { padding: 5px 8px; white-space: normal; }
 .sav-dpr .dpr-export-footer { color: var(--muted); border-top: 1px solid var(--line); margin-top: 9px; padding-top: 6px; font-size: 11px; }
-.sav-dpr .dpr-export-cover { padding: 86px 0 0; }
-.sav-dpr .dpr-export-cover-title { font-size: 34px; font-weight: 750; max-width: 640px; margin-bottom: 6px; }
-.sav-dpr .dpr-export-cover-line { font-size: 16px; margin: 14px 0; }
+.sav-dpr .dpr-export-sheet > :not(.dpr-export-content) { flex-shrink: 0; }
+.sav-dpr .dpr-export-bank { max-width: 72%; text-align: right; overflow-wrap: anywhere; }
+.sav-dpr .dpr-flow-heading { font-size: 19px; font-weight: 750; color: #512086; margin: 9px 0 4px; }
+.sav-dpr .dpr-export-content .tablewrap th, .sav-dpr .dpr-export-content .tablewrap td { padding-block: 4px; overflow-wrap: anywhere; }
+.sav-dpr .dpr-export-cover { padding: 40px 0 0; }
+.sav-dpr .dpr-cover-main, .sav-dpr .dpr-cover-credits { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; }
+.sav-dpr .dpr-cover-project { padding: 12px 0; }
+.sav-dpr .dpr-export-cover-title { font-size: 35px; line-height: 1.15; font-weight: 750; margin: 22px 0 12px; }
+.sav-dpr .dpr-cover-website, .sav-dpr .dpr-cover-label { color: #61328a; font-weight: 750; }
+.sav-dpr .dpr-cover-label { font-size: 11px; letter-spacing: .09em; }
+.sav-dpr .dpr-cover-recipient { background: #281b39; color: #fff9ef; padding: 22px; border-radius: 14px; overflow-wrap: anywhere; }
+.sav-dpr .dpr-cover-recipient .dpr-cover-label { color: #e8c798; }
+.sav-dpr .dpr-cover-loan-label { margin-top: 14px; border-top: 1px solid #ffffff40; padding-top: 12px; }
+.sav-dpr .dpr-cover-loan { font-size: 30px; font-weight: 750; margin-top: 3px; }
+.sav-dpr .dpr-cover-credits { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 26px; }
+.sav-dpr .dpr-cover-credit { overflow-wrap: anywhere; }
+.sav-dpr .dpr-cover-name { font-size: 19px; font-weight: 750; margin: 5px 0; }
+.sav-dpr .dpr-export-cover-line { font-size: 13px; margin: 5px 0; }
+.sav-dpr .dpr-cover-date { color: var(--muted); margin-top: 20px; }
