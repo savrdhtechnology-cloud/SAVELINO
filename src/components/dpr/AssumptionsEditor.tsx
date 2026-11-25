@@ -10,12 +10,19 @@ function Field({ name, label, value, text, integer }: {
     maxLength={text ? 160 : undefined} min={text ? undefined : 0} step={integer ? "1" : "any"} required={!text} /></label>;
 }
 
-export function AssumptionsEditor({ input, onPreview, onRestore }: {
-  input: Assumptions; onPreview: (next: Assumptions) => void; onRestore: () => void;
+export const assumptionsFormId = "dpr-assumptions-form";
+
+export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving, canSave }: {
+  input: Assumptions; onPreview: (next: Assumptions) => void; onSave: (next: Assumptions) => Promise<void>;
+  onRestore: () => void; saving: boolean; canSave: boolean;
 }) {
   const [error, setError] = useState("");
-  function preview(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const shouldSave = submitter?.getAttribute("value") === "save";
+    if (shouldSave && !canSave) return;
     const data = new FormData(event.currentTarget);
     const read = (name: string) => Number(data.get(name));
     const vector = (name: string, length: number) => Array.from({ length }, (_, index) => read(`${name}-${index}`));
@@ -33,9 +40,10 @@ export function AssumptionsEditor({ input, onPreview, onRestore }: {
       return;
     }
     setError("");
-    onPreview(updated);
+    if (shouldSave) void onSave(updated);
+    else onPreview(updated);
   }
-  return <form className="editor" onSubmit={preview}>
+  return <form id={assumptionsFormId} className="editor" onSubmit={submit} inert={saving} aria-busy={saving}>
     <Card title="Applicant & Loan Terms"><div className="body inputGrid">
       <Field name="applicant" label="Applicant name" value={input.applicant} text />
       <Field name="category" label="Applicant category" value={input.category} text />
@@ -59,7 +67,8 @@ export function AssumptionsEditor({ input, onPreview, onRestore }: {
     </div></Card>)}
     {error && <p role="alert" className="error">{error}</p>}
     <div className="actions">
-      <button className="print" type="submit">Apply & recalculate</button>
+      <button className="print" type="submit" value="save" disabled={!canSave || saving}>Save changes</button>
+      <button className="print" type="submit" value="preview">Apply & recalculate</button>
       <button className="print" type="button" onClick={() => { setError(""); onRestore(); }}>
         Restore DPR figures
       </button>
