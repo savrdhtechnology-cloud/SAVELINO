@@ -2,8 +2,12 @@ export const costLabels = ["Industrial sewing and overlock/interlock machines", 
 export const fixedLabels = ["Retained wages and support", "Premises rent", "Power and utilities", "Marketing and promotion", "Admin, repairs and overheads"];
 export const capacity = [3600.0, 4200.0, 4800.0, 5400.0, 6000.0];
 export const monthlySales = [1.1, 1.3, 1.5, 1.7, 1.8, 1.9, 2.0, 2.1, 2.4, 2.5, 2.7, 3.0];
+export const defaultBank = "Indian Overseas Bank";
+
 export const defaults = {
   applicant: "",
+  bank: defaultBank,
+  bankBranch: "Bhopal, Madhya Pradesh",
   category: "Woman entrepreneur",
   loan: 10,
   rate: 11,
