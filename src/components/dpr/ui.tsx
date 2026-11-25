@@ -56,14 +56,21 @@ export function Chart({ title, labels, values, colors = ["#8955c7"], note, margi
       })}
       <path d={`M${left} ${y(0)}H${right}`} stroke="#bca8cf" />
       {threshold !== undefined && <path d={`M${left} ${y(threshold)}H${right}`} stroke="#825a9c" strokeDasharray="4 4" />}
-      {values.map((value, index) => <g key={labels[index]} tabIndex={0}>
+      {values.map((value, index) => {
+        const percentage = margin?.[index];
+        const labelY = value === null ? y(0) - 5 : y(value) + (value < 0 ? 11 : -5);
+        const insideBar = value !== null && value > 0 && percentage != null
+          && y(0) - y(value) > 16 && Math.abs(labelY - marginY(percentage)) < 15;
+        return <g key={labels[index]} tabIndex={0}>
         <title>{labels[index]} · {number(value)} {unit}</title>
         {value !== null && <rect className="bar" x={x(index) - width * .33} y={Math.min(y(value), y(0))}
           width={width * .66} height={Math.abs(y(value) - y(0))} rx="4" fill={colors[index % colors.length]} />}
-        <text className="value" x={x(index)} y={value === null ? y(0) - 5 : y(value) + (value < 0 ? 11 : -5)}
+        <text className="value" x={x(index)} y={insideBar && value !== null ? y(value) + 13 : labelY}
+          style={insideBar ? { fill: "white" } : undefined}
           textAnchor="middle">{number(value)}</text>
         <text className="axis" x={x(index)} y="151" textAnchor="middle">{labels[index]}</text>
-      </g>)}
+      </g>;
+      })}
       {margin?.map((value, index) => {
         if (value === null) return null;
         const previous = margin[index - 1];
