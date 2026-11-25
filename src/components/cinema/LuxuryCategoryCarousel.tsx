@@ -1,5 +1,6 @@
 "use client";
 
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import Link from "next/link";
 import type { StaticImageData } from "next/image";
 import { useRef, type PointerEvent } from "react";
@@ -39,9 +40,9 @@ export function LuxuryCategoryCarousel({ items }: { items: CategoryCard[] }) {
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
         <Reveal className="flex flex-col items-center text-center">
           <p className="text-[0.76rem] uppercase tracking-[0.42em] text-gold-light">Explore</p>
-          <h2 id="cin-cats" className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory">
-            Shop by <span className="cin-shimmer italic">Category</span>
-          </h2>
+          <SplitHeadline id="cin-cats" text="Shop by Category"
+            accentWord={{ index: 2, className: "cin-shimmer italic" }}
+            className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory" />
           <Flourish className="mt-5" />
         </Reveal>
       </div>

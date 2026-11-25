@@ -1,5 +1,6 @@
 "use client";
 
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Button } from "@/components/ui/Button";
@@ -26,9 +27,9 @@ export function StitchingJourney() {
       <div className="mx-auto max-w-[1300px] px-5 md:px-10">
         <Reveal className="flex flex-col items-center text-center">
           <p className="text-[0.76rem] uppercase tracking-[0.42em] text-gold-light">Made for you</p>
-          <h2 id="cin-stitch" className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory">
-            Luxury <span className="cin-shimmer italic">Custom Stitching</span>
-          </h2>
+          <SplitHeadline id="cin-stitch" text="Luxury Custom Stitching"
+            accentWord={{ index: 1, className: "cin-shimmer italic" }}
+            className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory" />
           <Flourish className="mt-5" />
         </Reveal>
 
@@ -47,7 +48,7 @@ export function StitchingJourney() {
                       <CinemaIcon name={s.icon} className="h-8 w-8 transition-transform duration-700 group-hover:scale-110" strokeWidth={1.1} />
                       <span className="absolute -right-1 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-gold font-sans text-[0.74rem] font-semibold text-noir">{i + 1}</span>
                     </span>
-                    <h3 className="mt-5 font-display text-2xl text-ivory">{s.title}</h3>
+                    <SplitHeadline as="h3" className="mt-5 font-display text-2xl text-ivory" text={s.title} />
                     <p className="mt-3 text-sm leading-relaxed text-ivory/60">{s.text}</p>
                   </div>
                 </Reveal>

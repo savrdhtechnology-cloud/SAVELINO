@@ -1,5 +1,7 @@
 "use client";
 
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
+
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -128,7 +130,7 @@ function CollectionCardCinema({ item, centre }: { item: ShowcaseCard; centre: bo
         />
       </Link>
       <div className="px-3 pb-3 pt-4 text-center">
-        <h3 className="font-display text-xl text-ivory">{item.title}</h3>
+        <SplitHeadline as="h3" className="font-display text-xl text-ivory" text={item.title} />
         <Link
           href={`/collections/${item.slug}`}
           tabIndex={centre ? 0 : -1}

@@ -3,6 +3,8 @@
 import Image, { type StaticImageData } from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
+import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { useMotionStyle } from "@/components/site/Motion";
 import { HERO_PREVIEW_EVENT } from "@/components/site/StudioBridge";
@@ -150,13 +152,11 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
       <GoldParticles count={22} />
 
       <div className="relative mx-auto flex h-full max-w-[1440px] flex-col justify-end px-5 pb-24 pt-[calc(var(--header-h)+2rem)] md:justify-center md:px-10 md:pb-20">
-        <motion.div style={{ y: textY, opacity: fade }} className="relative min-h-[360px] max-w-[560px] md:min-h-[430px]">
+        <motion.div style={{ y: textY, opacity: still ? 1 : fade }} className="relative min-h-[360px] max-w-[560px] md:min-h-[430px]">
           {slides.map((sl, i) => {
             const on = i === index;
             const look = LOOKS[sl.style] ?? LOOKS.palace;
             const words = sl.title.trim().split(/\s+/);
-            const lead = words.slice(0, -1).join(" ");
-            const last = words[words.length - 1] ?? "";
             return (
               <div
                 key={i}
@@ -164,21 +164,17 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
                 aria-roledescription="slide"
                 aria-label={`${i + 1} of ${count}`}
                 aria-hidden={!on}
+                inert={!on}
                 className={`absolute inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 ${on ? "" : "pointer-events-none [&_*]:!pointer-events-none"}`}
               >
                 <motion.p {...rise(on, 0)} className="flex items-center gap-4 text-[0.78rem] uppercase tracking-[0.42em]" style={{ color: look.accent }}>
                   <span aria-hidden className="h-px w-10" style={{ background: look.accent }} />
                   {sl.eyebrow}
                 </motion.p>
-                <motion.h2
-                  role="heading"
-                  aria-level={i === 0 ? 1 : 2}
-                  {...rise(on, 1)}
+                <SplitHeadline as="h1" text={sl.title} trigger="mount" active={on} delay={0.17} stagger={0.13}
+                  accentWord={{ index: words.length - 1, className: "cin-shimmer italic" }}
                   className={`mt-5 font-display text-[clamp(2.25rem,5vw,4.1rem)] leading-[0.98] tracking-[-0.01em] text-ivory ${look.title}`}
-                >
-                  {lead && <span>{lead} </span>}
-                  <span className="cin-shimmer inline-block italic">{last}</span>
-                </motion.h2>
+                />
                 <motion.div {...rise(on, 2)}>
                   <Flourish className="mt-5" />
                   <p className="mt-5 max-w-md font-serif text-lg italic leading-relaxed text-ivory/85 md:text-[1.35rem]">{sl.subtitle}</p>
@@ -202,7 +198,9 @@ export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
               <span className="cin-icon-ring flex h-11 w-11 items-center justify-center rounded-full text-gold" style={{ animationDelay: `${i * 0.6}s` }}>
                 <CinemaIcon name={p.icon} className="h-5 w-5" />
               </span>
-              <span className="text-[0.7rem] uppercase leading-snug tracking-[0.2em] text-ivory/75">{p.label}</span>
+              <Reveal delay={i * 0.08} y={8}>
+                <span className="text-[0.7rem] uppercase leading-snug tracking-[0.2em] text-ivory/75">{p.label}</span>
+              </Reveal>
             </li>
           ))}
         </ul>

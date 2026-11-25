@@ -1,6 +1,8 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
+import { Reveal } from "@/components/ui/Reveal";
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
@@ -89,16 +91,20 @@ export function Lookbook({ enabled }: { enabled?: string[] }) {
         className="no-scrollbar flex snap-x snap-mandatory items-center gap-5 overflow-x-auto px-5 will-change-transform md:gap-8 md:px-10 lg:snap-none lg:overflow-visible"
       >
         <div className="w-[78vw] shrink-0 snap-start sm:w-[420px] lg:w-[460px] lg:pr-10">
-          <p className="eyebrow flex items-center gap-4">
-            <span aria-hidden className="h-px w-10 bg-gold/70" />
-            Editorial lookbook
-          </p>
-          <h2 className="mt-6 font-display text-[clamp(2.6rem,5vw,4.6rem)] leading-[1] text-ivory">
-            For every <em className="text-gold-foil">shade</em> of a woman
-          </h2>
-          <p className="mt-6 font-serif text-xl leading-relaxed text-ivory/70">
-            Six moods from the house of SAVLINO — from candlelit celebrations to slow, satin mornings.
-          </p>
+          <Reveal y={10}>
+            <p className="eyebrow flex items-center gap-4">
+              <span aria-hidden className="h-px w-10 bg-gold/70" />
+              Editorial lookbook
+            </p>
+          </Reveal>
+          <SplitHeadline text="For every shade of a woman"
+            accentWord={{ index: 2, className: "text-gold-foil italic" }}
+            className="mt-6 font-display text-[clamp(2.6rem,5vw,4.6rem)] leading-[1] text-ivory" />
+          <Reveal delay={0.16}>
+            <p className="mt-6 font-serif text-xl leading-relaxed text-ivory/70">
+              Six moods from the house of SAVLINO — from candlelit celebrations to slow, satin mornings.
+            </p>
+          </Reveal>
           <p className="mt-10 hidden text-[0.65rem] uppercase tracking-[0.35em] text-gold/70 lg:block" aria-hidden>
             Scroll to turn the page →
           </p>
