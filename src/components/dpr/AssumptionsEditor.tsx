@@ -29,6 +29,8 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
     const updated: Assumptions = {
       applicant: String(data.get("applicant")).trim(),
       category: String(data.get("category")).trim(),
+      bank: String(data.get("bank")).trim(),
+      bankBranch: String(data.get("bankBranch")).trim(),
       loan: read("loan"), rate: read("rate"), term: read("term"), taxRate: read("taxRate"),
       cost: vector("cost", costLabels.length), directRates: vector("direct", directLabels.length),
       units: vector("units", years.length), price: vector("price", years.length),
@@ -46,6 +48,8 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
   return <form id={assumptionsFormId} className="editor" onSubmit={submit} inert={saving} aria-busy={saving}>
     <Card title="Applicant & Loan Terms"><div className="body inputGrid">
       <Field name="applicant" label="Applicant name" value={input.applicant} text />
+      <Field name="bank" label="Bank name" value={input.bank} text />
+      <Field name="bankBranch" label="Bank branch / location" value={input.bankBranch} text />
       <Field name="category" label="Applicant category" value={input.category} text />
       <Field name="loan" label="Loan amount (₹ lakh)" value={input.loan} />
       <Field name="rate" label="Annual interest (%)" value={input.rate} />
@@ -77,5 +81,5 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
 }
 
 export function restoreFigures(input: Assumptions) {
-  return { ...defaults, applicant: input.applicant, category: input.category };
+  return { ...defaults, applicant: input.applicant, category: input.category, bank: input.bank, bankBranch: input.bankBranch };
 }
