@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Section = { title: string; content: ReactNode };
 type Mode = "summary" | "report";
+type ReportDetails = { applicant: string; loan: string; bank: string; branch: string };
 type Preview = { url: string; pages: string[]; filename: string };
 const paper = { width: 1122, height: 793 };
 const pixelRatio = 2;
@@ -35,7 +36,7 @@ function element(className: string, text?: string) {
   return node;
 }
 
-async function generate(stage: HTMLElement, mode: Mode, applicant: string, loan: string): Promise<Preview> {
+async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank, branch }: ReportDetails): Promise<Preview> {
   const [{ toCanvas }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
   await document.fonts.ready;
   const output = element("dpr-export-output");
@@ -43,15 +44,17 @@ async function generate(stage: HTMLElement, mode: Mode, applicant: string, loan:
 
   const sheets: HTMLElement[] = [];
   const footers: HTMLElement[] = [];
-  function sheet(title: string) {
+  function sheet(title?: string) {
     const page = element("dpr-export-sheet report");
     const header = element("dpr-export-header");
-    header.append(element("dpr-export-brand", "SAVLINO"), element("dpr-export-bank", `Indian Overseas Bank · MUDRA Tarun · ${loan}`));
+    header.append(element("dpr-export-brand", "SAVLINO"), element("dpr-export-bank", `${bank} · MUDRA Tarun · ${loan}`));
     const heading = document.createElement("h2");
-    heading.textContent = title;
+    if (title) heading.textContent = title;
     const content = element("dpr-export-content");
     const footer = element("dpr-export-footer", "SAVLINO · DPR projections and illustrative financing terms");
-    page.append(header, heading, content, footer);
+    page.append(header);
+    if (title) page.append(heading);
+    page.append(content, footer);
     output.append(page);
     sheets.push(page);
     footers.push(footer);
@@ -62,28 +65,90 @@ async function generate(stage: HTMLElement, mode: Mode, applicant: string, loan:
     if (mode === "report") {
       const cover = sheet("Detailed Project Report");
       cover.classList.add("dpr-export-cover");
-      cover.append(
+      const main = element("dpr-cover-main");
+      const project = element("dpr-cover-project");
+      project.append(
+        element("dpr-cover-website", "www.savlino.in"),
         element("dpr-export-cover-title", "Women’s blouse and apparel manufacturing"),
-        element("dpr-export-cover-line", "Direct-to-consumer website and local orders"),
-        element("dpr-export-cover-line", `Prepared for ${applicant || "the proposed proprietor of SAVLINO"}`),
-        element("dpr-export-cover-line", "For consideration by the Branch Manager, Indian Overseas Bank, Bhopal"),
-        element("dpr-export-cover-line", "25 November 2026"),
-        element("dpr-export-cover-line", "Preparation attributed to an empanelled CA of Savrdh Financial Services Private Limited."),
-        element("dpr-export-cover-line", "CA credentials and signature pending confirmation · savrdhfinancialservices.com"),
+        element("dpr-export-cover-line", "Online retail and local orders · Bhopal, Madhya Pradesh"),
       );
+      const recipient = element("dpr-cover-recipient");
+      recipient.append(
+        element("dpr-cover-label", "SUBMITTED TO"),
+        element("dpr-export-cover-line", "The Branch Manager"),
+        element("dpr-cover-name", bank),
+        element("dpr-export-cover-line", branch),
+        element("dpr-cover-label dpr-cover-loan-label", "MUDRA TARUN LOAN REQUEST"),
+        element("dpr-cover-loan", loan),
+      );
+      main.append(project, recipient);
+      const credits = element("dpr-cover-credits");
+      const applicantBlock = element("dpr-cover-credit");
+      applicantBlock.append(
+        element("dpr-cover-label", "PREPARED FOR"),
+        element("dpr-cover-name", applicant || "Proposed proprietor of SAVLINO"),
+        element("dpr-export-cover-line", "Applicant · SAVLINO"),
+      );
+      const preparer = element("dpr-cover-credit");
+      preparer.append(
+        element("dpr-cover-label", "PREPARED BY"),
+        element("dpr-cover-name", "Authorized Officer"),
+        element("dpr-export-cover-line", "Savrdh Financial Services Private Limited"),
+        element("dpr-cover-website", "www.savrdhfinancialservices.com"),
+      );
+      credits.append(applicantBlock, preparer);
+      cover.append(main, credits, element("dpr-cover-date", "Report date · 25 November 2026"));
     }
+
     const sources = Array.from(stage.querySelectorAll<HTMLElement>("[data-export-section]"));
+    let page: HTMLElement | undefined;
+    const fits = (content: HTMLElement) => content.scrollHeight <= content.clientHeight + 1;
+
     sources.forEach((source, index) => {
       const title = source.dataset.exportSection ?? "";
-      let page = sheet(title);
-      const blocks = Array.from(source.firstElementChild?.classList.contains("detail")
-        ? source.firstElementChild.children : source.children);
-      for (const block of blocks) {
-        const copy = block.cloneNode(true);
+      const root = source.firstElementChild?.classList.contains("detail") ? source.firstElementChild : source;
+      if (index === 0) {
+        const summary = sheet(title);
+        for (const block of root.children) summary.append(block.cloneNode(true));
+        return;
+      }
+
+      const heading = (continued = false) => element("dpr-flow-heading", continued ? `${title} · Continued` : title);
+      for (const [blockIndex, block] of Array.from(root.children).entries()) {
+        page ??= sheet();
+        const first = blockIndex === 0;
+        const sectionHeading = first ? heading() : undefined;
+        if (sectionHeading) page.append(sectionHeading);
+        const copy = block.cloneNode(true) as HTMLElement;
         page.append(copy);
-        if (page.scrollHeight > page.clientHeight + 1 && page.children.length > 1 && index !== 0) {
-          page = sheet(`${title} · Continued`);
-          page.append(copy);
+        if (fits(page)) continue;
+
+        // Keep a section heading with its first card and move intact cards to a fresh page.
+        if (page.children.length > (first ? 2 : 1)) {
+          copy.remove();
+          sectionHeading?.remove();
+          page = sheet();
+          page.append(first ? heading() : heading(true), copy);
+        }
+
+        // Split an oversized table by whole rows. Each fragment retains its caption and column headers.
+        const rowGroup = copy.querySelector("tbody");
+        if (fits(page) || !rowGroup || copy.querySelectorAll("table").length !== 1) continue;
+        const rows = Array.from(rowGroup.rows);
+        rowGroup.replaceChildren();
+        let currentRows = rowGroup;
+        for (const row of rows) {
+          currentRows.append(row);
+          if (!fits(page) && currentRows.rows.length > 1) {
+            row.remove();
+            page = sheet();
+            const continuation = copy.cloneNode(true) as HTMLElement;
+            const continuationRows = continuation.querySelector("tbody");
+            if (!continuationRows) throw new Error("Could not continue the DPR table.");
+            currentRows = continuationRows;
+            currentRows.replaceChildren(row);
+            page.append(heading(true), continuation);
+          }
         }
       }
     });
@@ -122,13 +187,13 @@ async function generate(stage: HTMLElement, mode: Mode, applicant: string, loan:
   }
 }
 
-export function ReportExport({ summary, reportSections, applicant, loan }: {
-  summary: ReactNode; reportSections: Section[]; applicant: string; loan: string;
-}) {
+export function ReportExport({ summary, reportSections, applicant, loan, bank, branch }: {
+  summary: ReactNode; reportSections: Section[];
+} & ReportDetails) {
   const [mode, setMode] = useState<Mode>();
   const [preview, setPreview] = useState<Preview>();
   const [error, setError] = useState("");
-  const [snapshot, setSnapshot] = useState<{ sections: Section[]; applicant: string; loan: string }>();
+  const [snapshot, setSnapshot] = useState<{ sections: Section[] } & ReportDetails>();
   const dialog = useRef<HTMLDialogElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const blob = useRef<string | undefined>(undefined);
@@ -156,7 +221,7 @@ export function ReportExport({ summary, reportSections, applicant, loan }: {
     const current = ++sequence.current;
     const root = stage.current;
     if (!root) return;
-    generate(root, mode, snapshot.applicant, snapshot.loan).then((result) => {
+    generate(root, mode, snapshot).then((result) => {
       if (sequence.current !== current) {
         URL.revokeObjectURL(result.url);
         return;
@@ -172,7 +237,7 @@ export function ReportExport({ summary, reportSections, applicant, loan }: {
   function open(next: Mode) {
     if (busy.current) return;
     busy.current = true;
-    setSnapshot({ applicant, loan, sections: next === "summary"
+    setSnapshot({ applicant, loan, bank, branch, sections: next === "summary"
       ? [{ title: "Executive Summary Dashboard", content: summary }] : reportSections });
     setMode(next);
     dialog.current?.showModal();
