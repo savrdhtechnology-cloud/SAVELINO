@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { saveDpr } from "@/app/admin/(crm)/dpr/actions";
 import { AssumptionsEditor, restoreFigures } from "./AssumptionsEditor";
+import { ReportExport } from "./ReportExport";
 import { Financials } from "./Financials";
 import { costLabels, type Assumptions } from "./defaults";
 import { amortize, project, years } from "./model";
@@ -112,6 +113,110 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
     ["◇", ratio(first.cashCoverage), "Cash debt coverage"],
   ];
 
+  function amortization(index: number, interactive: boolean) {
+    return <Card title={`Months ${index * 12 + 1}–${Math.min((index + 1) * 12, input.term)} · ₹`}>
+      {interactive && <div className="body switch">{data.loan.annual.map((_, i) =>
+        <button type="button" key={i} aria-pressed={index === i} onClick={() => setYear(i)}>Year {i + 1}</button>)}</div>}
+      <Table headings={["Month", "Opening balance", "Installment", "Interest", "Principal", "Closing balance"]} rows={
+        data.loan.months.slice(index * 12, (index + 1) * 12)
+          .map((m) => [String(m.month), m.opening, m.payment, m.interest, m.principal, m.balance])
+      } />
+    </Card>;
+  }
+
+  function renderSection(index: number, exporting = false) {
+    return <>
+      {index === 0 && <>
+        <div className="grid three">
+          <Card title="Project Snapshot"><Pairs rows={snapshot} /></Card>{funding}
+          <Card title="Key KPI Cards · Year 1 Base Case"><div className="body kpis">{kpis.map(([icon, value, label]) =>
+            <div className="kpi" key={label}><span className="ico" aria-hidden="true">{icon}</span><div><b>{value}</b><small>{label}</small></div></div>)}
+          </div></Card>
+        </div>
+        {charts}
+        <div className="grid four">
+          <Card title="Project Cost Break-up · ₹ lakh"><Pairs rows={costRows} money /></Card>
+          <Card title="Loan Repayment Summary"><Pairs rows={repaymentRows} money /></Card>
+          {stressChart}
+          <Card title="Key Takeaways"><div className="body"><ul className="notes">
+            <li>Year 1 indicative accounting DSCR {ratio(first.accountingDscr)}</li>
+            <li>Annual operating break-even {data.breakEven === null ? "—" : lakh(data.breakEven)}</li>
+            <li>Year 1 closing cash {lakh(first.cash)}</li>
+            <li>Cash debt coverage at 10% lower sales {ratio(data.scenarios[1].cashCoverage)}</li>
+          </ul></div></Card>
+        </div>
+        {timeline}
+      </>}
+      {index === 1 && <div className="detail">
+        <div className="split"><Card title="Applicant and Enterprise"><Pairs rows={snapshot} /></Card>
+          <Card title="Business and Premises"><Pairs rows={[
+            ["Location", "Bhopal, Madhya Pradesh"], ["Workshop", "500–700 sq. ft. planned"],
+            ["Year 1 rent", `₹${number(input.fixed[1][0] * 100_000 / 12, 0)} per month`],
+            ["Refundable deposit", lakh(data.deposit)], ["Website", "Developed per applicant"],
+            ["Year 1 channel mix", "60% website/digital · 40% local/custom"],
+          ]} /></Card>
+        </div>
+        <Card title="Staffing and Production"><div className="body">
+          <p>Start with two sewing operators. Add a third as orders justify it. The proprietor oversees sourcing, sampling, orders and accounts.</p>
+          <p>Sample and measure → source and inspect fabric → cut and stitch → press and inspect → pack and dispatch → reconcile payments and returns.</p>
+        </div></Card>{timeline}
+      </div>}
+      {index === 2 && <div className="detail">
+        <div className="split">{funding}<Card title="Opening Uses of Funds · ₹ lakh"><Pairs rows={costRows} money /></Card></div>
+        <Card title="Itemized Project Budget · ₹ lakh"><Table headings={["Use of funds", "Amount"]} rows={[
+          ...costLabels.slice(0, 6).map((label, index) => [label, input.cost[index]]), ["Total depreciable fixed asset budget", data.assets],
+          ...costLabels.slice(6).map((label, index) => [label, input.cost[index + 6]]), ["Total project cost", data.total],
+        ]} /></Card>
+        <Card title="Facility Structure"><div className="body">
+          <p>Suggested structure for branch appraisal uses term finance up to the fixed asset budget and working capital for the balance. The repayment model amortizes the full {lakh(input.loan)} over {input.term} months.</p>
+        </div></Card>
+      </div>}
+      {index === 3 && <div className="detail">{charts}<Financials input={input} data={data} /></div>}
+      {index === 4 && <div className="detail">
+        <div className="split"><Card title="Modeled Loan Terms"><Pairs rows={repaymentRows} money /></Card>
+          <Chart title="Year-end Outstanding Loan" labels={data.loan.annual.map((_, index) => `Y${index + 1}`)}
+            values={data.loan.annual.map((annual) => annual.closing)} />
+        </div>
+        <Card title="Annual Repayment Summary · ₹ lakh"><Table headings={["Year", "Opening loan", "Principal", "Interest", "Debt service", "Closing loan"]} rows={[
+          ...data.loan.annual.map((a, index) => [String(index + 1), a.opening, a.principal, a.interest, a.payment, a.closing]),
+          ["Total", "—", input.loan, data.loan.interest, input.loan + data.loan.interest, "—"],
+        ]} /></Card>
+        <Card title="Illustrative Rate Scenarios · ₹"><Table headings={["Rate", "Monthly installment", "Total interest"]} rows={
+          [...new Set([Math.max(0, input.rate - 1), input.rate, Math.min(100, input.rate + 1), Math.min(100, input.rate + 2)])].map((rate) => {
+            const scenario = amortize(input.loan, rate, input.term);
+            return [`${number(rate, 2)}%`, scenario.emi, scenario.interest * 100_000];
+          })
+        } /></Card>
+        {!exporting && amortization(selectedYear, true)}
+      </div>}
+      {index === 5 && <div className="detail">
+        <div className="split">{stressChart}<Chart title="5-Year Cash Debt Coverage" values={data.forecast.map((y) => y.cashCoverage)}
+          labels={years} unit="×" threshold={1} colors={["#2bb3a3"]} /></div>
+        <Card title="Year 1 Downside Scenarios · ₹ lakh except coverage"><Table
+          headings={["Scenario", "Net sales", "EBITDA", "Cash coverage", "Minimum month-end cash", "Year-end cash"]}
+          rows={data.scenarios.map((s, index) => [stressLabels[index], s.netSales, s.ebitda, ratio(s.cashCoverage), s.minCash, s.closing])} /></Card>
+        <Card title="Year 1 Monthly Cash Budget · ₹ lakh"><Table
+          headings={["Month", "Sales", "EBITDA", "WC increase", "Tax", "EMI", "Drawings", "Capex", "Closing cash"]}
+          rows={data.scenarios[0].budget.map((m, index) => [String(index + 1), m.monthSales, m.ebitda, m.wcChange, m.tax, m.payment, m.drawings, m.capex, m.closing])} /></Card>
+      </div>}
+      {index === 6 && <div className="detail">
+        <Card title="Bank Submission Checklist"><Pairs rows={[
+          ["Identity and category", "PAN, bank-accepted KYC, photos, category certificate if applicable and signed application"],
+          ["Residence", "Bank-accepted current address proof and ownership or occupancy documents as applicable"],
+          ["Workshop", "Landlord offer or lease, rent, deposit, tenure and consent"],
+          ["Business", "Proprietorship declaration, Udyam, GST and local registrations as applicable"],
+          ["Funding", `Bank statements and proof of ${lakh(data.equity)} own contribution`],
+          ["Machinery and inventory", "Pro forma invoices, fabric and trims quotations"],
+          ["Sales and website", "Website URL, catalogue, sample invoices, receipts and order records"],
+        ]} /></Card>
+        <Card title="Report Record"><div className="body"><p>Detailed Project Report · 25 November 2026 · For consideration by the Branch Manager, Indian Overseas Bank, Bhopal.</p>
+          <p>Preparation attributed in the source DPR to an empanelled CA of Savrdh Financial Services Private Limited. CA credentials and signature pending confirmation.</p>
+          <Link href="https://savrdhfinancialservices.com/">Savrdh Financial Services</Link>
+        </div></Card>
+      </div>}
+    </>;
+  }
+
   return <div className="sav-dpr"><div className="workspace">
     <aside>
       <div className="brand"><Image src="/dpr/hanger.webp" width={70} height={48} alt="" />SAVLINO</div>
@@ -141,108 +246,20 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         <button className="print" type="button" disabled={!dirty || saving || editing || revision === undefined} onClick={save}>
           {saving ? "Saving…" : "Save changes"}
         </button>
-        <button className="print" type="button" onClick={() => window.print()}>Print section</button>
+        <ReportExport summary={renderSection(0, true)} reportSections={[
+          { title: "Executive Summary Dashboard", content: renderSection(0, true) },
+          ...sections.slice(1).map(([title], index) => ({ title, content: renderSection(index + 1, true) })),
+          ...data.loan.annual.map((_, index) => ({
+            title: `Amortization · Year ${index + 1}`, content: amortization(index, false),
+          })),
+        ]} applicant={input.applicant} loan={lakh(input.loan)} />
         {status && <span role="status">{status}</span>}
         {error && <span role="alert" className="error">{error}</span>}
         {revision === undefined && <span className="error">Shared storage unavailable. You can still preview figures.</span>}
       </div>
       {editing && <AssumptionsEditor key={editorKey} input={input} onPreview={preview}
         onRestore={() => { setEditorKey(editorKey + 1); preview(restoreFigures(input)); }} />}
-      {section === 0 && <>
-        <div className="grid three">
-          <Card title="Project Snapshot"><Pairs rows={snapshot} /></Card>{funding}
-          <Card title="Key KPI Cards · Year 1 Base Case"><div className="body kpis">{kpis.map(([icon, value, label]) =>
-            <div className="kpi" key={label}><span className="ico" aria-hidden="true">{icon}</span><div><b>{value}</b><small>{label}</small></div></div>)}
-          </div></Card>
-        </div>
-        {charts}
-        <div className="grid four">
-          <Card title="Project Cost Break-up · ₹ lakh"><Pairs rows={costRows} money /></Card>
-          <Card title="Loan Repayment Summary"><Pairs rows={repaymentRows} money /></Card>
-          {stressChart}
-          <Card title="Key Takeaways"><div className="body"><ul className="notes">
-            <li>Year 1 indicative accounting DSCR {ratio(first.accountingDscr)}</li>
-            <li>Annual operating break-even {data.breakEven === null ? "—" : lakh(data.breakEven)}</li>
-            <li>Year 1 closing cash {lakh(first.cash)}</li>
-            <li>Cash debt coverage at 10% lower sales {ratio(data.scenarios[1].cashCoverage)}</li>
-          </ul></div></Card>
-        </div>
-        {timeline}
-      </>}
-      {section === 1 && <div className="detail">
-        <div className="split"><Card title="Applicant and Enterprise"><Pairs rows={snapshot} /></Card>
-          <Card title="Business and Premises"><Pairs rows={[
-            ["Location", "Bhopal, Madhya Pradesh"], ["Workshop", "500–700 sq. ft. planned"],
-            ["Year 1 rent", `₹${number(input.fixed[1][0] * 100_000 / 12, 0)} per month`],
-            ["Refundable deposit", lakh(data.deposit)], ["Website", "Developed per applicant"],
-            ["Year 1 channel mix", "60% website/digital · 40% local/custom"],
-          ]} /></Card>
-        </div>
-        <Card title="Staffing and Production"><div className="body">
-          <p>Start with two sewing operators. Add a third as orders justify it. The proprietor oversees sourcing, sampling, orders and accounts.</p>
-          <p>Sample and measure → source and inspect fabric → cut and stitch → press and inspect → pack and dispatch → reconcile payments and returns.</p>
-        </div></Card>{timeline}
-      </div>}
-      {section === 2 && <div className="detail">
-        <div className="split">{funding}<Card title="Opening Uses of Funds · ₹ lakh"><Pairs rows={costRows} money /></Card></div>
-        <Card title="Itemized Project Budget · ₹ lakh"><Table headings={["Use of funds", "Amount"]} rows={[
-          ...costLabels.slice(0, 6).map((label, index) => [label, input.cost[index]]), ["Total depreciable fixed asset budget", data.assets],
-          ...costLabels.slice(6).map((label, index) => [label, input.cost[index + 6]]), ["Total project cost", data.total],
-        ]} /></Card>
-        <Card title="Facility Structure"><div className="body">
-          <p>Suggested structure for branch appraisal uses term finance up to the fixed asset budget and working capital for the balance. The repayment model amortizes the full {lakh(input.loan)} over {input.term} months.</p>
-        </div></Card>
-      </div>}
-      {section === 3 && <div className="detail">{charts}<Financials input={input} data={data} /></div>}
-      {section === 4 && <div className="detail">
-        <div className="split"><Card title="Modeled Loan Terms"><Pairs rows={repaymentRows} money /></Card>
-          <Chart title="Year-end Outstanding Loan" labels={data.loan.annual.map((_, index) => `Y${index + 1}`)}
-            values={data.loan.annual.map((annual) => annual.closing)} />
-        </div>
-        <Card title="Annual Repayment Summary · ₹ lakh"><Table headings={["Year", "Opening loan", "Principal", "Interest", "Debt service", "Closing loan"]} rows={[
-          ...data.loan.annual.map((a, index) => [String(index + 1), a.opening, a.principal, a.interest, a.payment, a.closing]),
-          ["Total", "—", input.loan, data.loan.interest, input.loan + data.loan.interest, "—"],
-        ]} /></Card>
-        <Card title="Illustrative Rate Scenarios · ₹"><Table headings={["Rate", "Monthly installment", "Total interest"]} rows={
-          [...new Set([Math.max(0, input.rate - 1), input.rate, Math.min(100, input.rate + 1), Math.min(100, input.rate + 2)])].map((rate) => {
-            const scenario = amortize(input.loan, rate, input.term);
-            return [`${number(rate, 2)}%`, scenario.emi, scenario.interest * 100_000];
-          })
-        } /></Card>
-        <Card title={`${input.term}-Month Amortization · ₹`}><div className="body">
-          <div className="switch">{data.loan.annual.map((_, index) =>
-            <button type="button" key={index} aria-pressed={selectedYear === index} onClick={() => setYear(index)}>Year {index + 1}</button>)}</div>
-          <Table headings={["Month", "Opening balance", "Installment", "Interest", "Principal", "Closing balance"]} rows={
-            data.loan.months.slice(selectedYear * 12, (selectedYear + 1) * 12)
-              .map((m) => [String(m.month), m.opening, m.payment, m.interest, m.principal, m.balance])
-          } />
-        </div></Card>
-      </div>}
-      {section === 5 && <div className="detail">
-        <div className="split">{stressChart}<Chart title="5-Year Cash Debt Coverage" values={data.forecast.map((y) => y.cashCoverage)}
-          labels={years} unit="×" threshold={1} colors={["#2bb3a3"]} /></div>
-        <Card title="Year 1 Downside Scenarios · ₹ lakh except coverage"><Table
-          headings={["Scenario", "Net sales", "EBITDA", "Cash coverage", "Minimum month-end cash", "Year-end cash"]}
-          rows={data.scenarios.map((s, index) => [stressLabels[index], s.netSales, s.ebitda, ratio(s.cashCoverage), s.minCash, s.closing])} /></Card>
-        <Card title="Year 1 Monthly Cash Budget · ₹ lakh"><Table
-          headings={["Month", "Sales", "EBITDA", "WC increase", "Tax", "EMI", "Drawings", "Capex", "Closing cash"]}
-          rows={data.scenarios[0].budget.map((m, index) => [String(index + 1), m.monthSales, m.ebitda, m.wcChange, m.tax, m.payment, m.drawings, m.capex, m.closing])} /></Card>
-      </div>}
-      {section === 6 && <div className="detail">
-        <Card title="Bank Submission Checklist"><Pairs rows={[
-          ["Identity and category", "PAN, bank-accepted KYC, photos, category certificate if applicable and signed application"],
-          ["Residence", "Bank-accepted current address proof and ownership or occupancy documents as applicable"],
-          ["Workshop", "Landlord offer or lease, rent, deposit, tenure and consent"],
-          ["Business", "Proprietorship declaration, Udyam, GST and local registrations as applicable"],
-          ["Funding", `Bank statements and proof of ${lakh(data.equity)} own contribution`],
-          ["Machinery and inventory", "Pro forma invoices, fabric and trims quotations"],
-          ["Sales and website", "Website URL, catalogue, sample invoices, receipts and order records"],
-        ]} /></Card>
-        <Card title="Report Record"><div className="body"><p>Detailed Project Report · 25 November 2026 · For consideration by the Branch Manager, Indian Overseas Bank, Bhopal.</p>
-          <p>Preparation attributed in the source DPR to an empanelled CA of Savrdh Financial Services Private Limited. CA credentials and signature pending confirmation.</p>
-          <Link href="https://savrdhfinancialservices.com/">Savrdh Financial Services</Link>
-        </div></Card>
-      </div>}
+      {renderSection(section)}
       <footer className="foot">Financial figures are DPR projections and illustrative financing assumptions. Final terms are subject to bank appraisal.</footer>
     </div>
   </div></div>;

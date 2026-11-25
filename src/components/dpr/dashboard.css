@@ -459,3 +459,66 @@ nav button{
 .sav-dpr .toolbar {margin-bottom:12px;color:var(--muted);font-size:12px;}
 .sav-dpr .print:disabled {opacity:.55;cursor:default;}
 .sav-dpr .bank img,.sav-dpr .brand img {height:auto;}
+
+.sav-dpr .dpr-preview {
+  width: min(1120px, 96vw);
+  max-height: 92vh;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.sav-dpr .dpr-preview::backdrop { background: #170b2db3; }
+.sav-dpr .dpr-preview-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.sav-dpr .dpr-preview-toolbar h2 { margin: 0 auto 0 0; font-size: 18px; }
+.sav-dpr .dpr-preview-toolbar a { text-decoration: none; }
+.sav-dpr .dpr-preview > p { padding: 16px; }
+.sav-dpr .dpr-preview-pages { display: grid; gap: 16px; padding: 16px; background: #e9e0ee; }
+.sav-dpr .dpr-preview-pages img { display: block; width: 100%; height: auto; box-shadow: 0 2px 6px #290f4830; }
+.sav-dpr .dpr-export-stage { position: fixed; top: 0; left: -12000px; width: 1122px; container-type: inline-size; }
+.sav-dpr .dpr-export-stage *, .sav-dpr .dpr-export-stage *::before, .sav-dpr .dpr-export-stage *::after { animation: none !important; }
+.sav-dpr .dpr-export-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 1122px;
+  height: 793px;
+  padding: 25px 32px 19px;
+  color: var(--ink);
+  background: #faf7fc;
+  font: 13px/1.3 system-ui, sans-serif;
+}
+.sav-dpr .dpr-export-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.sav-dpr .dpr-export-brand { font-weight: 800; font-size: 28px; letter-spacing: -.03em; }
+.sav-dpr .dpr-export-bank { font-weight: 700; }
+.sav-dpr .dpr-export-sheet h2 { font-size: 23px; color: #512086; margin: 10px 0; }
+.sav-dpr .dpr-export-content { flex: 1; min-height: 0; }
+.sav-dpr .dpr-export-content > * + * { margin-top: 8px; }
+.sav-dpr .dpr-export-content .grid { margin-bottom: 0; gap: 8px; }
+.sav-dpr .dpr-export-content .four { grid-template-columns: 1.07fr .95fr 1fr .95fr; }
+.sav-dpr .dpr-export-content .card h3 { font-size: 15px; padding: 5px 9px; }
+.sav-dpr .dpr-export-content .body { padding: 7px 9px; }
+.sav-dpr .dpr-export-content .pairs { font-size: 12px; }
+.sav-dpr .dpr-export-content .pairs div { padding: 4px 0; }
+.sav-dpr .dpr-export-content .kpi { min-height: 53px; }
+.sav-dpr .dpr-export-content .kpi b { font-size: 18px; }
+.sav-dpr .dpr-export-content .chart { max-height: 147px; }
+.sav-dpr .dpr-export-content .subnote { margin: 0; }
+.sav-dpr .dpr-export-content .tablewrap { overflow: visible; }
+.sav-dpr .dpr-export-content .tablewrap table { min-width: 0; }
+.sav-dpr .dpr-export-content .tablewrap th, .sav-dpr .dpr-export-content .tablewrap td { padding: 5px 8px; white-space: normal; }
+.sav-dpr .dpr-export-footer { color: var(--muted); border-top: 1px solid var(--line); margin-top: 9px; padding-top: 6px; font-size: 11px; }
+.sav-dpr .dpr-export-cover { padding: 86px 0 0; }
+.sav-dpr .dpr-export-cover-title { font-size: 34px; font-weight: 750; max-width: 640px; margin-bottom: 6px; }
+.sav-dpr .dpr-export-cover-line { font-size: 16px; margin: 14px 0; }
