@@ -3,7 +3,7 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ImageReveal } from "@/components/ui/Reveal";
+import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { MotionCard } from "@/components/site/Motion";
 import { images } from "@/lib/collections";
@@ -123,9 +123,11 @@ export function SignatureGallery({
                   </ImageReveal>
                   <div className="absolute inset-0 bg-gradient-to-t from-noir/85 via-noir/10 to-transparent opacity-80 transition-opacity duration-700 group-hover:opacity-100" />
                   <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 transition-transform duration-700 group-hover:translate-y-0 md:p-6">
-                    <p className="line-clamp-2 text-[0.78rem] font-medium uppercase leading-snug tracking-[0.16em] text-gold-light md:text-[0.84rem]">{t.note}</p>
-                    <p className="mt-1.5 font-display text-2xl italic leading-tight text-ivory [text-shadow:0_2px_14px_rgba(0,0,0,0.55)] md:text-4xl">{t.title}</p>
-                    {t.isProduct && t.price != null && <p className="mt-1.5 text-base font-semibold text-gold md:text-lg">{inr(t.price)}</p>}
+                    <Reveal delay={(i % 3) * 0.08} y={12}>
+                      <p className="line-clamp-2 text-[0.78rem] font-medium uppercase leading-snug tracking-[0.16em] text-gold-light md:text-[0.84rem]">{t.note}</p>
+                      <p className="mt-1.5 font-display text-2xl italic leading-tight text-ivory [text-shadow:0_2px_14px_rgba(0,0,0,0.55)] md:text-4xl">{t.title}</p>
+                      {t.isProduct && t.price != null && <p className="mt-1.5 text-base font-semibold text-gold md:text-lg">{inr(t.price)}</p>}
+                    </Reveal>
                     <span className="mt-2 flex items-center gap-3">
                       <span className="block h-px w-0 bg-gold transition-all duration-700 group-hover:w-16" />
                       {t.isProduct && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMotionStyle } from "@/components/site/Motion";
 
@@ -15,9 +15,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Fades and lifts content into view once. No-op motion for reduced-motion users. */
 export function Reveal({ children, delay = 0, y = 28, className }: RevealProps) {
-  const reducedMotion = useReducedMotion();
-  const style = useMotionStyle();
-  const reduce = reducedMotion || style === "still";
+  const reduce = useMotionStyle() === "still";
   return (
     <motion.div
       className={className}
@@ -33,9 +31,7 @@ export function Reveal({ children, delay = 0, y = 28, className }: RevealProps) 
 
 /** Image reveal: a noir curtain lifts away while the image settles from a slight zoom. */
 export function ImageReveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-  const reducedMotion = useReducedMotion();
-  const style = useMotionStyle();
-  const reduce = reducedMotion || style === "still";
+  const reduce = useMotionStyle() === "still";
   return (
     <div className={`relative overflow-hidden ${className ?? ""}`}>
       <motion.div

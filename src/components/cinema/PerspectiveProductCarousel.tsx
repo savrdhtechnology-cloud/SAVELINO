@@ -1,5 +1,6 @@
 "use client";
 
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,9 +49,9 @@ export function PerspectiveProductCarousel({ items }: { items: ShowcaseItem[] })
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
         <Reveal className="flex flex-col items-center text-center">
           <p className="text-[0.76rem] uppercase tracking-[0.42em] text-gold-light">Featured</p>
-          <h2 id="cin-featured" className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory">
-            Featured <span className="cin-shimmer italic">Collections</span>
-          </h2>
+          <SplitHeadline id="cin-featured" text="Featured Collections"
+            accentWord={{ index: 1, className: "cin-shimmer italic" }}
+            className="mt-4 font-display text-[clamp(2rem,4.4vw,3.6rem)] text-ivory" />
           <Flourish className="mt-5" />
         </Reveal>
       </div>
@@ -157,7 +158,7 @@ function ProductCardCinema({ item: p, centre }: { item: ShowcaseItem; centre: bo
         </span>
       </Link>
       <div className="px-3 pb-3 pt-4 text-center">
-        <h3 className="line-clamp-1 font-display text-xl text-ivory">{p.name}</h3>
+        <SplitHeadline as="h3" className="line-clamp-1 font-display text-xl text-ivory" text={p.name} />
         {p.subtitle && <p className="mt-1 line-clamp-1 text-[0.78rem] text-ivory/70">{p.subtitle}</p>}
         <p className="mt-2 flex items-baseline justify-center gap-2">
           <span className="text-base font-medium text-gold">{inr(p.price)}</span>

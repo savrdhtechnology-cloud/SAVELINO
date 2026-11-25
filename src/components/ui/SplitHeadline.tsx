@@ -6,6 +6,9 @@ import { useMotionStyle } from "@/components/site/Motion";
 
 type SplitHeadlineProps = {
   text: string;
+  id?: string;
+  active?: boolean;
+  accentWord?: { index: number; className: string };
   className?: string;
   as?: "h1" | "h2" | "h3" | "p";
   delay?: number;
@@ -26,6 +29,9 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  */
 export function SplitHeadline({
   text,
+  id,
+  active = true,
+  accentWord,
   className,
   as = "h2",
   delay = 0,
@@ -36,15 +42,16 @@ export function SplitHeadline({
 }: SplitHeadlineProps) {
   const reduce = useMotionStyle() === "still";
   const Tag = as;
-  const words = text.split(" ");
+  const words = text.trim().split(/\s+/);
 
   const animateProps =
     trigger === "mount"
-      ? { animate: "show" as const }
+      ? { animate: active || reduce ? ("show" as const) : ("hidden" as const) }
       : { whileInView: "show" as const, viewport: { once: true, margin: "0px 0px -10% 0px" } };
 
   return (
-    <Tag className={className} aria-label={text} data-studio={studioKey}>
+    <Tag id={id} className={className} aria-label={as === "p" ? undefined : text} data-studio={studioKey}>
+      {as === "p" && <span className="sr-only">{text}</span>}
       <motion.span
         aria-hidden
         className="inline"
@@ -56,7 +63,7 @@ export function SplitHeadline({
           <Fragment key={`${word}-${i}`}>
             <span className="inline-block overflow-hidden -mb-[0.1em] pb-[0.22em] pr-[0.06em] align-bottom">
               <motion.span
-                className={`-mb-[0.2em] -mr-[0.08em] inline-block pb-[0.2em] pr-[0.08em] ${wordClassName ?? ""}`}
+                className={`-mb-[0.2em] -mr-[0.08em] inline-block pb-[0.2em] pr-[0.08em] ${wordClassName ?? ""} ${accentWord?.index === i ? accentWord.className : ""}`}
                 variants={{
                   hidden: { y: "110%", rotate: 4, opacity: 0 },
                   show: { y: "0%", rotate: 0, opacity: 1, transition: { duration: reduce ? 0 : 1.1, ease: EASE } },

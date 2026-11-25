@@ -1,8 +1,10 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
+import { useMotionStyle } from "@/components/site/Motion";
 import { Button } from "@/components/ui/Button";
 
 export type HeroSlide = {
@@ -22,7 +24,7 @@ const AUTOPLAY_MS = 5500;
  * Slides are built from real collection/category photography (see page.tsx).
  */
 export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
-  const reduce = useReducedMotion();
+  const reduce = useMotionStyle() === "still";
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = slides.length;
@@ -93,14 +95,12 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             initial={reduce ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.7, ease: EASE }}
+            transition={{ duration: reduce ? 0 : 0.7, ease: EASE }}
           >
             <p className="eyebrow" data-studio="hero-slide-kicker">
               {slide.kicker}
             </p>
-            <h1 className="mx-auto mt-4 max-w-4xl font-display text-[clamp(2.2rem,6.4vw,5rem)] italic leading-[1.02] tracking-[-0.01em] text-ivory">
-              {slide.title}
-            </h1>
+            <SplitHeadline as="h1" trigger="mount" delay={0.12} className="mx-auto mt-4 max-w-4xl font-display text-[clamp(2.2rem,6.4vw,5rem)] italic leading-[1.02] tracking-[-0.01em] text-ivory" text={slide.title} />
             <p className="mx-auto mt-4 max-w-xl font-serif text-lg text-ivory/75 md:text-xl">{slide.summary}</p>
             <div className="mt-7 flex items-center justify-center gap-3 sm:gap-5">
               <Button href={slide.href}>Shop now</Button>

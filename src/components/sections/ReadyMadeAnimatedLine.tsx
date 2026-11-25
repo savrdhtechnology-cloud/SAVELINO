@@ -1,7 +1,8 @@
 "use client";
 
+import { useMotionStyle } from "@/components/site/Motion";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 const phrases = [
   "Ready-made elegance",
@@ -12,7 +13,7 @@ const phrases = [
 
 export function ReadyMadeAnimatedLine() {
   const [index, setIndex] = useState(0);
-  const reduced = useReducedMotion();
+  const reduced = useMotionStyle() === "still";
   useEffect(() => {
     if (reduced) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % phrases.length), 4200);

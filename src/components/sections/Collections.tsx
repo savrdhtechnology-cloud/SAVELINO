@@ -1,3 +1,4 @@
+import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import Link from "next/link";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -70,9 +71,7 @@ export function Collections({ items }: { items: Category[] }) {
               <div>
                 <Reveal>
                   <p className="eyebrow">{c.kicker}</p>
-                  <h3 id={`${c.slug}-title`} className="mt-4 font-display text-[clamp(2.2rem,4.4vw,3.8rem)] leading-[1.02] text-ivory">
-                    {c.title}
-                  </h3>
+                  <SplitHeadline as="h3" id={`${c.slug}-title`} className="mt-4 font-display text-[clamp(2.2rem,4.4vw,3.8rem)] leading-[1.02] text-ivory" text={c.title} />
                   <p className="mt-5 font-serif text-xl leading-relaxed text-ivory/75 md:text-2xl">{c.summary}</p>
                 </Reveal>
                 <Reveal delay={0.12}>
