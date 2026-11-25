@@ -7,7 +7,7 @@ import { saveDpr } from "@/app/admin/(crm)/dpr/actions";
 import { AssumptionsEditor, assumptionsFormId, restoreFigures } from "./AssumptionsEditor";
 import { ReportExport } from "./ReportExport";
 import { Financials } from "./Financials";
-import { costLabels, type Assumptions } from "./defaults";
+import { costLabels, defaultBank, type Assumptions } from "./defaults";
 import { amortize, project, years } from "./model";
 import { Card, Chart, lakh, number, Pairs, ratio, Table } from "./ui";
 import "./dashboard.css";
@@ -36,6 +36,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const data = project(input);
+  const bank = input.bank || defaultBank;
   const first = data.forecast[0];
   const contribution = data.total ? data.equity / data.total * 100 : 0;
   const selectedYear = Math.min(year, data.loan.annual.length - 1);
@@ -117,12 +118,12 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
   ];
 
   function amortization(index: number, interactive: boolean) {
-    return <Card title={`Months ${index * 12 + 1}–${Math.min((index + 1) * 12, input.term)} · ₹`}>
+    const months = interactive ? data.loan.months.slice(index * 12, (index + 1) * 12) : data.loan.months;
+    return <Card title={`Months ${months[0].month}–${months[months.length - 1].month} · ₹`}>
       {interactive && <div className="body switch">{data.loan.annual.map((_, i) =>
         <button type="button" key={i} aria-pressed={index === i} onClick={() => setYear(i)}>Year {i + 1}</button>)}</div>}
       <Table headings={["Month", "Opening balance", "Installment", "Interest", "Principal", "Closing balance"]} rows={
-        data.loan.months.slice(index * 12, (index + 1) * 12)
-          .map((m) => [String(m.month), m.opening, m.payment, m.interest, m.principal, m.balance])
+        months.map((m) => [String(m.month), m.opening, m.payment, m.interest, m.principal, m.balance])
       } />
     </Card>;
   }
@@ -240,9 +241,9 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           ["Machinery and inventory", "Pro forma invoices, fabric and trims quotations"],
           ["Sales and website", "Website URL, catalogue, sample invoices, receipts and order records"],
         ]} /></Card>
-        <Card title="Report Record"><div className="body"><p>Detailed Project Report · 25 November 2026 · For consideration by the Branch Manager, Indian Overseas Bank, Bhopal.</p>
-          <p>Preparation attributed in the source DPR to an empanelled CA of Savrdh Financial Services Private Limited. CA credentials and signature pending confirmation.</p>
-          <Link href="https://savrdhfinancialservices.com/">Savrdh Financial Services</Link>
+        <Card title="Report Record"><div className="body"><p>Detailed Project Report · 25 November 2026 · For consideration by the Branch Manager, {bank}{input.bankBranch ? ` · ${input.bankBranch}` : ""}.</p>
+          <p>Prepared by the Authorized Officer of Savrdh Financial Services Private Limited.</p>
+          <Link href="https://savrdhfinancialservices.com/">www.savrdhfinancialservices.com</Link>
         </div></Card>
       </div>}
     </>;
@@ -263,8 +264,8 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         <div className="identity"><div><small>Credit Proposal · Detailed Project Report</small><h1>SAVLINO</h1></div>
           <div className="descriptor"><strong>Women’s blouse and apparel manufacturing</strong><br />Direct-to-consumer website and local orders</div>
         </div>
-        <div className="bank"><Image src="/dpr/bank.webp" width={72} height={64} alt="" /><div>
-          <strong>Indian Overseas Bank</strong>MUDRA Tarun Loan · {lakh(input.loan)}
+        <div className="bank">{bank === defaultBank && <Image src="/dpr/bank.webp" width={72} height={64} alt="" />}<div>
+          <strong>{bank}</strong>MUDRA Tarun Loan · {lakh(input.loan)}
         </div></div>
       </header>
       <div className="topline"><h2>{sections[section][0]}{section === 0 && " Dashboard"}</h2>
@@ -282,10 +283,8 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
         <ReportExport summary={renderSection(0, true)} reportSections={[
           { title: "Executive Summary Dashboard", content: renderSection(0, true) },
           ...sections.slice(1).map(([title], index) => ({ title, content: renderSection(index + 1, true) })),
-          ...data.loan.annual.map((_, index) => ({
-            title: `Amortization · Year ${index + 1}`, content: amortization(index, false),
-          })),
-        ]} applicant={input.applicant} loan={lakh(input.loan)} />
+          { title: "Monthly Loan Amortization", content: amortization(0, false) },
+        ]} applicant={input.applicant} loan={lakh(input.loan)} bank={bank} branch={input.bankBranch} />
         {status && <span role="status">{status}</span>}
         {error && <span role="alert" className="error">{error}</span>}
         {revision === undefined && <span className="error">Shared storage unavailable. You can still preview figures.</span>}
