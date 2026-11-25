@@ -1,58 +1,100 @@
 import type { Metadata } from "next";
-import { PageIntro, PageShell } from "@/components/layout/PageShell";
-import { Craftsmanship } from "@/components/sections/Craftsmanship";
-import { Heritage } from "@/components/sections/Heritage";
-import { Button } from "@/components/ui/Button";
+import Image from "next/image";
+import Link from "next/link";
+import { PageShell } from "@/components/layout/PageShell";
 import { Reveal } from "@/components/ui/Reveal";
+import { StudioGallery } from "./StudioGallery";
+import styles from "./story.module.css";
 
 export const metadata: Metadata = {
   title: "Our story",
-  description: "SAVLINO — a legacy of elegance. Indian heritage craft, made for the modern woman.",
+  description: "Discover SAVLINO’s Indian tailoring heritage and its proposed designer blouse studio in Bhopal.",
   alternates: { canonical: "/our-story" },
 };
 
 const values = [
-  { t: "Heritage first", d: "We keep India’s embroidery and tailoring traditions alive in every collection." },
-  { t: "Made with care", d: "Every piece is finished and checked by hand before it reaches you." },
-  { t: "For every woman", d: "From bridal occasionwear to everyday essentials — designed for real bodies and real lives." },
+  ["Heritage first", "Indian embroidery and tailoring traditions across our collections."],
+  ["Made with care", "Each garment is finished and checked by hand."],
+  ["For every woman", "From occasionwear to everyday essentials."],
+];
+
+const craftsmanship = [
+  ["Hand embroidery", "Zardozi, aari and sequin work."],
+  ["Fabric selection", "Chosen for hand-feel and drape."],
+  ["Precision fit", "Thoughtful pattern and seam construction."],
+  ["Finishing", "Clean seams and checked details."],
 ];
 
 export default function OurStoryPage() {
   return (
     <PageShell>
-      <PageIntro
-        eyebrow="Our story"
-        title="A legacy of elegance"
-        intro="The house of SAVLINO was born from a love of Indian craft — and a belief that every woman deserves to feel it."
-      />
-      <Heritage />
-      <section className="border-y border-gold/10 bg-noir py-20 md:py-28">
-        <ul className="mx-auto grid max-w-[1200px] gap-10 px-5 md:grid-cols-3 md:px-10">
-          {values.map((v, i) => (
-            <li key={v.t}>
-              <Reveal delay={i * 0.1}>
-                <span className="font-display text-5xl italic text-gold/70">{String(i + 1).padStart(2, "0")}</span>
-                <h2 className="mt-4 font-display text-2xl text-ivory">{v.t}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-ivory/65">{v.d}</p>
+      <div className={styles.page}>
+        <section className={styles.intro}>
+          <Reveal className={styles.wrap} y={16}>
+            <p className={styles.label}>Our story</p>
+            <h1>A legacy of elegance</h1>
+            <p className={styles.introCopy}>The house of SAVLINO was born from a love of Indian craft and a belief that every woman deserves to feel it.</p>
+            <Link className={styles.jump} href="#bhopal-studio">Discover the proposed Bhopal studio ↓</Link>
+          </Reveal>
+        </section>
+        <section id="heritage" className={`${styles.wrap} ${styles.story}`}>
+          <Reveal>
+            <Image className={styles.heritageImage} src="/our-story/heritage.webp" width={1200} height={896}
+              sizes="(max-width: 730px) 100vw, (max-width: 1224px) 50vw, 570px"
+              alt="SAVLINO heritage editorial in gold embroidery" />
+          </Reveal>
+          <Reveal delay={0.12}>
+            <p className={styles.label}>Our heritage</p>
+            <h2>Rooted in India.<br />Made for every shade of a woman.</h2>
+            <p className={styles.bodyCopy}>Our blouses draw on India’s embroidery and tailoring traditions, with silhouettes made for today.</p>
+          </Reveal>
+        </section>
+        <section className={styles.values} aria-label="Our values">
+          <div className={`${styles.wrap} ${styles.valuesGrid}`}>
+            {values.map(([title, description], index) => (
+              <Reveal delay={index * 0.08} key={title}>
+                <h3>{title}</h3><p>{description}</p>
               </Reveal>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <Craftsmanship />
-      <section className="py-20 text-center md:py-28">
-        <Reveal>
-          <p className="mx-auto max-w-2xl font-display text-3xl italic text-ivory md:text-4xl">
-            Tradition in style, always.
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Button href="/collections">Explore collections</Button>
-            <Button href="/contact" variant="outline">
-              Get in touch
-            </Button>
+            ))}
           </div>
-        </Reveal>
-      </section>
+        </section>
+        <section id="craftsmanship" className={styles.craft}>
+          <div className={styles.wrap}>
+            <Reveal className={styles.craftHeading}>
+              <p className={styles.label}>Craftsmanship</p>
+              <h2>The hand behind every stitch</h2>
+            </Reveal>
+            <div className={styles.craftGrid}>
+              {craftsmanship.map(([title, description], index) => (
+                <Reveal className={styles.craftCard} delay={index * 0.08} key={title}>
+                  <h3>{title}</h3><p>{description}</p>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+        <section id="bhopal-studio" className={styles.studio}>
+          <div className={styles.wrap}>
+            <Reveal className={styles.studioHead}>
+              <div><p className={styles.label}>The SAVLINO studio</p><h2>Our proposed Bhopal outlet</h2></div>
+              <div>
+                <span className={styles.status}>Proposed outlet</span>
+                <p className={styles.bodyCopy}>A planned designer blouse studio with a front display and an adjoining workshop for cutting, stitching and finishing.</p>
+              </div>
+            </Reveal>
+            <Reveal delay={0.1}><StudioGallery /></Reveal>
+          </div>
+        </section>
+        <section className={styles.closing}>
+          <Reveal className={styles.wrap}>
+            <h2>Tradition in style, always.</h2>
+            <div className={styles.actions}>
+              <Link className={styles.button} href="/collections">Explore collections</Link>
+              <Link className={`${styles.button} ${styles.outline}`} href="/contact">Get in touch</Link>
+            </div>
+          </Reveal>
+        </section>
+      </div>
     </PageShell>
   );
 }
