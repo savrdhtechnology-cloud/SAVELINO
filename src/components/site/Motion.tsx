@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { MOTION_STYLES, type MotionStyle } from "@/lib/settings";
 
 export { MOTION_STYLES, type MotionStyle };
@@ -21,9 +21,20 @@ export function MotionStyleProvider({ style, children }: { style: MotionStyle; c
   return <MotionStyleContext.Provider value={preview ?? style}>{children}</MotionStyleContext.Provider>;
 }
 
+const motionPreference = "(prefers-reduced-motion: reduce)";
+
+function subscribeToMotionPreference(onChange: () => void) {
+  const query = window.matchMedia(motionPreference);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+const readMotionPreference = () => window.matchMedia(motionPreference).matches;
+const serverMotionPreference = () => false;
+
 export function useMotionStyle(): MotionStyle {
   const style = useContext(MotionStyleContext);
-  const reduced = useReducedMotion();
+  const reduced = useSyncExternalStore(subscribeToMotionPreference, readMotionPreference, serverMotionPreference);
   return reduced ? "still" : style;
 }
 

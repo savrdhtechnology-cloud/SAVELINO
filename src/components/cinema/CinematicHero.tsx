@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SplitHeadline } from "@/components/ui/SplitHeadline";
 import { Reveal } from "@/components/ui/Reveal";
@@ -66,8 +66,7 @@ const POINTS: { icon: CinemaIconName; label: string }[] = [
  * mood (Hero Studio). Images, text and buttons come from settings — nothing is taken from the shop's products.
  */
 export function CinematicHero({ content }: { content: SiteSettings["hero"] }) {
-  const reduced = useReducedMotion();
-  const still = useMotionStyle() === "still" || Boolean(reduced);
+  const still = useMotionStyle() === "still";
   const ref = useRef<HTMLElement>(null);
   const [preview, setPreview] = useState<CinemaSlide[] | null>(null);
   const [active, setActive] = useState(0);
