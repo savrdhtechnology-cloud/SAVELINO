@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Section = { title: string; content: ReactNode };
 type Mode = "summary" | "report";
-type ReportDetails = { applicant: string; loan: string; bank: string; branch: string };
+type ReportDetails = { applicant: string; loan: string; bank: string; branch: string; scheme: string; reportDate: string; activity: string; website: string; unitAddress: string };
 type Preview = { url: string; pages: string[]; filename: string };
 const paper = { width: 1122, height: 793 };
 const pixelRatio = 2;
@@ -36,7 +36,7 @@ function element(className: string, text?: string) {
   return node;
 }
 
-async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank, branch }: ReportDetails): Promise<Preview> {
+async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank, branch, scheme, reportDate, activity, website, unitAddress }: ReportDetails): Promise<Preview> {
   const [{ toCanvas }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
   await document.fonts.ready;
   const output = element("dpr-export-output");
@@ -47,7 +47,7 @@ async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank,
   function sheet(title?: string) {
     const page = element("dpr-export-sheet report");
     const header = element("dpr-export-header");
-    header.append(element("dpr-export-brand", "SAVLINO"), element("dpr-export-bank", `${bank} · MUDRA Tarun · ${loan}`));
+    header.append(element("dpr-export-brand", "SAVLINO"), element("dpr-export-bank", `${bank} · ${scheme} · ${loan}`));
     const heading = document.createElement("h2");
     if (title) heading.textContent = title;
     const content = element("dpr-export-content");
@@ -68,9 +68,9 @@ async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank,
       const main = element("dpr-cover-main");
       const project = element("dpr-cover-project");
       project.append(
-        element("dpr-cover-website", "www.savlino.in"),
-        element("dpr-export-cover-title", "Women’s blouse and apparel manufacturing"),
-        element("dpr-export-cover-line", "Online retail and local orders · Bhopal, Madhya Pradesh"),
+        element("dpr-cover-website", website),
+        element("dpr-export-cover-title", activity),
+        element("dpr-export-cover-line", unitAddress || "Manufacturing address not provided"),
       );
       const recipient = element("dpr-cover-recipient");
       recipient.append(
@@ -78,7 +78,7 @@ async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank,
         element("dpr-export-cover-line", "The Branch Manager"),
         element("dpr-cover-name", bank),
         element("dpr-export-cover-line", branch),
-        element("dpr-cover-label dpr-cover-loan-label", "MUDRA TARUN LOAN REQUEST"),
+        element("dpr-cover-label dpr-cover-loan-label", `${scheme.toUpperCase()} REQUEST`),
         element("dpr-cover-loan", loan),
       );
       main.append(project, recipient);
@@ -97,7 +97,7 @@ async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank,
         element("dpr-cover-website", "www.savrdhfinancialservices.com"),
       );
       credits.append(applicantBlock, preparer);
-      cover.append(main, credits, element("dpr-cover-date", "Report date · 25 November 2026"));
+      cover.append(main, credits, element("dpr-cover-date", `Report date · ${reportDate}`));
     }
 
     const sources = Array.from(stage.querySelectorAll<HTMLElement>("[data-export-section]"));
@@ -187,7 +187,7 @@ async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank,
   }
 }
 
-export function ReportExport({ summary, reportSections, applicant, loan, bank, branch }: {
+export function ReportExport({ summary, reportSections, applicant, loan, bank, branch, scheme, reportDate, activity, website, unitAddress }: {
   summary: ReactNode; reportSections: Section[];
 } & ReportDetails) {
   const [mode, setMode] = useState<Mode>();
@@ -237,7 +237,7 @@ export function ReportExport({ summary, reportSections, applicant, loan, bank, b
   function open(next: Mode) {
     if (busy.current) return;
     busy.current = true;
-    setSnapshot({ applicant, loan, bank, branch, sections: next === "summary"
+    setSnapshot({ applicant, loan, bank, branch, scheme, reportDate, activity, website, unitAddress, sections: next === "summary"
       ? [{ title: "Executive Summary Dashboard", content: summary }] : reportSections });
     setMode(next);
     dialog.current?.showModal();
