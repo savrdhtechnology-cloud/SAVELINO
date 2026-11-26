@@ -180,8 +180,7 @@ async function generate(stage: HTMLElement, mode: Mode, { applicant, loan, bank,
       if (index > 0) pdf.addPage("a4", "landscape");
       pdf.addImage(image, "JPEG", 0, 0, 297, 210);
     }
-    return { pages, url: URL.createObjectURL(pdf.output("blob")), filename: mode === "summary"
-      ? "SAVLINO_DPR_Executive_Summary.pdf" : "SAVLINO_Detailed_Project_Report.pdf" };
+    return { pages, url: URL.createObjectURL(pdf.output("blob")), filename: `SAVLINO_${mode === "summary" ? "Summary" : "DPR"}_${`${bank}_${branch}`.replace(/[^a-zA-Z0-9]+/g, "_").slice(0, 120)}.pdf` };
   } finally {
     output.remove();
   }

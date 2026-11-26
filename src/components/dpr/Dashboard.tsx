@@ -22,6 +22,7 @@ const launchSteps = [
   ["Weeks 5–6", "Build stock, test checkout and dispatch pilot orders"],
   ["Weeks 7–8", "Launch commercially and review orders, returns and collections"],
 ];
+const bankOptions = ["IDBI Bank Limited", "Indian Overseas Bank", "State Bank of India", "Bank of Baroda", "Punjab National Bank", "Canara Bank", "Union Bank of India", "Bank of India", "Central Bank of India", "Indian Bank", "UCO Bank", "Bank of Maharashtra", "HDFC Bank", "ICICI Bank", "Axis Bank"];
 const stressLabels = ["Base case", "Sales −10%", "Sales −20%"];
 
 export function Dashboard({ initial, revision: initialRevision }: { initial: Assumptions; revision?: number }) {
@@ -30,13 +31,19 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
   const [section, setSection] = useState(0);
   const [year, setYear] = useState(0);
   const [editing, setEditing] = useState(false);
+  const [bankGenerator, setBankGenerator] = useState(false);
+  const [recipient, setRecipient] = useState<{bank: string; branch: string} | null>(null);
+  const [draftBank, setDraftBank] = useState("");
+  const [draftBranch, setDraftBranch] = useState("");
+  const [branches, setBranches] = useState<Record<string, string[]>>({});
   const [editorKey, setEditorKey] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const data = project(input);
-  const bank = input.bank || defaultBank;
+  const bank = recipient?.bank || input.bank || defaultBank;
+  const branch = recipient?.branch || input.bankBranch;
   const scheme = input.scheme || "Proposed bank finance";
   const reportDate = input.reportDate || "Not specified";
   const first = data.forecast[0];
@@ -243,7 +250,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           ["Machinery and inventory", "Pro forma invoices, fabric and trims quotations"],
           ["Sales and website", "Website URL, catalogue, sample invoices, receipts and order records"],
         ]} /></Card>
-        <Card title="Report Record"><div className="body"><p>Detailed Project Report · {reportDate} · For consideration by the Branch Manager, {bank}{input.bankBranch ? ` · ${input.bankBranch}` : ""}.</p>
+        <Card title="Report Record"><div className="body"><p>Detailed Project Report · {reportDate} · For consideration by the Branch Manager, {bank}{branch ? ` · ${branch}` : ""}.</p>
           <p>Prepared by the Authorized Officer of Savrdh Financial Services Private Limited.</p>
           <Link href="https://savrdhfinancialservices.com/">www.savrdhfinancialservices.com</Link>
         </div></Card>
@@ -282,15 +289,40 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           onClick={editing ? undefined : () => void save(input)}>
           {saving ? "Saving…" : "Save changes"}
         </button>
+        <button className="print" type="button" disabled={editing || saving} aria-expanded={bankGenerator} onClick={() => {
+          setDraftBank(bank); setDraftBranch(branch); setBankGenerator(!bankGenerator);
+        }}>Bank-wise DPR Generator</button>
         <ReportExport summary={renderSection(0, true)} reportSections={[
           { title: "Executive Summary Dashboard", content: renderSection(0, true) },
           ...sections.slice(1).map(([title], index) => ({ title, content: renderSection(index + 1, true) })),
           { title: "Monthly Loan Amortization", content: amortization(0, false) },
-        ]} applicant={input.applicant} loan={lakh(input.loan)} bank={bank} branch={input.bankBranch} scheme={scheme} reportDate={reportDate} activity={input.activity} website={input.website} unitAddress={input.unitAddress} />
+        ]} applicant={input.applicant} loan={lakh(input.loan)} bank={bank} branch={branch} scheme={scheme} reportDate={reportDate} activity={input.activity} website={input.website} unitAddress={input.unitAddress} />
         {status && <span role="status">{status}</span>}
         {error && <span role="alert" className="error">{error}</span>}
         {revision === undefined && <span className="error">Shared storage unavailable. You can still preview figures.</span>}
       </div>
+      {bankGenerator && !editing && <Card title="Bank-wise DPR Generator"><div className="body">
+        <p>Choose a recipient for the PDF only. Saved business details, loan terms and projections remain unchanged.</p>
+        <form className="editor" onSubmit={event => {
+          event.preventDefault();
+          const name = draftBank.trim(), location = draftBranch.trim();
+          if (!name || !location) return;
+          setRecipient({bank: name, branch: location});
+          setBranches(previous => ({...previous, [name]: Array.from(new Set([...(previous[name] || []), location]))}));
+          setBankGenerator(false);
+          setStatus("Bank-specific DPR ready. Preview and download the PDF.");
+        }}>
+          <div className="inputGrid">
+            <label>Bank name<input list="dpr-bank-options" value={draftBank} maxLength={160} required onChange={e => {setDraftBank(e.target.value); setDraftBranch("");}} /></label>
+            <datalist id="dpr-bank-options">{Array.from(new Set([...bankOptions, input.bank, ...Object.keys(branches)])).filter(Boolean).map(name => <option key={name} value={name}/>)}</datalist>
+            <label>Branch name / location<input list="dpr-branch-options" value={draftBranch} maxLength={160} required onChange={e => setDraftBranch(e.target.value)} /></label>
+            <datalist id="dpr-branch-options">{Array.from(new Set([...(branches[draftBank] || []), ...(draftBank === input.bank && input.bankBranch ? [input.bankBranch] : [])])).map(name => <option key={name} value={name}/>)}</datalist>
+          </div>
+          <p>Enter the exact branch name if it is not listed. Branch suggestions are from this session, not a verified bank directory.</p>
+          <div className="actions"><button className="print" type="submit">Prepare bank DPR</button><button className="print" type="button" onClick={() => setBankGenerator(false)}>Cancel</button></div>
+        </form>
+      </div></Card>}
+      {recipient && <div className="actions"><span>PDF recipient: {bank} · {branch}</span><button className="print" type="button" onClick={() => {setRecipient(null); setStatus("");}}>Use saved bank</button></div>}
       {editing && <AssumptionsEditor key={editorKey} input={input} onPreview={preview} onSave={save}
         saving={saving} canSave={revision !== undefined}
         onRestore={() => { setEditorKey(editorKey + 1); preview(restoreFigures(input)); }} />}
