@@ -37,6 +37,8 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
   const [error, setError] = useState("");
   const data = project(input);
   const bank = input.bank || defaultBank;
+  const scheme = input.scheme || "Proposed bank finance";
+  const reportDate = input.reportDate || "Not specified";
   const first = data.forecast[0];
   const contribution = data.total ? data.equity / data.total * 100 : 0;
   const selectedYear = Math.min(year, data.loan.annual.length - 1);
@@ -73,14 +75,14 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
   }
 
   const snapshot: [string, string][] = [
-    ["Applicant", input.applicant ? `${input.applicant} · Proposed sole proprietor` : "Proposed sole proprietor"],
-    ["Category", input.category], ["Business Stage", "New manufacturing unit"],
-    ["Premises", "Rented unit, Bhopal · To be finalized"], ["Udyam", "Registration pending"],
+    ["Applicant", input.applicant ? `${input.applicant} · Sole proprietor` : "Proposed sole proprietor"],
+    ["Category", input.category], ["Business Stage", input.businessStage || "Not specified"],
+    ["Premises", input.premises || "Not specified"], ["Udyam", input.udyam || "Not provided"],
   ];
   const costRows: [string, string][] = [
     ["Fixed assets and fit-out", number(data.assets)], ["Refundable premises deposit", number(data.deposit)],
     ["Opening fabric stock", number(data.fabric)], ["Trims and accessories", number(data.trims)],
-    ["Opening operating cash", number(data.openingCash)], ["Total project cost", number(data.total)],
+    ["Opening operating cash", number(data.openingCash)], ["Opening working capital subtotal", number(data.openingInventory + data.openingCash)], ["Total project cost", number(data.total)],
   ];
   const repaymentRows: [string, string][] = [
     ["Loan amount", lakh(input.loan)], ["Illustrative interest", `${input.rate}% p.a.`], ["Tenure", `${input.term} months`],
@@ -92,7 +94,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
       <div><b>₹{number(data.total)}</b>Lakh<br />Project cost</div>
     </div>
     <div className="legend">
-      <p><i className="dot" />Bank loan · PMMY Tarun<br /><b>{lakh(input.loan)} ({number(data.total ? 100 - contribution : 0, 1)}%)</b></p>
+      <p><i className="dot" />Bank loan · {scheme}<br /><b>{lakh(input.loan)} ({number(data.total ? 100 - contribution : 0, 1)}%)</b></p>
       <p><i className="dot pink" />Own contribution<br /><b>{lakh(data.equity)} ({number(contribution, 1)}%)</b></p>
     </div>
   </div></Card>;
@@ -154,9 +156,9 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
       {index === 1 && <div className="detail">
         <div className="split"><Card title="Applicant and Enterprise"><Pairs rows={snapshot} /></Card>
           <Card title="Business and Premises"><Pairs rows={[
-            ["Location", "Bhopal, Madhya Pradesh"], ["Workshop", "500–700 sq. ft. planned"],
+            ["Registered office", input.registeredAddress || "Not provided"], ["Manufacturing unit", input.unitAddress || "Not provided"], ["Workshop", input.workshopSize || "Not provided"], ["Gumasta", input.gumasta || "Not provided"], ["Gumasta date", input.gumastaDate || "Not provided"], ["GST", input.gst || "Not provided"], ["Activity", input.activity],
             ["Year 1 rent", `₹${number(input.fixed[1][0] * 100_000 / 12, 0)} per month`],
-            ["Refundable deposit", lakh(data.deposit)], ["Website", "Developed per applicant"],
+            ["Refundable deposit", lakh(data.deposit)], ["Website", input.website],
             ["Year 1 channel mix", "60% website/digital · 40% local/custom"],
           ]} /></Card>
         </div>
@@ -241,7 +243,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           ["Machinery and inventory", "Pro forma invoices, fabric and trims quotations"],
           ["Sales and website", "Website URL, catalogue, sample invoices, receipts and order records"],
         ]} /></Card>
-        <Card title="Report Record"><div className="body"><p>Detailed Project Report · 25 November 2026 · For consideration by the Branch Manager, {bank}{input.bankBranch ? ` · ${input.bankBranch}` : ""}.</p>
+        <Card title="Report Record"><div className="body"><p>Detailed Project Report · {reportDate} · For consideration by the Branch Manager, {bank}{input.bankBranch ? ` · ${input.bankBranch}` : ""}.</p>
           <p>Prepared by the Authorized Officer of Savrdh Financial Services Private Limited.</p>
           <Link href="https://savrdhfinancialservices.com/">www.savrdhfinancialservices.com</Link>
         </div></Card>
@@ -262,18 +264,18 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
     <div className="report">
       <header className="masthead">
         <div className="identity"><div><small>Credit Proposal · Detailed Project Report</small><h1>SAVLINO</h1></div>
-          <div className="descriptor"><strong>Women’s blouse and apparel manufacturing</strong><br />Direct-to-consumer website and local orders</div>
+          <div className="descriptor"><strong>{input.activity}</strong><br />Direct-to-consumer website and local orders</div>
         </div>
         <div className="bank">{bank === defaultBank && <Image src="/dpr/bank.webp" width={72} height={64} alt="" />}<div>
-          <strong>{bank}</strong>MUDRA Tarun Loan · {lakh(input.loan)}
+          <strong>{bank}</strong>{scheme} · {lakh(input.loan)}
         </div></div>
       </header>
       <div className="topline"><h2>{sections[section][0]}{section === 0 && " Dashboard"}</h2>
-        <div className="meta"><span>Bhopal, Madhya Pradesh</span><span>25 November 2026</span><span>For the Branch Manager</span></div>
+        <div className="meta"><span>{input.unitAddress || input.bankBranch}</span><span>{reportDate}</span><span>For the Branch Manager</span></div>
       </div>
       <div className="actions toolbar">
         <button className="print" type="button" aria-expanded={editing} disabled={saving} onClick={() => setEditing(!editing)}>
-          {editing ? "Close assumptions" : "Edit figures"}
+          {editing ? "Close assumptions" : "Edit business & financial settings"}
         </button>
         <button className="print" type={editing ? "submit" : "button"} form={editing ? assumptionsFormId : undefined}
           value="save" disabled={(!dirty && !editing) || saving || revision === undefined}
@@ -284,7 +286,7 @@ export function Dashboard({ initial, revision: initialRevision }: { initial: Ass
           { title: "Executive Summary Dashboard", content: renderSection(0, true) },
           ...sections.slice(1).map(([title], index) => ({ title, content: renderSection(index + 1, true) })),
           { title: "Monthly Loan Amortization", content: amortization(0, false) },
-        ]} applicant={input.applicant} loan={lakh(input.loan)} bank={bank} branch={input.bankBranch} />
+        ]} applicant={input.applicant} loan={lakh(input.loan)} bank={bank} branch={input.bankBranch} scheme={scheme} reportDate={reportDate} activity={input.activity} website={input.website} unitAddress={input.unitAddress} />
         {status && <span role="status">{status}</span>}
         {error && <span role="alert" className="error">{error}</span>}
         {revision === undefined && <span className="error">Shared storage unavailable. You can still preview figures.</span>}

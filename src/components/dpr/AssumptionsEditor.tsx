@@ -17,6 +17,7 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
   onRestore: () => void; saving: boolean; canSave: boolean;
 }) {
   const [error, setError] = useState("");
+  const [autoBudget, setAutoBudget] = useState(true);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
@@ -27,6 +28,19 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
     const read = (name: string) => Number(data.get(name));
     const vector = (name: string, length: number) => Array.from({ length }, (_, index) => read(`${name}-${index}`));
     const updated: Assumptions = {
+      businessStage: String(data.get("businessStage") ?? "").trim(),
+      registeredAddress: String(data.get("registeredAddress") ?? "").trim(),
+      unitAddress: String(data.get("unitAddress") ?? "").trim(),
+      premises: String(data.get("premises") ?? "").trim(),
+      workshopSize: String(data.get("workshopSize") ?? "").trim(),
+      udyam: String(data.get("udyam") ?? "").trim(),
+      gumasta: String(data.get("gumasta") ?? "").trim(),
+      gumastaDate: String(data.get("gumastaDate") ?? "").trim(),
+      gst: String(data.get("gst") ?? "").trim(),
+      website: String(data.get("website") ?? "").trim(),
+      scheme: String(data.get("scheme") ?? "").trim(),
+      reportDate: String(data.get("reportDate") ?? "").trim(),
+      activity: String(data.get("activity") ?? "").trim(),
       applicant: String(data.get("applicant")).trim(),
       category: String(data.get("category")).trim(),
       bank: String(data.get("bank")).trim(),
@@ -37,6 +51,17 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
       fixed: fixedLabels.map((_, index) => vector(`fixed-${index}`, years.length)),
       capitalExpenditure: vector("capex", years.length), drawings: vector("drawings", years.length),
     };
+    // Preserve the existing own contribution; allocate the funding difference to opening working capital.
+    if (autoBudget && updated.loan !== input.loan) {
+      const delta = updated.loan - input.loan;
+      const current = updated.cost.slice(7).reduce((a,b)=>a+b,0);
+      const target = current + delta;
+      if (target < 0) { setError("Loan decrease exceeds the opening working capital budget. Adjust costs manually."); return; }
+      const weights = current > 0 ? updated.cost.slice(7).map(v=>v/current) : [0.5,0.1,0.4];
+      updated.cost[7] = Math.round(target * weights[0] * 10000)/10000;
+      updated.cost[8] = Math.round(target * weights[1] * 10000)/10000;
+      updated.cost[9] = Math.max(0,target-updated.cost[7]-updated.cost[8]);
+    }
     if (!validAssumptions(updated)) {
       setError("Check the inputs. Tenure must be 1–120 months, percentages must be 0–100, total direct costs cannot exceed 100% and loan cannot exceed project cost.");
       return;
@@ -46,6 +71,21 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
     else onPreview(updated);
   }
   return <form id={assumptionsFormId} className="editor" onSubmit={submit} inert={saving} aria-busy={saving}>
+    <Card title="Business & Registration Details"><div className="body inputGrid">
+      <Field name="businessStage" label="Business stage" value={input.businessStage} text />
+      <Field name="registeredAddress" label="Registered office address" value={input.registeredAddress} text />
+      <Field name="unitAddress" label="Manufacturing unit address" value={input.unitAddress} text />
+      <Field name="premises" label="Premises / ownership" value={input.premises} text />
+      <Field name="workshopSize" label="Workshop size" value={input.workshopSize} text />
+      <Field name="udyam" label="Udyam number" value={input.udyam} text />
+      <Field name="gumasta" label="Gumasta number" value={input.gumasta} text />
+      <Field name="gumastaDate" label="Gumasta registration date" value={input.gumastaDate} text />
+      <Field name="gst" label="GST number (if applicable)" value={input.gst} text />
+      <Field name="website" label="Business website" value={input.website} text />
+      <Field name="scheme" label="Loan scheme / product" value={input.scheme} text />
+      <Field name="reportDate" label="Report date" value={input.reportDate} text />
+      <Field name="activity" label="Business activity" value={input.activity} text />
+    </div></Card>
     <Card title="Applicant & Loan Terms"><div className="body inputGrid">
       <Field name="applicant" label="Applicant name" value={input.applicant} text />
       <Field name="bank" label="Bank name" value={input.bank} text />
@@ -56,6 +96,7 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
       <Field name="term" label="Tenure (months)" value={input.term} integer />
       <Field name="taxRate" label="Tax reserve (%)" value={input.taxRate} />
     </div></Card>
+    <label><input type="checkbox" checked={autoBudget} onChange={e=>setAutoBudget(e.target.checked)} /> Automatically allocate loan changes to opening working capital (fabric, trims and cash); keep other costs unchanged. Uncheck for manual allocation.</label>
     <Card title="Opening Project Budget · ₹ lakh"><div className="body inputGrid">
       {costLabels.map((label, index) => <Field key={label} name={`cost-${index}`} label={label} value={input.cost[index]} />)}
     </div></Card>
@@ -81,5 +122,5 @@ export function AssumptionsEditor({ input, onPreview, onSave, onRestore, saving,
 }
 
 export function restoreFigures(input: Assumptions) {
-  return { ...defaults, applicant: input.applicant, category: input.category, bank: input.bank, bankBranch: input.bankBranch };
+  return { ...input, loan: defaults.loan, rate: defaults.rate, term: defaults.term, cost: defaults.cost, units: defaults.units, price: defaults.price, fixed: defaults.fixed, capitalExpenditure: defaults.capitalExpenditure, drawings: defaults.drawings, directRates: defaults.directRates, taxRate: defaults.taxRate };
 }

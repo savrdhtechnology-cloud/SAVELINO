@@ -5,6 +5,19 @@ export const monthlySales = [1.1, 1.3, 1.5, 1.7, 1.8, 1.9, 2.0, 2.1, 2.4, 2.5, 2
 export const defaultBank = "Indian Overseas Bank";
 
 export const defaults = {
+  businessStage: "",
+  registeredAddress: "",
+  unitAddress: "",
+  premises: "",
+  workshopSize: "",
+  udyam: "",
+  gumasta: "",
+  gumastaDate: "",
+  gst: "",
+  website: "www.savlino.in",
+  scheme: "",
+  reportDate: "",
+  activity: "Women’s blouse and apparel manufacturing",
   applicant: "",
   bank: defaultBank,
   bankBranch: "Bhopal, Madhya Pradesh",
